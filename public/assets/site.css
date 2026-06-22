@@ -275,6 +275,10 @@ footer {
     padding: 7px 14px;
 }
 .view-source-link:hover { background: var(--primary-glow); border-color: var(--accent); }
+/* EDIT button only shown to admin; subtle filled tint marks it as the primary
+   in-page action without breaking the bracketed-link family. */
+.view-source-link-edit { background: var(--primary-glow); }
+.view-source-link-edit:hover { background: var(--accent); color: var(--bg); }
 
 /* highlight-box (from markdown ::: highlight) */
 .highlight-box {
@@ -557,9 +561,10 @@ footer {
     font-size: 13px;
 }
 
-/* All admin buttons share the SAME geometry + accent palette. Visual hierarchy
-   comes from a subtle filled background on .admin-btn-primary, not from a
-   different color. Only destructive actions break out into red. */
+/* Admin buttons unified to the dominant theme color (--primary) so the entire
+   admin UI reads as ONE palette per theme (amber-only in amber mode, green-only
+   in green mode). Heading, status dot, button — all same family. Hierarchy via
+   subtle filled background on .admin-btn-primary. Only destructive → red. */
 .admin-btn {
     display: inline-flex;
     align-items: center;
@@ -567,9 +572,9 @@ footer {
     min-height: 32px;
     font-family: 'Share Tech Mono', monospace;
     font-size: 11px;
-    color: var(--accent);
+    color: var(--primary);
     background: transparent;
-    border: 1px solid var(--accent-dim);
+    border: 1px solid var(--primary-dim);
     padding: 6px 14px;
     letter-spacing: 2px;
     text-decoration: none;
@@ -581,16 +586,14 @@ footer {
 }
 .admin-btn:hover {
     background: var(--primary-glow);
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--primary);
 }
 .admin-btn-primary {
     background: var(--primary-glow);
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--primary);
 }
 .admin-btn-primary:hover {
-    background: var(--accent);
+    background: var(--primary);
     color: var(--bg);
 }
 .admin-btn-danger {
@@ -649,18 +652,44 @@ footer {
 }
 .admin-table tbody tr:hover { background: var(--panel); }
 .admin-slug { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); margin-top: 2px; }
-.admin-row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+/* Every cell stays vertical-align:top so the title's first line is the
+   reference baseline for the whole row. Status + action cells get a small
+   padding-top nudge so the dot and buttons visually sit on that title line. */
+.admin-table td.admin-row-actions {
+    padding-top: 4px;
+    white-space: nowrap;
+}
+.admin-row-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+}
+.admin-row-actions .admin-btn { flex: 0 0 auto; }
+.admin-status { margin-top: 5px; }  /* nudge dot onto title baseline */
+/* Compact colored dot — replaces bigger LIVE/DRAFT/SCHEDULED text badges.
+   Live: green dot with glow. Draft: muted gray. Scheduled: amber. */
 .admin-status {
     display: inline-block;
-    padding: 2px 8px;
-    border-radius: 2px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    vertical-align: middle;
+    font-size: 0;             /* hide any visible text we keep for a11y */
+    line-height: 0;
 }
-.admin-status-live { color: var(--primary); border: 1px solid var(--primary-dim); }
-.admin-status-draft { color: var(--accent); border: 1px solid var(--accent-dim); }
-.admin-status-scheduled { color: var(--text-dim); border: 1px solid var(--border); }
+.admin-status-live {
+    background: #39ff14;
+    box-shadow: 0 0 6px rgba(57, 255, 20, 0.6);
+}
+.admin-status-draft {
+    background: #5a5a5a;
+}
+.admin-status-scheduled {
+    background: #ffb700;
+    box-shadow: 0 0 6px rgba(255, 183, 0, 0.5);
+}
 
 @media (max-width: 600px) {
     .admin-table thead { display: none; }

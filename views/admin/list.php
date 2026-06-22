@@ -53,11 +53,11 @@ use App\Http;
                         <td class="admin-mono"><?= Http::e(implode(', ', (array) $entry['tags'])) ?></td>
                         <td class="admin-mono">
                             <?php if (!empty($entry['draft'])): ?>
-                                <span class="admin-status admin-status-draft">DRAFT</span>
+                                <span class="admin-status admin-status-draft" title="Draft" aria-label="Draft">Draft</span>
                             <?php elseif ($entry['date'] > date('Y-m-d')): ?>
-                                <span class="admin-status admin-status-scheduled">SCHEDULED</span>
+                                <span class="admin-status admin-status-scheduled" title="Scheduled" aria-label="Scheduled">Scheduled</span>
                             <?php else: ?>
-                                <span class="admin-status admin-status-live">LIVE</span>
+                                <span class="admin-status admin-status-live" title="Live" aria-label="Live">Live</span>
                             <?php endif; ?>
                         </td>
                         <td class="admin-row-actions">

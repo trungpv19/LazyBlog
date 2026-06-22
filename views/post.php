@@ -4,9 +4,11 @@
 /** @var string $body_html */
 /** @var list<array{level:int,id:string,text:string}> $toc */
 
+use App\Auth;
 use App\Http;
 
 $showToc = isset($toc) && count($toc) >= 3;
+$isAdmin = Auth::check();
 ?>
 
 <?php
@@ -56,6 +58,9 @@ $renderTocList = function () use ($toc): void {
 
     <div class="post-footer">
         <a class="view-source-link" href="<?= Http::e($post->rawUrl()) ?>">[ VIEW SOURCE .md ]</a>
+        <?php if ($isAdmin): ?>
+            <a class="view-source-link view-source-link-edit" href="/admin/edit/<?= Http::e($post->slug) ?>">[ EDIT ]</a>
+        <?php endif; ?>
         <a class="view-source-link" href="/">← BACK TO INDEX</a>
     </div>
 </article>
