@@ -686,7 +686,6 @@ button.admin-btn-sm { font-size: 10px; }
     text-transform: uppercase;
 }
 .admin-table tbody tr:hover { background: var(--panel); }
-.admin-slug { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); margin-top: 2px; }
 /* Action column: flex container, no special padding — fixed-height buttons
    line up naturally with vertical-align:top across all rows. */
 .admin-table td.admin-row-actions { white-space: nowrap; }

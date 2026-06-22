@@ -48,7 +48,6 @@ use App\Http;
                                 <?php if (!empty($entry['icon'])): ?><?= Http::e((string) $entry['icon']) ?> <?php endif; ?>
                                 <?= Http::e((string) $entry['title']) ?>
                             </a>
-                            <div class="admin-slug">/posts/<?= Http::e((string) $entry['slug']) ?></div>
                         </td>
                         <td class="admin-mono"><?= Http::e(implode(', ', (array) $entry['tags'])) ?></td>
                         <td class="admin-mono">
