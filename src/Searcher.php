@@ -60,10 +60,11 @@ final class Searcher
 
         $hits = [];
         foreach ($this->repo->published() as $entry) {
-            $body = (string) @file_get_contents($entry['file']);
-            // Strip the frontmatter — searching it would surface stopwords
-            // like "draft: false" as false positives.
-            $body = (string) preg_replace('/^---\s*\n.*?\n---\s*\n/s', '', $body);
+            $raw = (string) @file_get_contents($entry['file']);
+            // Reuse FrontmatterParser instead of a duplicate regex — the
+            // lazy `(.*?)` form would devour body content when the body
+            // contains a `---` horizontal rule (CommonMark HR).
+            [, $body] = FrontmatterParser::parse($raw);
 
             $title = $entry['title'];
             $tags = $entry['tags'];

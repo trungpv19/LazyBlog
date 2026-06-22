@@ -33,7 +33,11 @@ final class FrontmatterParser
         try {
             /** @var array<string,mixed>|null $meta */
             $meta = Yaml::parse($m[1]);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            // Surface YAML parse errors to error_log so admins can spot a
+            // broken frontmatter (otherwise the post silently degrades to
+            // filename-derived title/date with empty metadata).
+            error_log('LazyBlog: frontmatter YAML parse failed — ' . $e->getMessage());
             $meta = [];
         }
 

@@ -52,7 +52,11 @@ final class LlmsBuilder
                 $summary = $post ? $post->excerpt(120) : '';
             }
             $url = "{$siteUrl}/posts/{$entry['slug']}.md";
-            $out .= "- [{$entry['title']}]({$url}): {$summary}\n";
+            // Escape characters that would break the markdown list line:
+            // `]` and `)` close the link/text spans, newlines split the bullet.
+            $safeTitle = self::escapeListField($entry['title']);
+            $safeSummary = self::escapeListField($summary);
+            $out .= "- [{$safeTitle}]({$url}): {$safeSummary}\n";
         }
 
         $tags = $this->repo->allTags();
@@ -64,6 +68,17 @@ final class LlmsBuilder
         }
 
         return $out;
+    }
+
+    /**
+     * Escape characters in user-provided strings that would break a markdown
+     * list line: `]` `)` close link/text spans; newlines split the bullet.
+     */
+    private static function escapeListField(string $s): string
+    {
+        $s = str_replace(["\r\n", "\r"], "\n", $s);
+        $s = str_replace("\n", ' ', $s);
+        return str_replace([']', ')'], ['\]', '\)'], $s);
     }
 
     public function buildFull(): string
@@ -93,7 +108,7 @@ final class LlmsBuilder
             }
         }
         $built = $this->buildIndex();
-        @file_put_contents($path, $built, LOCK_EX);
+        try { FileWriter::writeAtomic($path, $built); } catch (\Throwable) {}
         return $built;
     }
 
@@ -107,7 +122,7 @@ final class LlmsBuilder
             }
         }
         $built = $this->buildFull();
-        @file_put_contents($path, $built, LOCK_EX);
+        try { FileWriter::writeAtomic($path, $built); } catch (\Throwable) {}
         return $built;
     }
 }

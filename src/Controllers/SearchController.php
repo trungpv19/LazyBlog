@@ -15,7 +15,9 @@ final class SearchController
 
     public function show(): void
     {
-        $q = trim((string) ($_GET['q'] ?? ''));
+        // Cap query at 256 chars — past that it's never a real search query,
+        // and unbounded length lets an attacker burn CPU in fold()/strtr().
+        $q = mb_substr(trim((string) ($_GET['q'] ?? '')), 0, 256);
         $hits = $q !== '' ? $this->searcher->run($q) : [];
 
         Http::render('search', [

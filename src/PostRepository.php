@@ -330,7 +330,7 @@ final class PostRepository
         if ($json === false) {
             throw new RuntimeException('Failed to encode index');
         }
-        file_put_contents($this->indexPath, $json, LOCK_EX);
+        FileWriter::writeAtomic($this->indexPath, $json);
 
         // Index rebuild means posts may have changed — invalidate downstream
         // caches so /llms.txt and /feed.xml regenerate on next request instead

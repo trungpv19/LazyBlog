@@ -13,7 +13,7 @@ namespace App;
  */
 final class Csrf
 {
-    private const SESSION_KEY = '_csrf';
+    public const SESSION_KEY = '_csrf';
 
     public static function token(): string
     {

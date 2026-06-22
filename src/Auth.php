@@ -36,6 +36,14 @@ final class Auth
         $name = (string) Config::get('SESSION_NAME', 'lazyblog_sess');
         $secure = strtolower((string) Config::get('SESSION_SECURE', 'false')) === 'true';
 
+        // In HTTPS mode, prepend the `__Host-` cookie prefix. Browsers
+        // enforce: cookie MUST be `Secure`, path=`/`, no `Domain` attribute.
+        // That bans subdomain takeover or path-narrowed shadowing — a
+        // stronger guarantee than the bare `Secure` flag alone.
+        if ($secure && !str_starts_with($name, '__Host-')) {
+            $name = '__Host-' . $name;
+        }
+
         session_name($name);
         session_set_cookie_params([
             'lifetime' => 0,
@@ -82,6 +90,9 @@ final class Auth
         // sessions don't carry a strike count after a typo.
         self::clearFailures($ip);
         session_regenerate_id(true);
+        // Rotate the CSRF token too so any pre-login captured token is
+        // invalidated. Next Csrf::token() call regenerates lazily.
+        unset($_SESSION[Csrf::SESSION_KEY]);
         $_SESSION['admin'] = true;
         $_SESSION['admin_since'] = time();
         return true;

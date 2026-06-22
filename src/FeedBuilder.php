@@ -47,7 +47,7 @@ final class FeedBuilder
             }
         }
         $xml = $this->build();
-        @file_put_contents($path, $xml, LOCK_EX);
+        try { FileWriter::writeAtomic($path, $xml); } catch (\Throwable) {}
         return $xml;
     }
 
@@ -143,9 +143,14 @@ final class FeedBuilder
         $this->appendText($dom, $item, 'description', $post->excerpt(280));
 
         // content:encoded = full rendered HTML, CDATA-wrapped for safety.
+        // PHP's createCDATASection does NOT escape `]]>` sequences inside —
+        // if rendered HTML ever contains the literal string `]]>` (rare but
+        // possible via raw author HTML), the CDATA terminates early and the
+        // feed XML breaks. Split on `]]>` and re-open CDATA right after.
         $rendered = $this->renderer->render($post->bodyMarkdown);
+        $safeHtml = str_replace(']]>', ']]]]><![CDATA[>', $rendered['html']);
         $content = $dom->createElement('content:encoded');
-        $content->appendChild($dom->createCDATASection($rendered['html']));
+        $content->appendChild($dom->createCDATASection($safeHtml));
         $item->appendChild($content);
     }
 
