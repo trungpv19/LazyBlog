@@ -25,6 +25,7 @@ final class Post
         public readonly ?string $icon = null,
         public readonly ?string $summary = null,
         public readonly ?string $author = null,
+        public readonly ?string $image = null,
     ) {
     }
 

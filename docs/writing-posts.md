@@ -43,6 +43,7 @@ icon: "📻"
 | `draft` | no | `true` → hidden from home, tag, RSS, and llms.txt. Still served at `/posts/{slug}` if URL known |
 | `summary` | no | Shown in listings, RSS description, llms.txt entry, og:description |
 | `icon` | no | Emoji shown next to the title in listings |
+| `image` | no | Per-post social-card image. Used as `og:image` + `twitter:image` when shared on Telegram/Facebook/Slack/Twitter. Path (`/uploads/…webp`) gets prefixed with `SITE_URL`; absolute URLs pass through. Falls back to `SITE_OG_IMAGE` env when omitted. |
 
 ## Body — markdown syntax
 

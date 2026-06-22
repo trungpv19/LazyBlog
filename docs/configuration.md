@@ -15,6 +15,8 @@
 | `ADMIN_PASSWORD_HASH` | yes for admin | bcrypt hash. Empty = login disabled — site is read-only |
 | `SESSION_NAME` | no | Cookie name. Default `lazyblog_sess` |
 | `SESSION_SECURE` | yes for HTTPS | `true` in production (HTTPS-only cookie); `false` for local HTTP dev |
+| `SITE_OG_IMAGE` | no | Default social-card image (path or absolute URL). Used when a post doesn't define `image:` in frontmatter. Recommended 1200×630 px |
+| `SITE_TWITTER_HANDLE` | no | Site's Twitter handle with `@`. Emitted as `twitter:site` so the rich card credits your account |
 
 Generate the password hash with the interactive helper:
 

@@ -304,6 +304,7 @@ final class PostRepository
                 'icon' => isset($meta['icon']) ? (string) $meta['icon'] : null,
                 'summary' => isset($meta['summary']) ? (string) $meta['summary'] : null,
                 'author' => self::resolveAuthor($meta['author'] ?? null),
+                'image' => isset($meta['image']) && is_string($meta['image']) ? (string) $meta['image'] : null,
                 // Store basename only — keeps the index portable between
                 // Docker (/var/www/html/...) and host (./content/...) paths.
                 // Resolved back to absolute in all().
@@ -376,6 +377,7 @@ final class PostRepository
             icon: isset($meta['icon']) ? (string) $meta['icon'] : null,
             summary: isset($meta['summary']) ? (string) $meta['summary'] : null,
             author: self::resolveAuthor($meta['author'] ?? null),
+            image: isset($meta['image']) && is_string($meta['image']) ? (string) $meta['image'] : null,
         );
     }
 

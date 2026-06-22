@@ -35,6 +35,24 @@ $pageDesc = $isPost && $post->summary !== null && $post->summary !== ''
 // og:type — `article` for posts, `website` otherwise.
 $ogType = $isPost ? 'article' : 'website';
 
+// og:image — frontmatter `image:` on posts wins; otherwise site-wide
+// SITE_OG_IMAGE env (set in .env). Telegram, Facebook, Slack, Twitter,
+// Discord all need an absolute URL — prepend SITE_URL when the value
+// starts with `/`. When absent: skip the tag (platforms fall back to
+// title-only card).
+$ogImageRaw = $isPost && !empty($post->image)
+    ? $post->image
+    : (string) Config::get('SITE_OG_IMAGE', '');
+$ogImage = '';
+if ($ogImageRaw !== '') {
+    $ogImage = str_starts_with($ogImageRaw, 'http')
+        ? $ogImageRaw
+        : rtrim($siteUrl, '/') . '/' . ltrim($ogImageRaw, '/');
+}
+// Upgrade twitter:card when an image is available — `summary_large_image`
+// gets the big-thumbnail layout instead of the compact summary card.
+$twitterCard = $ogImage !== '' ? 'summary_large_image' : 'summary';
+
 // Footer metadata. Index cache makes this cheap.
 $footerRepo = new PostRepository();
 $footerTags = $footerRepo->allTags();
@@ -110,6 +128,10 @@ $favicon = 'data:image/svg+xml,'
     <meta property="og:type" content="<?= $ogType ?>">
     <meta property="og:site_name" content="<?= Http::e($siteTitle) ?>">
     <meta property="og:locale" content="vi_VN">
+    <?php if ($ogImage !== ''): ?>
+        <meta property="og:image" content="<?= Http::e($ogImage) ?>">
+        <meta property="og:image:alt" content="<?= Http::e($title) ?>">
+    <?php endif; ?>
     <?php if ($isPost): ?>
         <meta property="article:published_time" content="<?= Http::e($post->date) ?>">
         <?php if ($post->author): ?>
@@ -121,9 +143,18 @@ $favicon = 'data:image/svg+xml,'
     <?php endif; ?>
 
     <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary">
+    <meta name="twitter:card" content="<?= $twitterCard ?>">
     <meta name="twitter:title" content="<?= Http::e($title) ?>">
     <meta name="twitter:description" content="<?= Http::e($pageDesc) ?>">
+    <?php if ($ogImage !== ''): ?>
+        <meta name="twitter:image" content="<?= Http::e($ogImage) ?>">
+    <?php endif; ?>
+    <?php
+        $twitterHandle = (string) Config::get('SITE_TWITTER_HANDLE', '');
+        if ($twitterHandle !== ''):
+    ?>
+        <meta name="twitter:site" content="<?= Http::e($twitterHandle) ?>">
+    <?php endif; ?>
 
     <!-- Alternates: machine-readable / AI / RSS -->
     <?php if ($isPost): ?>
