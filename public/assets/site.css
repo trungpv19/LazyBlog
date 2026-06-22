@@ -561,29 +561,37 @@ footer {
     font-size: 13px;
 }
 
-/* Admin buttons unified to the dominant theme color (--primary) so the entire
-   admin UI reads as ONE palette per theme (amber-only in amber mode, green-only
-   in green mode). Heading, status dot, button — all same family. Hierarchy via
-   subtle filled background on .admin-btn-primary. Only destructive → red. */
+/* Admin buttons unified to the dominant theme color (--primary). Reset native
+   <button> user-agent styles so <a class="admin-btn"> and <button class="admin-btn">
+   render at identical width + height (was the [ NEW POST ] vs [ LOG OUT ] gap).
+   Fixed height + box-sizing prevents the row-divider artifact below EDIT/DEL. */
 .admin-btn {
+    box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 32px;
+    height: 32px;
     font-family: 'Share Tech Mono', monospace;
     font-size: 11px;
+    font-weight: 400;
     color: var(--primary);
     background: transparent;
     border: 1px solid var(--primary-dim);
-    padding: 6px 14px;
+    padding: 0 14px;
+    margin: 0;
     letter-spacing: 2px;
     text-decoration: none;
     border-radius: 2px;
     cursor: pointer;
     text-transform: uppercase;
     line-height: 1;
+    vertical-align: middle;
+    -webkit-appearance: none;
+    appearance: none;
     transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
+/* Native <button> baseline alignment differs from <a>; force consistent. */
+button.admin-btn { font: inherit; font-family: 'Share Tech Mono', monospace; }
 .admin-btn:hover {
     background: var(--primary-glow);
     border-color: var(--primary);
@@ -606,11 +614,11 @@ footer {
     color: #ff9090;
 }
 .admin-btn-sm {
-    /* Same colors as .admin-btn, just slightly tighter padding so it fits
-       inside table rows without breaking layout. */
-    min-height: 26px;
+    /* Same colors as .admin-btn, just smaller fixed dimensions so it fits
+       inside table rows. Fixed height + box-sizing keeps row alignment clean. */
+    height: 26px;
     font-size: 10px;
-    padding: 4px 10px;
+    padding: 0 10px;
 }
 
 .admin-error {
@@ -652,13 +660,9 @@ footer {
 }
 .admin-table tbody tr:hover { background: var(--panel); }
 .admin-slug { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-dim); margin-top: 2px; }
-/* Every cell stays vertical-align:top so the title's first line is the
-   reference baseline for the whole row. Status + action cells get a small
-   padding-top nudge so the dot and buttons visually sit on that title line. */
-.admin-table td.admin-row-actions {
-    padding-top: 4px;
-    white-space: nowrap;
-}
+/* Action column: flex container, no special padding — fixed-height buttons
+   line up naturally with vertical-align:top across all rows. */
+.admin-table td.admin-row-actions { white-space: nowrap; }
 .admin-row-actions {
     display: flex;
     gap: 6px;
@@ -667,7 +671,10 @@ footer {
     justify-content: flex-start;
 }
 .admin-row-actions .admin-btn { flex: 0 0 auto; }
-.admin-status { margin-top: 5px; }  /* nudge dot onto title baseline */
+.admin-row-actions form { margin: 0; padding: 0; display: inline-flex; }
+/* Dot nudges down a bit so it visually sits on the title's first text line
+   (cell top = 10px padding, title baseline ≈ 22-24px, dot is 12px). */
+.admin-status { margin-top: 6px; }
 /* Compact colored dot — replaces bigger LIVE/DRAFT/SCHEDULED text badges.
    Live: green dot with glow. Draft: muted gray. Scheduled: amber. */
 .admin-status {
