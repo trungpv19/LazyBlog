@@ -104,10 +104,9 @@ body.is-admin main { max-width: 1180px; }
 }
 .admin-mono { font-family: 'Share Tech Mono', monospace; font-size: 13px; }
 .admin-textarea-body {
-    /* Tall enough to write without scrolling for short posts, but capped so
-       it doesn't dwarf the meta fields on big monitors. Drag handle stays
-       available via resize:vertical for anything longer. */
-    min-height: clamp(360px, 55vh, 600px);
+    /* Compact default — drag handle (resize:vertical) is always there if
+       the writer wants more. */
+    min-height: clamp(280px, 40vh, 440px);
     font-family: 'Share Tech Mono', monospace;
     font-size: 14px;
     line-height: 1.6;
@@ -207,8 +206,8 @@ body.is-admin main { max-width: 1180px; }
     font-family: 'Share Tech Mono', monospace;
     font-size: 14px;
     line-height: 1.55;
-    /* Same height envelope as the plain textarea fallback. */
-    min-height: clamp(360px, 55vh, 600px);
+    /* Same envelope as the plain textarea fallback. */
+    min-height: clamp(280px, 40vh, 440px);
 }
 .EasyMDEContainer .CodeMirror-cursor { border-left-color: var(--primary); }
 .EasyMDEContainer .CodeMirror-selected { background: var(--primary-glow) !important; }
