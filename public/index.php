@@ -17,10 +17,22 @@ $home = new App\Controllers\HomeController($repo);
 $post = new App\Controllers\PostController($repo, $renderer);
 $tag = new App\Controllers\TagController($repo);
 $llmsCtl = new App\Controllers\LlmsController($llms);
+$admin = new App\Controllers\AdminController($repo);
 
 $router = new App\Router();
 
 // Most-specific patterns first.
+// Admin (auth-gated inside the controller).
+$router->get('/admin/login', fn () => $admin->loginForm());
+$router->post('/admin/login', fn () => $admin->loginSubmit());
+$router->post('/admin/logout', fn () => $admin->logout());
+$router->get('/admin/new', fn () => $admin->newForm());
+$router->get('/admin/edit/{slug}', fn (array $p) => $admin->editForm($p));
+$router->post('/admin/save', fn () => $admin->save());
+$router->post('/admin/delete/{slug}', fn (array $p) => $admin->delete($p));
+$router->get('/admin', fn () => $admin->index());
+
+// Public.
 $router->get('/posts/{slug}.md', fn (array $p) => $post->raw($p));
 $router->get('/posts/{slug}', fn (array $p) => $post->show($p));
 $router->get('/tags/{tag}', fn (array $p) => $tag->show($p));

@@ -24,7 +24,7 @@ final class PostController
         $slug = $params['slug'] ?? '';
         $post = $this->repo->bySlug($slug);
 
-        if ($post === null || $post->draft) {
+        if ($post === null || $post->draft || $post->date > date('Y-m-d')) {
             http_response_code(404);
             Http::render('not-found', ['title' => '404 // NO SIGNAL']);
             return;
@@ -48,7 +48,7 @@ final class PostController
         $slug = $params['slug'] ?? '';
         $post = $this->repo->bySlug($slug);
 
-        if ($post === null || $post->draft) {
+        if ($post === null || $post->draft || $post->date > date('Y-m-d')) {
             http_response_code(404);
             header('Content-Type: text/plain; charset=utf-8');
             echo "404 not found\n";

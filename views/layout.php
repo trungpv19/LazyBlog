@@ -99,7 +99,7 @@ $favicon = 'data:image/svg+xml,'
         <meta name="author" content="<?= Http::e($isPost && $post->author ? $post->author : $siteAuthor) ?>">
     <?php endif; ?>
     <meta name="generator" content="LazyBlog (PHP + Markdown)">
-    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="robots" content="<?= str_starts_with($path, '/admin') ? 'noindex, nofollow' : 'index, follow, max-image-preview:large' ?>">
 
     <link rel="canonical" href="<?= Http::e($canonicalUrl) ?>">
 

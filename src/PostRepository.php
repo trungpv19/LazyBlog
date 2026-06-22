@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App;
 
 use RuntimeException;
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * Reads/writes posts as markdown files under content/posts/.
@@ -139,6 +140,87 @@ final class PostRepository
         @unlink($this->contentDir . '/.llms.txt');
         @unlink($this->contentDir . '/.llms-full.txt');
         @unlink($this->contentDir . '/.feed.xml');
+    }
+
+    /**
+     * Persist a Post to disk as `YYYY-MM-DD-{slug}.md`. Validates the slug,
+     * serializes frontmatter via Symfony YAML, writes atomically, then
+     * invalidates derived caches.
+     *
+     * @param string|null $previousFilename When editing, the file the post was
+     *   loaded from. If the new filename differs (slug or date changed) the
+     *   previous file is removed after the new one is written.
+     */
+    public function save(Post $post, ?string $previousFilename = null): string
+    {
+        if (!SlugUtil::valid($post->slug)) {
+            throw new RuntimeException("Invalid slug: {$post->slug}");
+        }
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $post->date)) {
+            throw new RuntimeException("Invalid date format: {$post->date}");
+        }
+
+        if (!is_dir($this->postsDir)) {
+            mkdir($this->postsDir, 0775, true);
+        }
+
+        $filename = $post->date . '-' . $post->slug . '.md';
+        $path = $this->postsDir . '/' . $filename;
+
+        // Refuse to clobber an unrelated post with a different previous filename.
+        if (is_file($path) && $previousFilename !== null && basename($previousFilename) !== $filename) {
+            throw new RuntimeException("Slug taken: {$post->slug}");
+        }
+
+        $meta = [
+            'title' => $post->title,
+            'date' => $post->date,
+        ];
+        if ($post->author !== null && $post->author !== '') {
+            $meta['author'] = $post->author;
+        }
+        if ($post->tags !== []) {
+            $meta['tags'] = array_values($post->tags);
+        }
+        $meta['draft'] = $post->draft;
+        if ($post->icon !== null && $post->icon !== '') {
+            $meta['icon'] = $post->icon;
+        }
+        if ($post->summary !== null && $post->summary !== '') {
+            $meta['summary'] = $post->summary;
+        }
+
+        // Inline tags array (`[a, b]`) is friendlier than YAML's default
+        // block style for short lists.
+        $yaml = Yaml::dump($meta, 2, 2, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK);
+
+        $body = rtrim($post->bodyMarkdown, "\n") . "\n";
+        $contents = "---\n{$yaml}---\n\n{$body}";
+
+        FileWriter::writeAtomic($path, $contents);
+
+        // Slug or date rename: delete the old file once the new one is on disk.
+        if ($previousFilename !== null && $previousFilename !== '' && basename($previousFilename) !== $filename) {
+            $oldPath = $this->postsDir . '/' . basename($previousFilename);
+            if (is_file($oldPath)) {
+                @unlink($oldPath);
+            }
+        }
+
+        $this->invalidateCaches();
+        return $path;
+    }
+
+    public function delete(string $slug): bool
+    {
+        foreach ($this->all() as $entry) {
+            if ($entry['slug'] === $slug) {
+                $ok = @unlink($entry['file']);
+                $this->invalidateCaches();
+                return $ok;
+            }
+        }
+        return false;
     }
 
     private function indexStale(): bool
