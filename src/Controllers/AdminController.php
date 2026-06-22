@@ -32,9 +32,16 @@ final class AdminController
         if (Auth::check()) {
             Http::redirect('/admin');
         }
+        // Validate `next` at form-render time too (not just submit) so a
+        // crafted ?next=https://evil.example/... cannot ride along in the
+        // visible URL bar and round-trip through the form.
+        $next = isset($_GET['next']) ? (string) $_GET['next'] : '/admin';
+        if (!self::safeRedirectTarget($next)) {
+            $next = '/admin';
+        }
         Http::render('admin/login', [
             'title' => 'Admin Login',
-            'next' => isset($_GET['next']) ? (string) $_GET['next'] : '/admin',
+            'next' => $next,
             'error' => null,
         ]);
     }

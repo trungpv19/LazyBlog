@@ -136,7 +136,11 @@ $favicon = 'data:image/svg+xml,'
     <link rel="icon" type="image/svg+xml" href="<?= $favicon ?>">
 
     <?php if ($jsonLd !== null): ?>
-        <script type="application/ld+json"><?= json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
+        <script type="application/ld+json"><?= json_encode(
+            $jsonLd,
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+                | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT,
+        ) ?></script>
     <?php endif; ?>
 
     <script>

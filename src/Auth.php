@@ -102,13 +102,25 @@ final class Auth
     /**
      * Guard an admin handler. If not authed, redirect to login preserving
      * the original destination in `?next=` so the user lands back where they
-     * tried to go.
+     * tried to go — but only when the URI looks like a sane internal path
+     * (starts with `/`, no `//`, no CRLF/control chars). Anything else is
+     * dropped and the user lands at /admin after login. REQUEST_URI is
+     * attacker-controlled on the first request line, so pre-validating it
+     * here closes the open-redirect window cleanly.
      */
     public static function requireAuth(): void
     {
-        if (!self::check()) {
-            $next = $_SERVER['REQUEST_URI'] ?? '/admin';
-            Http::redirect('/admin/login?next=' . rawurlencode($next));
+        if (self::check()) {
+            return;
         }
+        $uri = (string) ($_SERVER['REQUEST_URI'] ?? '');
+        $safe = $uri !== ''
+            && $uri[0] === '/'
+            && !str_starts_with($uri, '//')
+            && !preg_match('/[\r\n\t\0]/', $uri);
+        if ($safe) {
+            Http::redirect('/admin/login?next=' . rawurlencode($uri));
+        }
+        Http::redirect('/admin/login');
     }
 }
