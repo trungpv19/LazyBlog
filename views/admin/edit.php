@@ -25,63 +25,90 @@ $isEdit = $mode === 'edit';
         <input type="hidden" name="mode" value="<?= Http::e($mode) ?>">
         <input type="hidden" name="original_filename" value="<?= Http::e($originalFilename) ?>">
 
-        <div class="admin-grid">
-            <div>
-                <label class="admin-label" for="date">DATE (YYYY-MM-DD)</label>
+        <!-- Row 1: Title (wide) + Author + Icon — primary identifying fields -->
+        <div class="admin-form-row">
+            <div class="admin-field admin-field-grow">
+                <label class="admin-label" for="title">Title</label>
+                <input type="text" name="title" id="title" required
+                       value="<?= Http::e($formValues['title']) ?>"
+                       class="admin-input"
+                       placeholder="Your post title">
+            </div>
+            <div class="admin-field" style="flex: 0 1 180px">
+                <label class="admin-label" for="author">Author</label>
+                <input type="text" name="author" id="author"
+                       value="<?= Http::e($formValues['author']) ?>"
+                       class="admin-input admin-mono">
+            </div>
+            <div class="admin-field" style="flex: 0 0 96px">
+                <label class="admin-label" for="icon">Icon</label>
+                <input type="text" name="icon" id="icon"
+                       value="<?= Http::e($formValues['icon']) ?>"
+                       maxlength="8"
+                       class="admin-input"
+                       placeholder="📺">
+            </div>
+        </div>
+
+        <!-- Row 2: Date + Slug + Tags + Draft — secondary structural fields -->
+        <div class="admin-form-row">
+            <div class="admin-field" style="flex: 0 0 140px">
+                <label class="admin-label" for="date">Date</label>
                 <input type="text" name="date" id="date" required
                        value="<?= Http::e($formValues['date']) ?>"
                        pattern="\d{4}-\d{2}-\d{2}"
                        class="admin-input admin-mono">
             </div>
-            <div>
-                <label class="admin-label" for="slug">SLUG ([a-z0-9-])</label>
+            <div class="admin-field" style="flex: 1 1 200px">
+                <label class="admin-label" for="slug">Slug</label>
                 <input type="text" name="slug" id="slug"
                        value="<?= Http::e($formValues['slug']) ?>"
                        maxlength="80"
                        placeholder="auto-from-title"
                        class="admin-input admin-mono">
             </div>
-        </div>
-
-        <label class="admin-label" for="title">TITLE</label>
-        <input type="text" name="title" id="title" required
-               value="<?= Http::e($formValues['title']) ?>"
-               class="admin-input">
-
-        <div class="admin-grid">
-            <div>
-                <label class="admin-label" for="author">AUTHOR</label>
-                <input type="text" name="author" id="author"
-                       value="<?= Http::e($formValues['author']) ?>"
-                       class="admin-input admin-mono">
+            <div class="admin-field admin-field-grow">
+                <label class="admin-label" for="tags">Tags</label>
+                <input type="text" name="tags" id="tags"
+                       value="<?= Http::e($formValues['tags']) ?>"
+                       class="admin-input admin-mono"
+                       placeholder="ham-radio, sstv, history">
             </div>
-            <div>
-                <label class="admin-label" for="icon">ICON (emoji, optional)</label>
-                <input type="text" name="icon" id="icon"
-                       value="<?= Http::e($formValues['icon']) ?>"
-                       maxlength="8"
-                       class="admin-input admin-mono">
+            <div class="admin-field" style="flex: 0 0 auto">
+                <label class="admin-label">&nbsp;</label>
+                <label class="admin-checkbox-pill">
+                    <input type="checkbox" name="draft" value="1" <?= $formValues['draft'] ? 'checked' : '' ?>>
+                    <span>Draft</span>
+                </label>
             </div>
         </div>
 
-        <label class="admin-label" for="tags">TAGS (comma-separated)</label>
-        <input type="text" name="tags" id="tags"
-               value="<?= Http::e($formValues['tags']) ?>"
-               class="admin-input admin-mono"
-               placeholder="ham-radio, sstv, history">
+        <!-- Summary — kept compact, single line -->
+        <div class="admin-field">
+            <label class="admin-label" for="summary">Summary <span class="admin-label-hint">(optional · listings · og · llms.txt)</span></label>
+            <input type="text" name="summary" id="summary"
+                   value="<?= Http::e($formValues['summary']) ?>"
+                   class="admin-input"
+                   placeholder="One-line description shown in post lists and meta tags.">
+        </div>
 
-        <label class="admin-label" for="summary">SUMMARY (optional — used in listings, OG, llms.txt)</label>
-        <textarea name="summary" id="summary" rows="2"
-                  class="admin-input"><?= Http::e($formValues['summary']) ?></textarea>
+        <!-- Body — the focus -->
+        <div class="admin-field">
+            <label class="admin-label" for="body">Body <span class="admin-label-hint">(markdown)</span></label>
+            <textarea name="body" id="body" rows="28" required
+                      class="admin-input admin-textarea-body"
+                      placeholder="# Heading
 
-        <label class="admin-label admin-checkbox-row">
-            <input type="checkbox" name="draft" value="1" <?= $formValues['draft'] ? 'checked' : '' ?>>
-            <span>DRAFT (hidden from public site + llms.txt)</span>
-        </label>
+Write in **markdown**. Use `code`, [links](https://example.com), and admonitions:
 
-        <label class="admin-label" for="body">BODY (markdown)</label>
-        <textarea name="body" id="body" rows="24" required
-                  class="admin-input admin-textarea-body"><?= Http::e($formValues['body']) ?></textarea>
+::: highlight
+Key fact or callout.
+:::
+
+::: story icon=&quot;🌕&quot; title=&quot;A story&quot;
+Body of the story card.
+:::"><?= Http::e($formValues['body']) ?></textarea>
+        </div>
 
         <div class="admin-actions">
             <button type="submit" class="admin-btn admin-btn-primary">[ <?= $isEdit ? 'SAVE' : 'CREATE' ?> ]</button>
