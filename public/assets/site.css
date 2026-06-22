@@ -596,19 +596,23 @@ footer {
 }
 
 /* ---------- Tag chip input (admin edit form) ---------- */
+/* Visually identical to .admin-input: same border, padding, height, and
+   focus glow. The wrap holds rendered chips + the entry input. */
 .tag-chip-hidden { display: none; }
 .tag-chip-wrap {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
     align-items: center;
-    padding: 6px;
+    padding: 5px 8px;
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 2px;
-    min-height: 34px;
+    min-height: 35px;
+    box-sizing: border-box;
 }
 .tag-chip-wrap:focus-within {
+    outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 8px var(--primary-glow);
 }
@@ -637,16 +641,23 @@ footer {
     opacity: 0.7;
 }
 .tag-chip-x:hover { opacity: 1; }
+/* Entry input lives inside the wrap; visually it's just the cursor + text.
+   No own border/background so it inherits the wrap's frame. */
 .tag-chip-entry {
     flex: 1 1 120px;
     min-width: 120px;
     background: transparent !important;
     border: none !important;
-    padding: 4px 6px !important;
+    padding: 2px 0 !important;
+    margin: 0 !important;
+    height: 22px !important;
+    line-height: 1.4 !important;
     box-shadow: none !important;
-    height: auto !important;
+    font-size: 14px !important;
+    color: var(--text) !important;
 }
 .tag-chip-entry:focus { outline: none; }
+.tag-chip-entry::placeholder { color: var(--text-dim); }
 
 /* ---------- EasyMDE theme integration ---------- */
 .EasyMDEContainer .editor-toolbar {
