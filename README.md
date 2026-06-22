@@ -221,12 +221,60 @@ See `plans/260622-1036-personal-blog-php-markdown/plan.md` for the full multi-ph
 
 1. ✅ Bootstrap (Docker, composer, router, env)
 2. ✅ PostRepository + public read paths + raw `.md` + `llms.txt`
-3. ⏳ Admin auth + CRUD (single-password, CSRF, atomic file writes)
-4. ⏳ Editor UX (EasyMDE, tag chips, autosave)
+3. ✅ Admin auth + CRUD (single-password, CSRF, atomic file writes)
+4. ⏳ Editor UX (EasyMDE, tag chips, autosave, unsaved-changes guard)
 5. ⏳ RSS feed `/feed.xml`
 6. ⏳ Deployment (Caddyfile, backup script, deploy guide)
 
-Phases 1–2 are implemented and live. Phases 3–6 are spec'd in the plan but not yet built.
+Phases 1–3 are implemented and live. Phases 4–6 are spec'd in the plan but not yet built.
+
+### Phase 3 details — admin lives at `/admin`
+
+| Route | Purpose |
+|-------|---------|
+| `GET /admin/login` · `POST /admin/login` | Single-password login (bcrypt) |
+| `POST /admin/logout` | CSRF-protected session destroy |
+| `GET /admin` | List every post (live · draft · scheduled) |
+| `GET /admin/new` | Blank edit form |
+| `GET /admin/edit/{slug}` | Prefilled edit form |
+| `POST /admin/save` | Validates + atomic write + cache invalidation |
+| `POST /admin/delete/{slug}` | CSRF-protected unlink |
+
+Set up:
+```bash
+# 1. Generate a bcrypt hash for your admin password
+docker compose exec app php scripts/hash-password.php "your-real-password"
+
+# 2. Paste the output into .env:
+#    ADMIN_PASSWORD_HASH="$2y$10$..."
+
+# 3. Restart
+docker compose restart app
+
+# 4. Log in at http://localhost:8080/admin/login
+```
+
+When logged in, a `[ ADMIN ]` link appears in the header on every page,
+plus an `[ EDIT ]` button next to `[ VIEW SOURCE .md ]` on each post.
+Public visitors see nothing different (gated server-side, not just CSS).
+
+Empty `ADMIN_PASSWORD_HASH` = login disabled. No default password.
+
+### New config keys (since v1)
+
+| Env | Default | Purpose |
+|-----|---------|---------|
+| `POSTS_PER_PAGE` | `10` | Posts per page on home + tag listings (`?page=N`) |
+| `CALLSIGN` | empty | Small line above the site title (e.g. `XV5HP // STATION // CITY`). Empty hides the line. |
+| `DEFAULT_AUTHOR` | empty | Author shown in `§ TRANSMISSION — DATE — AUTHOR` when a post has no `author:` frontmatter |
+
+### Recent polish
+
+- Status badges → colored dots (green = live, gray = draft, amber = scheduled), with `title=""` tooltips for a11y
+- Pagination: prev/next + page indicator; canonical URL includes `?page=N` so each page is its own canonical
+- Long titles ellipsis-truncate in the admin list so rows stay single-line
+- Admin canvas widens to 1180–1480px depending on viewport, separate from the narrower (960–1020px) reading width on public pages
+- `[ HOME ]` + `[ ADMIN ]` + theme toggle in centered header actions row
 
 ## License
 

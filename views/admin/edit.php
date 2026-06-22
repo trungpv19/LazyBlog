@@ -119,3 +119,8 @@ Body of the story card.
         </div>
     </form>
 </section>
+
+<!-- EasyMDE: markdown editor with live preview, autosave, fullscreen, etc. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/easymde@2.18.0/dist/easymde.min.js"></script>
+<script defer src="/assets/admin-editor.js"></script>
