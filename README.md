@@ -26,11 +26,11 @@ No database. No framework. No build step. Backup with `rsync`.
 
 | | |
 |---|---|
-| ![Home — amber (default)](docs/screenshot/home-amber.png) | ![Home — green theme](docs/screenshot/home.png) |
+| ![Home — amber (default)](docs/screenshot/home-amber.webp) | ![Home — green theme](docs/screenshot/home.webp) |
 | _Home — amber (default theme)_ | _Home — green theme toggle_ |
-| ![Single post with TOC + reading progress + figure](docs/screenshot/post.png) | ![Archive heatmap + grouped list](docs/screenshot/archive.png) |
+| ![Single post with TOC + reading progress + figure](docs/screenshot/post.webp) | ![Archive heatmap + grouped list](docs/screenshot/archive.webp) |
 | _Single post — TOC, reading progress, full-bleed figure_ | _`/archive` — heatmap + posts grouped by year_ |
-| ![Search results with snippet + highlight](docs/screenshot/search.png) | ![Admin post list](docs/screenshot/admin-home.png) |
+| ![Search results with snippet + highlight](docs/screenshot/search.webp) | ![Admin post list](docs/screenshot/admin-home.webp) |
 | _`/search` — diacritic-insensitive, highlighted snippets_ | _`/admin` — post management with EasyMDE editor_ |
 
 ## Stack
