@@ -506,7 +506,20 @@ footer {
     flex-wrap: wrap;
     margin-bottom: 18px;
 }
-.admin-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.admin-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+/* Forms wrapping buttons (logout, delete) must not add their own margin —
+   browsers vary, and any stray gap distorts button sizing visually. */
+.admin-actions form,
+.admin-header-row form {
+    margin: 0;
+    padding: 0;
+    display: inline-flex;
+}
 
 .admin-form { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
 .admin-grid {
@@ -590,8 +603,22 @@ footer {
     appearance: none;
     transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
-/* Native <button> baseline alignment differs from <a>; force consistent. */
-button.admin-btn { font: inherit; font-family: 'Share Tech Mono', monospace; }
+/* Native <button> needs every font property re-asserted because some
+   browsers don't inherit font on <button>. Do NOT use `font: inherit` —
+   that shorthand resets font-size+line-height to body values (17-18px)
+   and bursts the geometry. Assert each property explicitly. */
+button.admin-btn,
+button.admin-btn-sm {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 2px;
+    overflow: visible;            /* old IE/Edge button overflow quirk */
+    width: auto;
+    min-width: 0;
+}
+button.admin-btn-sm { font-size: 10px; }
 .admin-btn:hover {
     background: var(--primary-glow);
     border-color: var(--primary);
