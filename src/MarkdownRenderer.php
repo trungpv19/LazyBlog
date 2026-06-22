@@ -44,7 +44,8 @@ final class MarkdownRenderer
     {
         $this->injected = [];
 
-        $pre = $this->preprocessAdmonitions($markdown);
+        $pre = $this->preprocessStandaloneImages($markdown);
+        $pre = $this->preprocessAdmonitions($pre);
         $html = (string) $this->converter->convert($pre);
         $html = $this->reinjectStashed($html);
         $html = $this->postprocessFreqTags($html);
@@ -53,6 +54,44 @@ final class MarkdownRenderer
         $toc = $this->extractToc($html);
 
         return ['html' => $html, 'toc' => $toc];
+    }
+
+    /**
+     * Promote any line that contains ONLY `![alt](url)` into its own paragraph
+     * by inserting surrounding blank lines. Without this, CommonMark glues the
+     * image into the adjacent paragraph (e.g. `text\n![alt](url)`) and the
+     * figure-wrapping postprocess sees `<p>text<img></p>` — which it skips,
+     * leaving the image inline at natural size with no tint overlay.
+     * Skips lines inside fenced code blocks (```/~~~).
+     */
+    private function preprocessStandaloneImages(string $md): string
+    {
+        $lines = preg_split('/\R/u', $md) ?: [];
+        $inFence = false;
+        $out = [];
+        $imgRe = '/^\s*!\[[^\]]*\]\([^)]+\)\s*$/u';
+
+        foreach ($lines as $i => $line) {
+            if (preg_match('/^\s*(?:```|~~~)/u', $line)) {
+                $inFence = !$inFence;
+                $out[] = $line;
+                continue;
+            }
+            if ($inFence || !preg_match($imgRe, $line)) {
+                $out[] = $line;
+                continue;
+            }
+            if (!empty($out) && trim((string) end($out)) !== '') {
+                $out[] = '';
+            }
+            $out[] = $line;
+            $next = $lines[$i + 1] ?? null;
+            if ($next !== null && trim($next) !== '') {
+                $out[] = '';
+            }
+        }
+
+        return implode("\n", $out);
     }
 
     /**
