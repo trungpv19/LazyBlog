@@ -143,10 +143,10 @@ $favicon = 'data:image/svg+xml,'
     (function () {
         try {
             var t = localStorage.getItem('theme');
-            if (t !== 'green' && t !== 'amber') t = 'green';
+            if (t !== 'green' && t !== 'amber') t = 'amber';
             document.documentElement.setAttribute('data-theme', t);
         } catch (e) {
-            document.documentElement.setAttribute('data-theme', 'green');
+            document.documentElement.setAttribute('data-theme', 'amber');
         }
     })();
     </script>

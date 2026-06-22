@@ -4,22 +4,7 @@
    ========================================================================= */
 
 /* ---------- Theme tokens ---------- */
-:root, [data-theme="green"] {
-    --bg: #0a0e0a;
-    --panel: #0f1a0f;
-    --primary: #39ff14;
-    --primary-dim: #1a7a08;
-    --primary-glow: rgba(57, 255, 20, 0.15);
-    --primary-glow-strong: rgba(57, 255, 20, 0.30);
-    --accent: #ffb700;
-    --accent-dim: #7a5800;
-    --text: #d8efd0;
-    --text-dim: #5a7a55;
-    --border: #1e3a1e;
-    --scan: rgba(57, 255, 20, 0.03);
-}
-
-[data-theme="amber"] {
+:root, [data-theme="amber"] {
     --bg: #100a04;
     --panel: #1a1208;
     --primary: #ffb700;
@@ -32,6 +17,21 @@
     --text-dim: #7a6a55;
     --border: #3a2a1e;
     --scan: rgba(255, 183, 0, 0.03);
+}
+
+[data-theme="green"] {
+    --bg: #0a0e0a;
+    --panel: #0f1a0f;
+    --primary: #39ff14;
+    --primary-dim: #1a7a08;
+    --primary-glow: rgba(57, 255, 20, 0.15);
+    --primary-glow-strong: rgba(57, 255, 20, 0.30);
+    --accent: #ffb700;
+    --accent-dim: #7a5800;
+    --text: #d8efd0;
+    --text-dim: #5a7a55;
+    --border: #1e3a1e;
+    --scan: rgba(57, 255, 20, 0.03);
 }
 
 /* ---------- Reset ---------- */
@@ -825,25 +825,40 @@ html { scroll-behavior: smooth; }
     .back-to-top { bottom: 28px; right: 28px; width: 48px; height: 48px; font-size: 28px; }
 }
 
-/* ---------- Code blocks: language label + copy button ---------- */
+/* ---------- Code blocks: dashed HUD frame on grid background ----------
+   Cross-hatch grid drawn over the panel bg via repeating-linear-gradients
+   in the accent color, plus a dashed accent border around the whole
+   block — reads as a targeting/output frame. */
 .post-body pre {
     position: relative;
-    padding: 36px 16px 14px;
-    background: var(--panel);
-    border: 1px solid var(--primary-dim);
-    border-left: 3px solid var(--primary);
+    padding: 36px 18px 16px;
+    background:
+        repeating-linear-gradient(0deg,
+            rgba(255, 183, 0, 0.05) 0, rgba(255, 183, 0, 0.05) 1px,
+            transparent 1px, transparent 6px),
+        repeating-linear-gradient(90deg,
+            rgba(255, 183, 0, 0.05) 0, rgba(255, 183, 0, 0.05) 1px,
+            transparent 1px, transparent 6px),
+        var(--panel);
+    border: 1px dashed var(--accent-dim);
+    border-radius: 2px;
     font-size: 13px;
     line-height: 1.6;
 }
-.post-body pre code { color: var(--text); background: transparent; padding: 0; }
+.post-body pre code {
+    color: var(--accent);
+    background: transparent;
+    padding: 0;
+    text-shadow: 0 0 4px var(--accent-dim);
+}
 
 .code-lang-tag {
     position: absolute;
     top: 8px;
-    left: 12px;
+    left: 14px;
     font-family: 'Share Tech Mono', monospace;
     font-size: 10px;
-    color: var(--primary-dim);
+    color: var(--accent);
     letter-spacing: 2px;
     text-transform: uppercase;
     pointer-events: none;
