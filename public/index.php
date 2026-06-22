@@ -35,6 +35,7 @@ $router->get('/admin/new', fn () => $admin->newForm());
 $router->get('/admin/edit/{slug}', fn (array $p) => $admin->editForm($p));
 $router->post('/admin/save', fn () => $admin->save());
 $router->post('/admin/delete/{slug}', fn (array $p) => $admin->delete($p));
+$router->post('/admin/preview', fn () => $admin->preview());
 $router->get('/admin', fn () => $admin->index());
 
 // Public.

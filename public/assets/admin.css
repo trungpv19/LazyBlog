@@ -1,0 +1,478 @@
+/* =========================================================================
+   LazyBlog — Admin-only styles
+   Loaded by layout.php only when the request path starts with /admin.
+   Inherits theme tokens (--bg, --primary, etc.) from site.css.
+   ========================================================================= */
+
+/* ---------- Admin canvas — wider than public pages ---------- */
+body.is-admin main { max-width: 1180px; }
+@media (min-width: 1400px) {
+    body.is-admin main { max-width: 1320px; }
+}
+@media (min-width: 1600px) {
+    body.is-admin main { max-width: 1480px; }
+}
+
+/* ---------- Admin shell ---------- */
+.admin-card {
+    max-width: 440px;
+    margin: 0 auto;
+    padding: 28px 24px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 3px;
+}
+.admin-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+.admin-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+/* Forms wrapping buttons (logout, delete) must not add their own margin —
+   browsers vary, and any stray gap distorts button sizing visually. */
+.admin-actions form,
+.admin-header-row form {
+    margin: 0;
+    padding: 0;
+    display: inline-flex;
+}
+
+/* ---------- Edit form ---------- */
+/* Compact, write-focused form. Meta fields cluster on flex rows so the
+   body textarea gets most of the vertical space. */
+.admin-form { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+
+.admin-form-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+.admin-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;        /* allow ellipsis / shrink inside flex */
+}
+.admin-field-grow { flex: 1 1 240px; }
+
+@media (max-width: 600px) {
+    .admin-form-row { gap: 8px; }
+    .admin-form-row .admin-field { flex: 1 1 100% !important; }
+}
+
+.admin-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--primary-dim);
+    text-transform: uppercase;
+    display: block;
+    margin: 0;
+    line-height: 1;
+}
+.admin-label-hint {
+    color: var(--text-dim);
+    text-transform: none;
+    letter-spacing: 1px;
+    font-size: 10px;
+}
+.admin-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Play', system-ui, sans-serif;
+    font-size: 15px;
+    padding: 7px 10px;
+    border-radius: 2px;
+    box-sizing: border-box;
+}
+.admin-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 8px var(--primary-glow);
+}
+.admin-mono { font-family: 'Share Tech Mono', monospace; font-size: 13px; }
+.admin-textarea-body {
+    /* Tall enough to write without scrolling for short posts, but capped so
+       it doesn't dwarf the meta fields on big monitors. Drag handle stays
+       available via resize:vertical for anything longer. */
+    min-height: clamp(360px, 55vh, 600px);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+}
+
+/* ---------- Tag chip input (edit form) ---------- */
+/* Visually identical to .admin-input: same border, padding, height, and
+   focus glow. The wrap holds rendered chips + the entry input. */
+.tag-chip-hidden { display: none; }
+.tag-chip-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    padding: 5px 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    min-height: 35px;
+    box-sizing: border-box;
+}
+.tag-chip-wrap:focus-within {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 8px var(--primary-glow);
+}
+.tag-chip-list { display: contents; }
+.tag-chip-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px 2px 10px;
+    background: var(--primary-glow);
+    border: 1px solid var(--primary-dim);
+    border-radius: 2px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--primary);
+    letter-spacing: 1px;
+}
+.tag-chip-x {
+    background: transparent;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 2px;
+    opacity: 0.7;
+}
+.tag-chip-x:hover { opacity: 1; }
+/* Entry input lives inside the wrap; visually it's just the cursor + text.
+   No own border/background so it inherits the wrap's frame. */
+.tag-chip-entry {
+    flex: 1 1 120px;
+    min-width: 120px;
+    background: transparent !important;
+    border: none !important;
+    padding: 2px 0 !important;
+    margin: 0 !important;
+    height: 22px !important;
+    line-height: 1.4 !important;
+    box-shadow: none !important;
+    font-size: 14px !important;
+    color: var(--text) !important;
+}
+.tag-chip-entry:focus { outline: none; }
+.tag-chip-entry::placeholder { color: var(--text-dim); }
+
+/* ---------- EasyMDE theme integration ---------- */
+.EasyMDEContainer .editor-toolbar {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 2px 2px 0 0;
+    opacity: 1;
+}
+.EasyMDEContainer .editor-toolbar button {
+    color: var(--text) !important;
+    border-radius: 2px;
+}
+.EasyMDEContainer .editor-toolbar button:hover,
+.EasyMDEContainer .editor-toolbar button.active {
+    background: var(--primary-glow) !important;
+    border-color: var(--primary-dim) !important;
+    color: var(--primary) !important;
+}
+.EasyMDEContainer .editor-toolbar i.separator {
+    border-left-color: var(--border);
+    border-right-color: var(--border);
+}
+.EasyMDEContainer .CodeMirror {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    line-height: 1.55;
+    /* Same height envelope as the plain textarea fallback. */
+    min-height: clamp(360px, 55vh, 600px);
+}
+.EasyMDEContainer .CodeMirror-cursor { border-left-color: var(--primary); }
+.EasyMDEContainer .CodeMirror-selected { background: var(--primary-glow) !important; }
+.EasyMDEContainer .editor-statusbar {
+    background: var(--panel);
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    border: 1px solid var(--border);
+    border-top: none;
+}
+.EasyMDEContainer .editor-preview, .EasyMDEContainer .editor-preview-side {
+    background: var(--bg);
+    color: var(--text);
+    border-color: var(--border);
+}
+
+/* Fullscreen + side-by-side: EasyMDE applies its own background:white via
+   .CodeMirror-fullscreen / .editor-toolbar.fullscreen with high specificity,
+   so we override with !important to keep the CRT theme. */
+.EasyMDEContainer .editor-toolbar.fullscreen,
+.editor-toolbar.fullscreen {
+    background: var(--panel) !important;
+    border: 1px solid var(--border) !important;
+    opacity: 1 !important;
+}
+.EasyMDEContainer .CodeMirror-fullscreen,
+.CodeMirror.CodeMirror-fullscreen {
+    background: var(--bg) !important;
+    color: var(--text) !important;
+    border: none !important;
+}
+.CodeMirror-fullscreen .CodeMirror-scroll,
+.EasyMDEContainer .CodeMirror-fullscreen .CodeMirror-scroll {
+    background: var(--bg) !important;
+}
+.editor-preview-side,
+.editor-preview-active-side,
+.EasyMDEContainer .editor-preview-side {
+    background: var(--bg) !important;
+    color: var(--text) !important;
+    border-left: 1px solid var(--border) !important;
+}
+.editor-preview-active,
+.EasyMDEContainer .editor-preview-active {
+    background: var(--bg) !important;
+    color: var(--text) !important;
+}
+/* Preview pane typography matches the post body style */
+.editor-preview h1, .editor-preview h2, .editor-preview h3,
+.editor-preview-side h1, .editor-preview-side h2, .editor-preview-side h3 {
+    color: var(--primary);
+    font-family: 'VT323', monospace;
+}
+.editor-preview a, .editor-preview-side a { color: var(--accent); }
+.editor-preview code, .editor-preview-side code,
+.editor-preview pre, .editor-preview-side pre {
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+/* Hide scanline overlay + flicker on fullscreen so the editor isn't covered */
+body.editor-fullscreen-active::before { display: none; }
+body.editor-fullscreen-active.is-home { animation: none; }
+
+/* ---------- Draft pill ---------- */
+.admin-checkbox-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: var(--primary);
+    border: 1px solid var(--primary-dim);
+    border-radius: 2px;
+    padding: 0 12px;
+    height: 34px;            /* match admin-input visual height (7+15+7+2 border) */
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    user-select: none;
+}
+.admin-checkbox-pill input { accent-color: var(--primary); margin: 0; }
+.admin-checkbox-pill:hover { background: var(--primary-glow); border-color: var(--primary); }
+
+/* ---------- Admin buttons ---------- */
+/* Unified to the dominant theme color (--primary). Reset native <button>
+   user-agent styles so <a class="admin-btn"> and <button class="admin-btn">
+   render identically. Fixed height + box-sizing prevents row-divider artifacts. */
+.admin-btn {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--primary);
+    background: transparent;
+    border: 1px solid var(--primary-dim);
+    padding: 0 14px;
+    margin: 0;
+    letter-spacing: 2px;
+    text-decoration: none;
+    border-radius: 2px;
+    cursor: pointer;
+    text-transform: uppercase;
+    line-height: 1;
+    vertical-align: middle;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+/* Native <button> needs every font property re-asserted because some
+   browsers don't inherit font on <button>. Do NOT use `font: inherit` —
+   that shorthand resets font-size+line-height to body values (17-18px). */
+button.admin-btn,
+button.admin-btn-sm {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 2px;
+    overflow: visible;
+    width: auto;
+    min-width: 0;
+}
+button.admin-btn-sm { font-size: 10px; }
+.admin-btn:hover {
+    background: var(--primary-glow);
+    border-color: var(--primary);
+}
+.admin-btn-primary {
+    background: var(--primary-glow);
+    border-color: var(--primary);
+}
+.admin-btn-primary:hover {
+    background: var(--primary);
+    color: var(--bg);
+}
+.admin-btn-danger {
+    color: #ff7676;
+    border-color: #663030;
+}
+.admin-btn-danger:hover {
+    background: rgba(255, 80, 80, 0.14);
+    border-color: #ff5555;
+    color: #ff9090;
+}
+.admin-btn-sm {
+    height: 26px;
+    font-size: 10px;
+    padding: 0 10px;
+}
+
+/* ---------- Inline status messages ---------- */
+.admin-error {
+    color: #ff8a8a;
+    border-left: 3px solid #ff5555;
+    padding: 8px 12px;
+    background: rgba(255, 80, 80, 0.08);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+}
+.admin-flash {
+    color: var(--primary);
+    border-left: 3px solid var(--primary);
+    padding: 8px 12px;
+    background: var(--primary-glow);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    margin-bottom: 14px;
+}
+
+/* ---------- Admin list table ---------- */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 14px;
+    font-size: 14px;
+    /* Explicit column widths — without this the browser auto-distributes by
+       content, so a row with many tags squeezed the title column. Fixed
+       layout gives the title cell space priority. */
+    table-layout: fixed;
+}
+.admin-table th, .admin-table td {
+    text-align: left;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    word-wrap: break-word;
+}
+/* Column width plan (desktop):
+   DATE 110px · TITLE flex · TAGS 260px · STATUS 80px · ACTIONS 140px */
+.admin-table th:nth-child(1), .admin-table td:nth-child(1) { width: 110px; }
+.admin-table th:nth-child(3), .admin-table td:nth-child(3) { width: 260px; }
+.admin-table th:nth-child(4), .admin-table td:nth-child(4) { width: 80px; text-align: center; }
+.admin-table th:nth-child(5), .admin-table td:nth-child(5) { width: 140px; }
+.admin-table th {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--primary-dim);
+    text-transform: uppercase;
+}
+.admin-table tbody tr:hover { background: var(--panel); }
+
+/* Title cell: stretches to fill the remaining space; long titles ellipsis-
+   truncate; full title shown on hover via title="" attr. */
+.admin-table .admin-title-cell {
+    overflow: hidden;
+}
+.admin-table .admin-title-cell a {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+/* Tags wrap inside their fixed-width column instead of squeezing the
+   title column. */
+.admin-table .admin-mono { line-height: 1.45; }
+/* Action column: flex container, no special padding — fixed-height buttons
+   line up naturally with vertical-align:top across all rows. */
+.admin-table td.admin-row-actions { white-space: nowrap; }
+.admin-row-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+}
+.admin-row-actions .admin-btn { flex: 0 0 auto; }
+.admin-row-actions form { margin: 0; padding: 0; display: inline-flex; }
+
+/* Status dot — replaces bigger LIVE/DRAFT/SCHEDULED text badges.
+   Live: green dot with glow. Draft: muted gray. Scheduled: amber. */
+.admin-status {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    vertical-align: middle;
+    font-size: 0;             /* hide any visible text we keep for a11y */
+    line-height: 0;
+    margin-top: 6px;          /* nudge onto title baseline */
+}
+.admin-status-live {
+    background: #39ff14;
+    box-shadow: 0 0 6px rgba(57, 255, 20, 0.6);
+}
+.admin-status-draft {
+    background: #5a5a5a;
+}
+.admin-status-scheduled {
+    background: #ffb700;
+    box-shadow: 0 0 6px rgba(255, 183, 0, 0.5);
+}
+
+@media (max-width: 600px) {
+    .admin-table thead { display: none; }
+    .admin-table, .admin-table tbody, .admin-table tr, .admin-table td { display: block; width: 100%; }
+    .admin-table tr { padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .admin-table td { padding: 4px 0; border: none; }
+}

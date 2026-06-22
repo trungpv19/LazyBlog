@@ -29,11 +29,39 @@
         });
         observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
 
+        // Server-side preview — POSTs raw markdown to /admin/preview and
+        // uses the real PHP MarkdownRenderer so admonitions (::: highlight,
+        // ::: story) and freq-tag chips render the same as the public page.
+        // Debounced so we don't hammer the server on every keystroke.
+        var previewCache = '';
+        var previewTimer = null;
+        function previewRender(plainText, previewEl) {
+            clearTimeout(previewTimer);
+            previewTimer = setTimeout(function () {
+                fetch('/admin/preview', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+                    body: plainText,
+                    credentials: 'same-origin',
+                }).then(function (r) { return r.text(); })
+                  .then(function (html) {
+                      previewCache = html;
+                      previewEl.innerHTML = html;
+                  })
+                  .catch(function () {
+                      previewEl.innerHTML = '<p style="color:#ff8a8a">// Preview render failed.</p>';
+                  });
+            }, 300);
+            // Return last cached HTML so the panel doesn't flash blank between updates.
+            return previewCache || '<p style="opacity:0.5">Rendering…</p>';
+        }
+
         easyMDE = new EasyMDE({
             element: bodyEl,
             spellChecker: false,
             forceSync: true,            // mirror back to the underlying textarea so form submit works
             autoDownloadFontAwesome: true,
+            previewRender: previewRender,
             autosave: {
                 enabled: true,
                 uniqueId: autosaveId,

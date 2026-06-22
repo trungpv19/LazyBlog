@@ -156,6 +156,9 @@ $favicon = 'data:image/svg+xml,'
     <link href="https://fonts.googleapis.com/css2?family=Play:wght@400;700&family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="/assets/site.css">
+    <?php if (str_starts_with($path, '/admin')): ?>
+        <link rel="stylesheet" href="/assets/admin.css">
+    <?php endif; ?>
 </head>
 <body class="<?php
     $bodyClasses = [];

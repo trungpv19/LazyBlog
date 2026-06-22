@@ -8,6 +8,7 @@ use App\Auth;
 use App\Config;
 use App\Csrf;
 use App\Http;
+use App\MarkdownRenderer;
 use App\Post;
 use App\PostRepository;
 use App\SlugUtil;
@@ -141,6 +142,33 @@ final class AdminController
                 'body' => $post->bodyMarkdown,
             ],
         ]);
+    }
+
+    // ----- Live preview (EasyMDE side-by-side / preview button) -----
+
+    /**
+     * POST /admin/preview — body is raw markdown, response is rendered HTML.
+     * Lets EasyMDE show the SAME output as the public post page, including
+     * LazyBlog admonitions (::: highlight, ::: story) and freq-tag chips —
+     * EasyMDE's default marked.js can't render those.
+     *
+     * Auth-required. CSRF skipped because the endpoint is read-only and
+     * doesn't mutate any state.
+     */
+    public function preview(): void
+    {
+        Auth::requireAuth();
+
+        $raw = file_get_contents('php://input');
+        if (!is_string($raw)) {
+            $raw = '';
+        }
+
+        $rendered = (new MarkdownRenderer())->render($raw);
+
+        header('Content-Type: text/html; charset=utf-8');
+        header('X-Content-Type-Options: nosniff');
+        echo $rendered['html'];
     }
 
     // ----- Save -----
