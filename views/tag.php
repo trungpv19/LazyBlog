@@ -7,7 +7,6 @@ use App\Http;
 ?>
 
 <section>
-    <div class="section-tag">§ TAG — FILTERED FREQUENCY</div>
     <h2 class="tag-page-title">#<?= Http::e($tag) ?></h2>
 
     <?php if ($posts === []): ?>

@@ -180,6 +180,7 @@ $favicon = 'data:image/svg+xml,'
     <div class="header-actions">
         <a class="header-btn" href="/" aria-label="Back to home"<?= $isHome ? ' aria-current="page"' : '' ?>>[ HOME ]</a>
         <a class="header-btn" href="/archive" aria-label="Archive"<?= $path === '/archive' ? ' aria-current="page"' : '' ?>>[ ARCHIVE ]</a>
+        <a class="header-btn" href="/search" aria-label="Search"<?= $path === '/search' ? ' aria-current="page"' : '' ?>>[ SEARCH ]</a>
         <?php if (App\Auth::check()): ?>
             <a class="header-btn" href="/admin" aria-label="Admin"<?= str_starts_with($path, '/admin') ? ' aria-current="page"' : '' ?>>[ ADMIN ]</a>
         <?php endif; ?>

@@ -51,6 +51,7 @@ $llmsCtl = new App\Controllers\LlmsController($llms);
 $feedCtl = new App\Controllers\FeedController($feed);
 $admin = new App\Controllers\AdminController($repo);
 $archive = new App\Controllers\ArchiveController($repo);
+$search = new App\Controllers\SearchController(new App\Searcher($repo));
 
 $router = new App\Router();
 
@@ -74,6 +75,7 @@ $router->get('/llms.txt', fn () => $llmsCtl->index());
 $router->get('/llms-full.txt', fn () => $llmsCtl->full());
 $router->get('/feed.xml', fn () => $feedCtl->show());
 $router->get('/archive', fn () => $archive->show());
+$router->get('/search', fn () => $search->show());
 $router->get('/', fn () => $home->index());
 
 $router->dispatch(

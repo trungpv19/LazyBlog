@@ -47,7 +47,21 @@ final class PostRepository
         }
 
         $decoded = json_decode($raw, true);
-        return is_array($decoded) ? $decoded : [];
+        if (!is_array($decoded)) {
+            return [];
+        }
+
+        // 'file' is stored as a basename (portable across environments —
+        // Docker bind mounts and host paths differ). Resolve to absolute
+        // path against this instance's postsDir.
+        foreach ($decoded as &$entry) {
+            if (isset($entry['file']) && is_string($entry['file']) && !str_contains($entry['file'], '/')) {
+                $entry['file'] = $this->postsDir . '/' . $entry['file'];
+            }
+        }
+        unset($entry);
+
+        return $decoded;
     }
 
     /**
@@ -290,7 +304,10 @@ final class PostRepository
                 'icon' => isset($meta['icon']) ? (string) $meta['icon'] : null,
                 'summary' => isset($meta['summary']) ? (string) $meta['summary'] : null,
                 'author' => self::resolveAuthor($meta['author'] ?? null),
-                'file' => $file,
+                // Store basename only — keeps the index portable between
+                // Docker (/var/www/html/...) and host (./content/...) paths.
+                // Resolved back to absolute in all().
+                'file' => basename($file),
                 'mtime' => (int) filemtime($file),
             ];
 
