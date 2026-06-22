@@ -48,6 +48,7 @@ final class MarkdownRenderer
         $html = (string) $this->converter->convert($pre);
         $html = $this->reinjectStashed($html);
         $html = $this->postprocessFreqTags($html);
+        $html = $this->postprocessFigures($html);
         $html = $this->injectHeadingIds($html);
         $toc = $this->extractToc($html);
 
@@ -190,6 +191,32 @@ final class MarkdownRenderer
             $out .= '<section class="post-section">' . $h2 . $body . '</section>';
         }
         return $out;
+    }
+
+    /**
+     * Wrap standalone `<p><img></p>` lines (markdown's default for an image on
+     * its own paragraph) in `<figure class="post-figure">` with a `<figcaption>`
+     * pulled from the alt text. So `![Caption](url)` on its own line becomes
+     * a captioned figure with the CRT theme-color tint overlay applied in CSS.
+     */
+    private function postprocessFigures(string $html): string
+    {
+        return (string) preg_replace_callback(
+            '/<p>(<img\s+[^>]*src="([^"]+)"[^>]*alt="([^"]*)"[^>]*\/?>)<\/p>/u',
+            static function (array $m): string {
+                $alt = $m[3];
+                $cap = $alt !== ''
+                    ? '<figcaption>' . $alt . '</figcaption>'
+                    : '';
+                // Wrap the <img> in its own div so the theme-color tint
+                // overlay (CSS ::after) only covers the image, not the caption.
+                return '<figure class="post-figure">'
+                    . '<div class="post-figure-image">' . $m[1] . '</div>'
+                    . $cap
+                    . '</figure>';
+            },
+            $html,
+        );
     }
 
     /**
