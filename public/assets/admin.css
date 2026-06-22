@@ -428,6 +428,14 @@ button.admin-btn-sm { font-size: 10px; }
     text-overflow: ellipsis;
     white-space: nowrap;
     vertical-align: middle;
+    /* Default global a { text-decoration: underline } is noisy on a tight
+       table — show underline only on hover/focus as an affordance. */
+    text-decoration: none;
+}
+.admin-table .admin-title-cell a:hover,
+.admin-table .admin-title-cell a:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
 /* Tags wrap inside their fixed-width column instead of squeezing the
    title column. */
