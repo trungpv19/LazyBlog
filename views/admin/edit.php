@@ -13,8 +13,7 @@ $isEdit = $mode === 'edit';
 ?>
 
 <section>
-    <div class="section-tag">§ ADMIN — <?= $isEdit ? 'EDIT POST' : 'NEW POST' ?></div>
-    <h2><?= $isEdit ? 'Edit: ' . Http::e($formValues['title']) : 'New post' ?></h2>
+    <h2><?= $isEdit ? 'EDIT: ' . Http::e($formValues['title']) : 'NEW POST' ?></h2>
 
     <?php if ($formError !== null): ?>
         <p class="admin-error">// <?= Http::e($formError) ?></p>

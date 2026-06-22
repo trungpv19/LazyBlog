@@ -10,8 +10,7 @@ use App\Http;
 <section>
     <div class="admin-header-row">
         <div>
-            <div class="section-tag">§ ADMIN — POSTS</div>
-            <h2>All posts (<?= count($posts) ?>)</h2>
+            <h2>ALL POSTS (<?= count($posts) ?>)</h2>
         </div>
         <div class="admin-actions">
             <a class="admin-btn admin-btn-primary" href="/admin/new">[ NEW POST ]</a>
