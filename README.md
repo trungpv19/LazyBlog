@@ -22,6 +22,17 @@ No database. No framework. No build step. Backup with `rsync`.
 └─────────────────────────────────────────────────────┘
 ```
 
+## Screenshots
+
+| | |
+|---|---|
+| ![Home — amber (default)](docs/screenshot/home-amber.png) | ![Home — green theme](docs/screenshot/home.png) |
+| _Home — amber (default theme)_ | _Home — green theme toggle_ |
+| ![Single post with TOC + reading progress + figure](docs/screenshot/post.png) | ![Archive heatmap + grouped list](docs/screenshot/archive.png) |
+| _Single post — TOC, reading progress, full-bleed figure_ | _`/archive` — heatmap + posts grouped by year_ |
+| ![Search results with snippet + highlight](docs/screenshot/search.png) | ![Admin post list](docs/screenshot/admin-home.png) |
+| _`/search` — diacritic-insensitive, highlighted snippets_ | _`/admin` — post management with EasyMDE editor_ |
+
 ## Stack
 
 - PHP 8.2+ (no framework)
