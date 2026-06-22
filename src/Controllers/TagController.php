@@ -25,10 +25,17 @@ final class TagController
             return;
         }
 
+        $page = max(1, (int) ($_GET['page'] ?? 1));
+        $paged = \App\PostRepository::paginate($this->repo->byTag($tag), $page, 10);
+
         Http::render('tag', [
             'title' => '#' . $tag,
             'tag' => $tag,
-            'posts' => $this->repo->byTag($tag),
+            'posts' => $paged['posts'],
+            'page' => $paged['page'],
+            'totalPages' => $paged['totalPages'],
+            'total' => $paged['total'],
+            'pageBaseUrl' => '/tags/' . rawurlencode($tag),
         ]);
     }
 }

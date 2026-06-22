@@ -72,6 +72,30 @@ final class PostRepository
         ));
     }
 
+    /**
+     * Slice a published-post list with prev/next metadata, used by paginated
+     * views (home, tag pages).
+     *
+     * @param list<array<string,mixed>> $entries
+     * @return array{posts:list<array<string,mixed>>, page:int, totalPages:int, total:int, perPage:int}
+     */
+    public static function paginate(array $entries, int $page, int $perPage = 10): array
+    {
+        $perPage = max(1, $perPage);
+        $total = count($entries);
+        $totalPages = max(1, (int) ceil($total / $perPage));
+        $page = max(1, min($page, $totalPages));
+        $offset = ($page - 1) * $perPage;
+
+        return [
+            'posts' => array_slice($entries, $offset, $perPage),
+            'page' => $page,
+            'totalPages' => $totalPages,
+            'total' => $total,
+            'perPage' => $perPage,
+        ];
+    }
+
     public function bySlug(string $slug): ?Post
     {
         foreach ($this->all() as $entry) {
@@ -208,6 +232,13 @@ final class PostRepository
             throw new RuntimeException('Failed to encode index');
         }
         file_put_contents($this->indexPath, $json, LOCK_EX);
+
+        // Index rebuild means posts may have changed — invalidate downstream
+        // caches so /llms.txt and /feed.xml regenerate on next request instead
+        // of serving stale data.
+        @unlink($this->contentDir . '/.llms.txt');
+        @unlink($this->contentDir . '/.llms-full.txt');
+        @unlink($this->contentDir . '/.feed.xml');
     }
 
     private function loadFromFile(string $file): ?Post

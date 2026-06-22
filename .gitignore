@@ -96,8 +96,9 @@ claude/skills/ai-multimodal/assets/demo-*.claude/session-state/*.tmp
 
 # Gemini CLI settings (symlink to staged .claude/.mcp.json)
 .gemini/settings.json
-# Showoff/marketing assets (images, showcases)
-assets/
+# Showoff/marketing assets at REPO ROOT only — do not let this swallow
+# /public/assets which is the actual web stylesheet directory.
+/assets/
 # Exception: use-mcp ships a persistent tool catalog at assets/tools.json
 !claude/skills/use-mcp/assets/
 !claude/skills/use-mcp/assets/**

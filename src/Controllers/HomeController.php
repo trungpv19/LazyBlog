@@ -16,10 +16,17 @@ final class HomeController
 
     public function index(): void
     {
+        $page = max(1, (int) ($_GET['page'] ?? 1));
+        $paged = PostRepository::paginate($this->repo->published(), $page, 10);
+
         Http::render('home', [
             'title' => (string) Config::get('SITE_TITLE'),
-            'posts' => $this->repo->published(),
+            'posts' => $paged['posts'],
             'tags' => $this->repo->allTags(),
+            'page' => $paged['page'],
+            'totalPages' => $paged['totalPages'],
+            'total' => $paged['total'],
+            'pageBaseUrl' => '/',
         ]);
     }
 }

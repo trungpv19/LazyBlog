@@ -18,7 +18,10 @@ $browserTitle = $isHome || $title === $siteTitle
     ? $siteTitle
     : ($title . ' — ' . $siteTitle);
 
-$canonicalUrl = $siteUrl . $path;
+// Include the (sanitized) query string in the canonical URL so paginated pages
+// are their own canonicals; otherwise SEs treat ?page=2 as duplicate of /.
+$qs = $_SERVER['QUERY_STRING'] ?? '';
+$canonicalUrl = $siteUrl . $path . ($qs !== '' ? '?' . $qs : '');
 
 // Pull $post from the render data when the post view set it.
 $isPost = isset($post) && $post instanceof Post;
@@ -157,7 +160,9 @@ $favicon = 'data:image/svg+xml,'
 <body class="<?= $isHome ? 'is-home' : '' ?>">
 
 <header>
-    <div class="callsign">XV5HP // MAYLAB // HẢI PHÒNG</div>
+    <?php $callsign = (string) Config::get('CALLSIGN', ''); if ($callsign !== ''): ?>
+        <div class="callsign"><?= Http::e($callsign) ?></div>
+    <?php endif; ?>
     <h1><a href="/" class="brand-link"><?= Http::e($siteTitle) ?></a></h1>
     <?php if ($siteDesc !== ''): ?>
         <div class="subtitle">// <?= Http::e($siteDesc) ?></div>

@@ -1,0 +1,675 @@
+/* =========================================================================
+   LazyBlog — CRT Phosphor Terminal
+   Mobile-first base + theme system + components + page-specific styles.
+   ========================================================================= */
+
+/* ---------- Theme tokens ---------- */
+:root, [data-theme="green"] {
+    --bg: #0a0e0a;
+    --panel: #0f1a0f;
+    --primary: #39ff14;
+    --primary-dim: #1a7a08;
+    --primary-glow: rgba(57, 255, 20, 0.15);
+    --primary-glow-strong: rgba(57, 255, 20, 0.30);
+    --accent: #ffb700;
+    --accent-dim: #7a5800;
+    --text: #d8efd0;
+    --text-dim: #5a7a55;
+    --border: #1e3a1e;
+    --scan: rgba(57, 255, 20, 0.03);
+}
+
+[data-theme="amber"] {
+    --bg: #100a04;
+    --panel: #1a1208;
+    --primary: #ffb700;
+    --primary-dim: #7a5800;
+    --primary-glow: rgba(255, 183, 0, 0.15);
+    --primary-glow-strong: rgba(255, 183, 0, 0.30);
+    --accent: #39ff14;
+    --accent-dim: #1a7a08;
+    --text: #efe0c0;
+    --text-dim: #7a6a55;
+    --border: #3a2a1e;
+    --scan: rgba(255, 183, 0, 0.03);
+}
+
+/* ---------- Reset ---------- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+::selection { background: var(--primary); color: var(--bg); text-shadow: none; }
+::-moz-selection { background: var(--primary); color: var(--bg); text-shadow: none; }
+
+/* ---------- Mobile-first base ---------- */
+html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Play', system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+}
+
+@media (min-width: 768px) {
+    html, body { font-size: 17px; line-height: 1.75; }
+}
+@media (min-width: 1200px) {
+    html, body { font-size: 18px; line-height: 1.8; }
+}
+
+/* CRT scanline overlay */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px, var(--scan) 2px, var(--scan) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+}
+
+@keyframes flicker {
+    0%, 92%, 100% { opacity: 1; }
+    93% { opacity: 0.96; }
+    94% { opacity: 1; }
+    96% { opacity: 0.98; }
+}
+body.is-home { animation: flicker 8s infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+    body.is-home { animation: none; }
+}
+
+/* ---------- Typography ---------- */
+h1, h2, h3, .story-title, .post-title {
+    font-family: 'VT323', monospace;
+    color: var(--primary);
+    text-shadow: 0 0 12px var(--primary), 0 0 32px var(--primary-glow-strong);
+    letter-spacing: 2px;
+    line-height: 1.1;
+}
+
+h1 { font-size: clamp(38px, 9vw, 68px); }
+h1 .brand-link { color: inherit; text-decoration: none; }
+h1 .brand-link:hover { text-shadow: 0 0 16px var(--primary), 0 0 48px var(--primary-glow-strong); }
+
+h2 { font-size: clamp(28px, 5vw, 36px); margin: 28px 0 16px; }
+h3 { font-size: clamp(22px, 4vw, 26px); margin: 24px 0 12px; }
+h3 { color: var(--accent); text-shadow: 0 0 8px var(--accent-dim); }
+
+a { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
+a:hover { text-shadow: 0 0 8px var(--primary-glow-strong); }
+
+p { margin: 12px 0; }
+ul, ol { margin: 12px 0 12px 24px; }
+li { margin: 6px 0; }
+
+code, pre {
+    font-family: 'Share Tech Mono', monospace;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 2px;
+}
+pre { padding: 12px 14px; overflow-x: auto; margin: 12px 0; }
+pre code { border: none; padding: 0; background: transparent; }
+
+strong { color: var(--primary); }
+em { color: var(--accent); font-style: italic; }
+
+blockquote {
+    border-left: 3px solid var(--primary-dim);
+    padding: 8px 16px;
+    margin: 16px 0;
+    color: var(--text-dim);
+    background: var(--panel);
+}
+
+/* ---------- Header (centered) ---------- */
+header {
+    border-bottom: 1px solid var(--border);
+    padding: 28px 20px 24px;
+    text-align: center;
+}
+@media (min-width: 768px) {
+    header { padding: 40px 40px 28px; }
+}
+
+.callsign {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--primary-dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-size: 11px;
+    margin-bottom: 6px;
+}
+
+.subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--text-dim);
+    font-size: 12px;
+    margin-top: 12px;
+    letter-spacing: 1px;
+}
+
+.header-actions {
+    margin-top: 18px;
+    display: inline-flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.header-btn {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    background: transparent;
+    border: 1px solid var(--accent-dim);
+    color: var(--accent);
+    padding: 6px 14px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    border-radius: 2px;
+    text-decoration: none;
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+.header-btn:hover { background: var(--primary-glow); border-color: var(--accent); text-shadow: 0 0 6px var(--accent-dim); }
+.header-btn[aria-current="page"] {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* Theme toggle variant: only need data-when swap mechanics here */
+.theme-toggle [data-when] { display: none; }
+[data-theme="green"] .theme-toggle [data-when="green"] { display: inline; }
+[data-theme="amber"] .theme-toggle [data-when="amber"] { display: inline; }
+
+/* ---------- Main layout ---------- */
+main {
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 16px 20px 48px;
+}
+@media (min-width: 768px) {
+    main { padding: 20px 40px 64px; }
+}
+@media (min-width: 1200px) {
+    main { max-width: 1020px; padding: 24px 48px 80px; }
+}
+
+/* The first heading in main shouldn't have a big top margin — header border
+   already separates it from the brand area. */
+main > section:first-child > h2:first-child,
+main > article:first-child > .post-page-title:first-of-type,
+main > article:first-child > .section-tag:first-child {
+    margin-top: 4px;
+}
+
+/* ---------- Footer (site-wide metadata) ---------- */
+footer {
+    border-top: 1px solid var(--border);
+    padding: 28px 20px 28px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-align: left;
+}
+@media (min-width: 768px) {
+    footer { padding: 36px 40px; }
+}
+
+.footer-block {
+    margin-bottom: 22px;
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.footer-block:last-child { margin-bottom: 0; }
+
+.footer-label {
+    color: var(--primary-dim);
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.footer-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.footer-ai a { color: var(--accent); text-decoration: underline; }
+.footer-copyright {
+    text-align: center;
+    color: var(--text-dim);
+    padding-top: 18px;
+    border-top: 1px dashed var(--border);
+    margin-top: 8px;
+    letter-spacing: 3px;
+}
+
+/* ---------- Components ---------- */
+.tag-chip {
+    display: inline-block;
+    padding: 3px 12px;
+    border: 1px solid var(--accent-dim);
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    text-decoration: none;
+    border-radius: 2px;
+    letter-spacing: 1px;
+}
+.tag-chip:hover { background: var(--primary-glow); border-color: var(--accent); }
+
+.view-source-link {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-decoration: none;
+    border: 1px solid var(--accent-dim);
+    padding: 7px 14px;
+}
+.view-source-link:hover { background: var(--primary-glow); border-color: var(--accent); }
+
+/* highlight-box (from markdown ::: highlight) */
+.highlight-box {
+    background: var(--panel);
+    border: 1px solid var(--primary-dim);
+    border-left: 3px solid var(--primary);
+    padding: 16px 18px;
+    margin: 20px 0;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    color: var(--primary);
+    line-height: 1.75;
+}
+.highlight-box p { margin: 6px 0; color: var(--primary); }
+.highlight-box strong { color: var(--primary); }
+
+/* story-card (from markdown ::: story) */
+.story-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 20px;
+    margin: 24px 0;
+    position: relative;
+}
+.story-card::before {
+    content: attr(data-icon);
+    position: absolute;
+    top: 14px; right: 18px;
+    font-size: 26px;
+    opacity: 0.55;
+}
+.story-card .story-title {
+    font-family: 'VT323', monospace;
+    font-size: clamp(22px, 4vw, 26px);
+    color: var(--accent);
+    text-shadow: 0 0 8px var(--accent-dim);
+    margin-bottom: 10px;
+    padding-right: 42px;
+    letter-spacing: 1px;
+}
+.story-card p { margin: 8px 0; color: var(--text); }
+
+/* freq-tag (from markdown unit-pattern <code> upgrade) */
+.freq-tag {
+    display: inline-block;
+    background: var(--primary-glow);
+    border: 1px solid var(--primary-dim);
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    color: var(--primary);
+    margin: 0 2px;
+    white-space: nowrap;
+}
+
+/* ---------- Section tag (used by views) ---------- */
+.section-tag, [class*="section"] > .callsign {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--primary-dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-size: 11px;
+    margin-bottom: 8px;
+}
+
+/* ---------- Home / Tag page: post list ---------- */
+.post-list { list-style: none; padding: 0; }
+.post-item {
+    border-bottom: 1px solid var(--border);
+    padding: 22px 0;
+}
+.post-item:last-child { border-bottom: none; }
+
+.post-meta {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+.post-date { color: var(--primary-dim); text-transform: uppercase; }
+
+.post-title-link { text-decoration: none; display: block; }
+.post-title {
+    font-family: 'VT323', monospace;
+    font-size: clamp(26px, 5vw, 32px);
+    color: var(--primary);
+    text-shadow: 0 0 8px var(--primary-glow-strong);
+    letter-spacing: 1px;
+    display: inline-block;
+    line-height: 1.15;
+}
+.post-title-link:hover .post-title { text-shadow: 0 0 14px var(--primary), 0 0 24px var(--primary-glow-strong); }
+.post-icon { opacity: 0.85; }
+
+.post-summary {
+    color: var(--text);
+    margin-top: 8px;
+    font-size: 1em;
+    line-height: 1.65;
+}
+
+/* Date moved below summary, right-aligned */
+.post-date-row {
+    text-align: right;
+    margin-top: 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+}
+.post-date-row .post-date {
+    color: var(--primary-dim);
+    text-transform: uppercase;
+}
+
+/* ---------- Post page ---------- */
+.post-page-title {
+    margin-bottom: 12px;
+}
+.post-meta-tags {
+    margin-bottom: 28px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.post-body { font-size: 1em; line-height: 1.85; }
+.post-body h2, .post-body h3 { margin-top: 28px; margin-bottom: 14px; }
+.post-body p { margin: 14px 0; }
+.post-body ul, .post-body ol { margin: 14px 0 14px 24px; }
+.post-body li { margin: 8px 0; }
+
+/* ---------- Pagination ---------- */
+.pagination {
+    margin-top: 36px;
+    padding-top: 22px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.page-btn {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    border: 1px solid var(--accent-dim);
+    padding: 7px 14px;
+    text-decoration: none;
+    letter-spacing: 2px;
+    border-radius: 2px;
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+.page-btn:hover {
+    background: var(--primary-glow);
+    border-color: var(--accent);
+}
+.page-btn-disabled {
+    color: var(--text-dim);
+    border-color: var(--border);
+    cursor: not-allowed;
+}
+.page-btn-disabled:hover { background: transparent; border-color: var(--border); }
+.page-indicator {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-align: center;
+    flex: 1;
+}
+@media (max-width: 480px) {
+    .pagination { justify-content: center; }
+    .page-indicator { flex-basis: 100%; order: -1; }
+}
+
+/* Matching TOC link lights up when its h2 enters the viewport (set by JS) */
+.toc-list a.is-active {
+    color: var(--primary);
+    text-shadow: 0 0 6px var(--primary-glow-strong);
+}
+.post-toc-wrap .toc-list a.is-active {
+    border-bottom-color: var(--primary-dim);
+}
+@media (min-width: 768px) {
+    .post-body .post-section { padding-left: 22px; margin: 40px 0; }
+}
+
+.post-footer {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ---------- Tag page (extends post list) ---------- */
+.tag-page-title { color: var(--primary); }
+
+/* ---------- Table of Contents ---------- */
+.toc {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 16px 20px;
+    margin: 24px 0 36px;
+}
+.toc-label {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-size: 11px;
+    margin-bottom: 10px;
+}
+.toc-list { list-style: none; margin: 0; padding: 0; }
+.toc-list li {
+    margin: 4px 0;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    line-height: 1.55;
+}
+.toc-list li::before {
+    content: '› ';
+    color: var(--primary-dim);
+}
+.toc-list li.level-3 { padding-left: 18px; }
+.toc-list li.level-3::before { content: '— '; }
+.toc-list a {
+    color: var(--text);
+    text-decoration: none;
+    border-bottom: 1px dashed transparent;
+}
+.toc-list a:hover {
+    color: var(--primary);
+    border-bottom-color: var(--primary-dim);
+    text-shadow: 0 0 6px var(--primary-glow-strong);
+}
+
+/* Smooth scroll for anchor jumps */
+html { scroll-behavior: smooth; }
+.post-body h2, .post-body h3 { scroll-margin-top: 24px; }
+
+/* ---------- Post layout ----------
+   The post.php template renders the TOC twice:
+     1. `.toc-inline` — always in normal flow, sits just below the post meta on
+        every viewport size. This is the "stays below summary when not scrolled"
+        copy.
+     2. `.post-toc-wrap` — a duplicate that's hidden on mobile and only fades in
+        on desktop after the reader scrolls past a threshold (toggled by JS).
+   The article column width is never affected by the floating TOC.
+*/
+
+/* Mobile: inline TOC handles everything; hide the floating-copy element. */
+.post-toc-wrap { display: none; }
+
+@media (min-width: 1024px) {
+    .post-toc-wrap {
+        display: block;
+        position: fixed;
+        top: 28px;
+        left: 20px;
+        width: 220px;
+        max-height: calc(100vh - 56px);
+        overflow-y: auto;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateX(-12px);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        z-index: 50;
+        margin: 0;
+        background: rgba(15, 26, 15, 0.92); /* var(--panel) at 92% so scanline shows through */
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        padding: 14px 14px 14px 16px;
+        border: 1px solid var(--border);
+        border-left: 2px solid var(--accent-dim);
+        border-radius: 3px;
+    }
+    [data-theme="amber"] .post-toc-wrap {
+        background: rgba(26, 18, 8, 0.92);
+    }
+
+    .post-toc-wrap.floating-visible {
+        opacity: 0.96;
+        pointer-events: auto;
+        transform: translateX(0);
+    }
+
+    .post-toc-wrap .toc {
+        margin: 0;
+        background: transparent;
+        border: none;
+        padding: 0;
+    }
+    .post-toc-wrap .toc-label { margin-bottom: 10px; }
+    .post-toc-wrap .toc-list li { margin: 5px 0; font-size: 12px; line-height: 1.45; }
+
+    /* Custom scrollbar for floating TOC */
+    .post-toc-wrap::-webkit-scrollbar { width: 4px; }
+    .post-toc-wrap::-webkit-scrollbar-thumb { background: var(--primary-dim); border-radius: 2px; }
+    .post-toc-wrap::-webkit-scrollbar-track { background: transparent; }
+}
+
+/* ---------- Back-to-top floating button ---------- */
+.back-to-top {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'VT323', monospace;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 3px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
+    transition: opacity 0.25s ease, transform 0.25s ease, box-shadow 0.2s ease, background 0.2s ease;
+    z-index: 999;
+    text-shadow: 0 0 6px var(--accent-dim);
+}
+.back-to-top.visible {
+    opacity: 0.85;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+.back-to-top:hover {
+    background: var(--primary-glow);
+    box-shadow: 0 0 12px var(--primary-glow-strong);
+    opacity: 1;
+}
+.back-to-top:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 3px;
+}
+
+@media (min-width: 768px) {
+    .back-to-top { bottom: 28px; right: 28px; width: 48px; height: 48px; font-size: 28px; }
+}
+
+/* ---------- Code blocks: language label + copy button ---------- */
+.post-body pre {
+    position: relative;
+    padding: 36px 16px 14px;
+    background: var(--panel);
+    border: 1px solid var(--primary-dim);
+    border-left: 3px solid var(--primary);
+    font-size: 13px;
+    line-height: 1.6;
+}
+.post-body pre code { color: var(--text); background: transparent; padding: 0; }
+
+.code-lang-tag {
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--primary-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    pointer-events: none;
+}
+
+.copy-btn {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    background: var(--panel);
+    border: 1px solid var(--accent-dim);
+    color: var(--accent);
+    padding: 4px 10px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    opacity: 0.55;
+    transition: opacity 0.18s, background 0.18s, border-color 0.18s;
+    border-radius: 2px;
+}
+.post-body pre:hover .copy-btn { opacity: 1; }
+.copy-btn:hover { background: var(--primary-glow); border-color: var(--accent); }
+.copy-btn.copied { color: var(--primary); border-color: var(--primary); }

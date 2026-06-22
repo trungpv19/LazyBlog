@@ -31,6 +31,8 @@ use App\Http;
                 </li>
             <?php endforeach; ?>
         </ul>
+
+        <?php include __DIR__ . '/_pagination.php'; ?>
     <?php endif; ?>
 
     <p style="margin-top: 32px;">
