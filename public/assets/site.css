@@ -186,6 +186,15 @@ p { margin: 12px 0; }
 ul, ol { margin: 12px 0 12px 24px; }
 li { margin: 6px 0; }
 
+/* Horizontal rule — themed thin line with soft phosphor glow. */
+hr {
+    border: 0;
+    height: 1px;
+    background: var(--primary-dim);
+    box-shadow: 0 0 6px var(--primary-glow);
+    margin: 28px 0;
+}
+
 code, pre {
     font-family: 'Share Tech Mono', monospace;
     background: var(--panel);
