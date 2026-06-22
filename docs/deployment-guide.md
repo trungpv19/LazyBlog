@@ -3,6 +3,30 @@
 Target stack: Ubuntu 24.04 LTS (or Debian 12) VPS with Caddy + php-fpm.
 Adapt the paths if you're on a different distro.
 
+## Fast path: `install-vps.sh`
+
+If you just want a working install in one shot, skip directly to
+phases 2–7 by running:
+
+```bash
+# As root on a fresh Debian/Ubuntu/Raspbian host (x86_64 or ARM)
+curl -fsSL https://raw.githubusercontent.com/hieuha/LazyBlog/main/scripts/install-vps.sh -o install-vps.sh
+sudo bash install-vps.sh
+```
+
+That single script does everything phases 2–7 below describe:
+PHP 8.2 (auto-adds Sury / Ondrej repos when needed), Caddy listening
+on `:80`, dedicated `lazyblog` system user, private FPM pool,
+interactive prompts for admin password + site title + URL + author +
+callsign + timezone, daily backup cron, smoke-test, and a summary
+saved to `/var/www/lazyblog/setup-successfully.txt`.
+
+Phase 1 (VPS provisioning) and phase 5 (DNS + TLS) are still manual —
+the script can't book a VPS or point your domain.
+
+The phases below remain useful when you need to customize a step, audit
+what the installer did, or recover after an incident.
+
 ## Phases
 
 1. [Provision the VPS](#1-provision-the-vps)

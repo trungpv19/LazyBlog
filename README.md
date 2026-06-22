@@ -208,6 +208,7 @@ LazyBlog/
 ├── content/                 # gitignored
 │   └── posts/               # YYYY-MM-DD-slug.md files
 ├── scripts/
+│   ├── install-vps.sh       # one-shot bare-metal installer (Debian/Ubuntu/Raspbian)
 │   ├── hash-password.php    # bcrypt helper for ADMIN_PASSWORD_HASH
 │   └── backup-content.sh    # local tarball by default; --remote for rsync
 ├── docs/
@@ -239,6 +240,38 @@ LazyBlog/
 | `ADMIN_PASSWORD_HASH` | bcrypt hash for the admin. Empty = login disabled. |
 | `SESSION_NAME` | Cookie name. Default `lazyblog_sess`. |
 | `SESSION_SECURE` | `true` in production (HTTPS only); `false` for local dev. |
+
+## Deploy to a VPS (bare-metal, no Docker)
+
+One-shot installer for Debian, Ubuntu, and Raspbian (x86_64 and ARM). It
+pins PHP 8.2 (auto-adds `packages.sury.org` or `ppa:ondrej/php` if the
+distro default is older), creates a private FPM pool running as a
+dedicated `lazyblog` user, drops a Caddy site listening on `:80`, sets
+up a daily local-tarball backup cron, and prompts interactively for
+admin password + site title + URL + author + callsign + timezone.
+
+```bash
+# As root on the VPS — Debian/Ubuntu/Raspbian:
+curl -fsSL https://raw.githubusercontent.com/hieuha/LazyBlog/main/scripts/install-vps.sh -o install-vps.sh
+sudo bash install-vps.sh
+```
+
+The summary (URL, paths, backup schedule, next steps) is printed at the
+end and saved to `/var/www/lazyblog/setup-successfully.txt` for later
+reference.
+
+Re-running the script on an already-installed host pulls the latest code,
+refreshes Composer deps, and reloads services — the existing `.env` is
+left untouched.
+
+To switch from HTTP to HTTPS: point DNS at the host, then edit
+`/etc/caddy/Caddyfile` and replace `:80` with your domain — Caddy will
+auto-issue a TLS certificate. After HTTPS works, set `SESSION_SECURE=true`
+in `/var/www/lazyblog/src/.env` and `systemctl restart php8.2-fpm`.
+
+See `docs/deployment-guide.md` for the manual step-by-step playbook if
+you want to customize each phase or understand what the installer does
+under the hood.
 
 ## Build & ship as Docker image
 
