@@ -435,6 +435,8 @@ button.admin-btn-sm { font-size: 10px; }
 .admin-table .admin-title-cell a:hover,
 .admin-table .admin-title-cell a:focus-visible {
     text-decoration: underline;
+    text-decoration-style: dashed;
+    text-decoration-thickness: 1px;
     text-underline-offset: 3px;
 }
 /* Tags wrap inside their fixed-width column instead of squeezing the

@@ -101,7 +101,15 @@ h2 { font-size: clamp(28px, 5vw, 36px); margin: 28px 0 16px; }
 h3 { font-size: clamp(22px, 4vw, 26px); margin: 24px 0 12px; }
 h3 { color: var(--accent); text-shadow: 0 0 8px var(--accent-dim); }
 
-a { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
+/* All underlines are dashed across the site (1px thin dashes) to soften the
+   look vs. the default solid bar — fits the CRT terminal aesthetic. */
+a {
+    color: var(--primary);
+    text-decoration: underline;
+    text-decoration-style: dashed;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+}
 a:hover { text-shadow: 0 0 8px var(--primary-glow-strong); }
 
 p { margin: 12px 0; }
