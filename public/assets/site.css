@@ -491,6 +491,16 @@ footer {
 /* ---------- Tag page (extends post list) ---------- */
 .tag-page-title { color: var(--primary); }
 
+/* ---------- 404 page ---------- */
+.not-found-section {
+    text-align: center;
+    padding-top: 24px;
+}
+.not-found-section .callsign,
+.not-found-section .section-tag { text-align: center; }
+.not-found-section h2 { margin-top: 18px; }
+.not-found-section p { margin: 18px 0; }
+
 /* ---------- Table of Contents ---------- */
 .toc {
     background: var(--panel);
