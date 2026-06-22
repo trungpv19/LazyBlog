@@ -222,11 +222,41 @@ See `plans/260622-1036-personal-blog-php-markdown/plan.md` for the full multi-ph
 1. ✅ Bootstrap (Docker, composer, router, env)
 2. ✅ PostRepository + public read paths + raw `.md` + `llms.txt`
 3. ✅ Admin auth + CRUD (single-password, CSRF, atomic file writes)
-4. ⏳ Editor UX (EasyMDE, tag chips, autosave, unsaved-changes guard)
-5. ⏳ RSS feed `/feed.xml`
+4. ✅ Editor UX (EasyMDE, tag chips, server-side preview, autosave, unsaved-changes guard)
+5. ✅ RSS feed `/feed.xml`
 6. ⏳ Deployment (Caddyfile, backup script, deploy guide)
 
-Phases 1–3 are implemented and live. Phases 4–6 are spec'd in the plan but not yet built.
+Phases 1–5 are implemented and live. Phase 6 is spec'd in the plan but not yet built.
+
+### Phase 4 — Editor UX details
+
+When editing a post at `/admin/edit/{slug}` you get:
+
+- **EasyMDE markdown editor** (CDN, pinned to 2.18.0)
+  - Bold / italic / heading / quote / list / code / link / image toolbar
+  - Custom buttons for the LazyBlog admonitions: `!` inserts `::: highlight`, `💬` inserts `::: story icon="..." title="..."`
+  - `Cmd-P` toggle preview, `F9` side-by-side, `F11` fullscreen
+  - **Server-side preview**: the preview pane POSTs to `/admin/preview` and renders through the SAME `MarkdownRenderer` used for public pages — so `::: highlight`, `::: story`, and freq-tag chips render correctly (EasyMDE's default marked.js can't parse them). Debounced 300ms.
+  - **Autosave** to `localStorage` keyed by slug, 1500ms delay — restored if you reopen the tab after an accidental close
+  - Theme-aware: editor surfaces use `--bg`, `--primary`, etc. and swap with the green ↔ amber toggle
+- **Tag chip input** — comma-separated input becomes clickable pills. Type a tag + `Enter` or `,` to add. Backspace on empty entry removes the last chip. Click `×` on a chip to delete it. Hidden `<input>` keeps the comma-joined value for form submit.
+- **Unsaved-changes guard** — `window.beforeunload` prompts if you try to navigate away with edits. Cleared on actual SAVE so it doesn't fire on submit.
+
+### Phase 5 — RSS feed
+
+`GET /feed.xml` returns a valid RSS 2.0 feed of the latest 20 published posts:
+- Channel: site title, description, language `vi`, `lastBuildDate`, `atom:link rel="self"`
+- Per item: title, link, GUID (permalink), `pubDate` (RFC 2822), description (excerpt), `content:encoded` (full rendered HTML, CDATA-wrapped), one `<category>` per tag
+- Cached to `content/.feed.xml`; invalidated automatically when any post is saved/deleted (same hook as `.index.json` and `.llms.txt`)
+- Sends `ETag` header; honors `If-None-Match` with 304
+- `<link rel="alternate" type="application/rss+xml">` already in every page's `<head>` so reader apps auto-discover
+
+### CSS architecture (security + perf hygiene)
+
+- `public/assets/site.css` — public-only (theme tokens, header/footer, post-list, post-body, TOC, code-copy, scrollspy). **Loaded on every page.**
+- `public/assets/admin.css` — admin-only (`.admin-*`, `.tag-chip-*`, EasyMDE/CodeMirror overrides, `body.is-admin` widths). **Only loaded when path starts with `/admin`.**
+- Public visitors save ~10KB and don't see admin class names in view-source
+- Admin pages load both — theme tokens cascade from `site.css` so `admin.css` inherits CRT palette without redeclaring
 
 ### Phase 3 details — admin lives at `/admin`
 
