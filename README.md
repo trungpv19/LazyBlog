@@ -224,9 +224,16 @@ See `plans/260622-1036-personal-blog-php-markdown/plan.md` for the full multi-ph
 3. ✅ Admin auth + CRUD (single-password, CSRF, atomic file writes)
 4. ✅ Editor UX (EasyMDE, tag chips, server-side preview, autosave, unsaved-changes guard)
 5. ✅ RSS feed `/feed.xml`
-6. ⏳ Deployment (Caddyfile, backup script, deploy guide)
+6. ✅ Deployment (Caddyfile.example, Dockerfile.prod, backup script, `docs/deployment-guide.md`)
 
-Phases 1–5 are implemented and live. Phase 6 is spec'd in the plan but not yet built.
+**All six phases complete.** The plan in `plans/260622-1036-personal-blog-php-markdown/` is fully implemented.
+
+### Phase 6 — Deployment
+
+- **`Caddyfile.example`** — production HTTPS config with security headers, asset caching, dotfile blocking, optional rate-limit on `/admin/login`
+- **`Dockerfile.prod`** — non-root `lazyblog` user, opcache enabled with `validate_timestamps=0`, production php.ini (display_errors off, expose_php off, session.use_strict_mode=1), composer `--no-dev --optimize-autoloader` baked in
+- **`scripts/backup-content.sh`** — idempotent rsync of `content/` to a remote host; designed for cron
+- **`docs/deployment-guide.md`** — step-by-step Ubuntu/Debian VPS playbook covering: VPS provisioning + firewall, runtime install, app deploy as a dedicated `lazyblog` user, Caddy setup, DNS + TLS, admin password, backup cron, zero-downtime update flow, troubleshooting matrix, production-hardening checklist
 
 ### Phase 4 — Editor UX details
 
