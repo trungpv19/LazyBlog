@@ -36,10 +36,15 @@ final class Csrf
 
     /**
      * Verify or 403. Use at the top of every state-changing admin POST handler.
+     * Accepts the token from either `$_POST['_csrf']` (form-encoded requests)
+     * or the `X-CSRF-Token` header (raw-body requests like /admin/preview).
      */
     public static function requireValid(): void
     {
         $posted = $_POST['_csrf'] ?? null;
+        if (!is_string($posted) || $posted === '') {
+            $posted = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
+        }
         if (!self::verify(is_string($posted) ? $posted : null)) {
             http_response_code(403);
             header('Content-Type: text/plain; charset=utf-8');

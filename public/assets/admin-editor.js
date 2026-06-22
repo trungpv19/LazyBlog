@@ -35,12 +35,18 @@
         // Debounced so we don't hammer the server on every keystroke.
         var previewCache = '';
         var previewTimer = null;
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
         function previewRender(plainText, previewEl) {
             clearTimeout(previewTimer);
             previewTimer = setTimeout(function () {
                 fetch('/admin/preview', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+                    headers: {
+                        'Content-Type': 'text/plain; charset=utf-8',
+                        'X-CSRF-Token': csrfToken,
+                    },
                     body: plainText,
                     credentials: 'same-origin',
                 }).then(function (r) { return r.text(); })

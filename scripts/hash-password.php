@@ -47,6 +47,10 @@ if ($password === '') {
     fwrite(STDERR, "ERROR: password cannot be empty\n");
     exit(1);
 }
+if (strlen($password) < 8) {
+    fwrite(STDERR, "ERROR: password must be at least 8 characters (got " . strlen($password) . "). The login throttle helps, but a weak password is still a weak password.\n");
+    exit(1);
+}
 
 $hash = password_hash($password, PASSWORD_BCRYPT);
 

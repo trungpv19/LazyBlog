@@ -162,6 +162,9 @@ $favicon = 'data:image/svg+xml,'
     <link rel="stylesheet" href="/assets/site.css">
     <?php if (str_starts_with($path, '/admin')): ?>
         <link rel="stylesheet" href="/assets/admin.css">
+        <?php if (App\Auth::check()): ?>
+            <meta name="csrf-token" content="<?= Http::e(App\Csrf::token()) ?>">
+        <?php endif; ?>
     <?php endif; ?>
 </head>
 <body class="<?php

@@ -52,23 +52,107 @@ final class Auth
     {
         self::start();
 
+        // Per-IP brute-force throttle — sliding 15-min window. After 10
+        // failures from one IP, all subsequent attempts return false fast
+        // for 15 minutes regardless of the password. Backed by a small
+        // JSON file in the system temp dir (single-server scope; for
+        // multi-host setups put it on shared storage or swap for Redis).
+        $ip = self::clientIp();
+        if (self::tooManyFailures($ip)) {
+            usleep(500_000);
+            return false;
+        }
+
         $hash = (string) Config::get('ADMIN_PASSWORD_HASH', '');
         if ($hash === '') {
             // Soft fail: no hash configured yet — still burn time so callers
             // can't distinguish "no admin set" from "wrong password".
             usleep(500_000);
+            self::recordFailure($ip);
             return false;
         }
 
         if (!password_verify($password, $hash)) {
             usleep(500_000);
+            self::recordFailure($ip);
             return false;
         }
 
+        // Successful login — drop the per-IP failure record so legitimate
+        // sessions don't carry a strike count after a typo.
+        self::clearFailures($ip);
         session_regenerate_id(true);
         $_SESSION['admin'] = true;
         $_SESSION['admin_since'] = time();
         return true;
+    }
+
+    private const RATE_LIMIT_FILE = '/tmp/lazyblog-login-attempts.json';
+    private const RATE_LIMIT_MAX = 10;
+    private const RATE_LIMIT_WINDOW_SEC = 900;  // 15 minutes
+
+    private static function clientIp(): string
+    {
+        // REMOTE_ADDR is the only IP source we trust by default. If you put
+        // LazyBlog behind a reverse proxy that sets X-Forwarded-For, swap
+        // this for a header-aware lookup that strictly validates the proxy.
+        return (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+    }
+
+    /** @return array<string,list<int>> */
+    private static function loadAttempts(): array
+    {
+        if (!is_file(self::RATE_LIMIT_FILE)) {
+            return [];
+        }
+        $raw = @file_get_contents(self::RATE_LIMIT_FILE);
+        if (!is_string($raw) || $raw === '') {
+            return [];
+        }
+        $decoded = json_decode($raw, true);
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    /** @param array<string,list<int>> $attempts */
+    private static function saveAttempts(array $attempts): void
+    {
+        @file_put_contents(self::RATE_LIMIT_FILE, (string) json_encode($attempts), LOCK_EX);
+    }
+
+    private static function tooManyFailures(string $ip): bool
+    {
+        $attempts = self::loadAttempts();
+        $timestamps = $attempts[$ip] ?? [];
+        $cutoff = time() - self::RATE_LIMIT_WINDOW_SEC;
+        $recent = array_values(array_filter($timestamps, static fn (int $t): bool => $t > $cutoff));
+        return count($recent) >= self::RATE_LIMIT_MAX;
+    }
+
+    private static function recordFailure(string $ip): void
+    {
+        $attempts = self::loadAttempts();
+        $cutoff = time() - self::RATE_LIMIT_WINDOW_SEC;
+        $timestamps = $attempts[$ip] ?? [];
+        $timestamps = array_values(array_filter($timestamps, static fn (int $t): bool => $t > $cutoff));
+        $timestamps[] = time();
+        $attempts[$ip] = $timestamps;
+        // Prune IPs whose latest attempt is also outside the window so the
+        // file doesn't grow unbounded.
+        foreach ($attempts as $key => $ts) {
+            if (max($ts) <= $cutoff) {
+                unset($attempts[$key]);
+            }
+        }
+        self::saveAttempts($attempts);
+    }
+
+    private static function clearFailures(string $ip): void
+    {
+        $attempts = self::loadAttempts();
+        if (isset($attempts[$ip])) {
+            unset($attempts[$ip]);
+            self::saveAttempts($attempts);
+        }
     }
 
     public static function check(): bool

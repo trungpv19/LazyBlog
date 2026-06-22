@@ -123,6 +123,13 @@ html::before {
 body.editor-fullscreen-active::after { display: none; }
 html:has(body.editor-fullscreen-active)::before { display: none; }
 
+/* Mobile: drop the corner vignette + bezel. They eat valuable screen space
+   on small viewports and the curve illusion doesn't read on a phone. */
+@media (max-width: 600px) {
+    body::after { display: none; }
+    html::before { display: none; }
+}
+
 /* Phosphor flicker — subtle opacity dips on home only. */
 @keyframes flicker {
     0%, 92%, 100% { opacity: 1; }

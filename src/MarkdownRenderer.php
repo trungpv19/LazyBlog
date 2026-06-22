@@ -32,6 +32,14 @@ final class MarkdownRenderer
 
     public function __construct()
     {
+        // SECURITY: html_input='allow' renders raw HTML inside .md files
+        // verbatim. This is required so the admonition placeholder bridge
+        // (stash → CommonMark → reinjectStashed) survives.
+        //
+        // Trust assumption: posts are author-only. If multi-author writing
+        // is ever added, switch to 'escape' and re-implement admonitions
+        // on the escaped form so writer B cannot XSS readers via writer A's
+        // post. See docs/security.md.
         $this->converter = new CommonMarkConverter([
             'html_input' => 'allow',
             'allow_unsafe_links' => false,

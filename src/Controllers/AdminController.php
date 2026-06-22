@@ -159,12 +159,14 @@ final class AdminController
      * LazyBlog admonitions (::: highlight, ::: story) and freq-tag chips —
      * EasyMDE's default marked.js can't render those.
      *
-     * Auth-required. CSRF skipped because the endpoint is read-only and
-     * doesn't mutate any state.
+     * Auth + CSRF required. Token comes via X-CSRF-Token header since the
+     * body is raw markdown, not form-encoded. SameSite=Lax already blocks
+     * cross-origin POSTs, but the explicit token closes the gap.
      */
     public function preview(): void
     {
         Auth::requireAuth();
+        Csrf::requireValid();
 
         // Cap the preview payload at 256 KB — guards against accidental or
         // malicious massive POSTs that would consume CPU in CommonMark.

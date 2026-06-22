@@ -266,7 +266,11 @@ PHPEOF
     php "$edit_php" "$ENV_FILE" "$hash" "$site_title" "$site_url" "$author" "$callsign" "$tz" || die "Failed to write .env"
     rm -f "$edit_php"
 
-    chown "$APP_USER:www-data" "$ENV_FILE" 2>/dev/null || chown "$APP_USER:$APP_USER" "$ENV_FILE"
+    # Caddy on Debian/Ubuntu runs as the `caddy` user. PHP-FPM pool runs
+    # as `$APP_USER`. .env is read by PHP-FPM only, so owner = app user,
+    # group = caddy (so Caddy could read it if ever needed; harmless when
+    # not). Fall back to APP_USER:APP_USER if the caddy group is absent.
+    chown "$APP_USER:caddy" "$ENV_FILE" 2>/dev/null || chown "$APP_USER:$APP_USER" "$ENV_FILE"
     chmod 640 "$ENV_FILE"
 }
 
@@ -427,7 +431,7 @@ LazyBlog installed — $(date -u +'%Y-%m-%dT%H:%M:%SZ')
 
   Code         $SRC_DIR
   Content      $SRC_DIR/content/posts/
-  .env         $ENV_FILE   (mode 640, $APP_USER:www-data)
+  .env         $ENV_FILE   (mode 640, $APP_USER:caddy)
   FPM pool     /etc/php/$PHP_VER/fpm/pool.d/lazyblog.conf
   Caddy site   /etc/caddy/Caddyfile
 
