@@ -588,7 +588,9 @@ footer {
 }
 .admin-mono { font-family: 'Share Tech Mono', monospace; font-size: 13px; }
 .admin-textarea-body {
-    min-height: 480px;
+    /* Editor takes most of the viewport. floor 520px, otherwise viewport
+       minus the meta rows + header + actions above and below. */
+    min-height: max(520px, calc(100vh - 380px));
     font-family: 'Share Tech Mono', monospace;
     font-size: 14px;
     line-height: 1.6;
@@ -688,7 +690,9 @@ footer {
     font-family: 'Share Tech Mono', monospace;
     font-size: 14px;
     line-height: 1.55;
-    min-height: 480px;
+    /* Same viewport-relative floor as the plain textarea so EasyMDE feels
+       roomy on big screens but still works on a 768-tall laptop. */
+    min-height: max(520px, calc(100vh - 380px));
 }
 .EasyMDEContainer .CodeMirror-cursor { border-left-color: var(--primary); }
 .EasyMDEContainer .CodeMirror-selected { background: var(--primary-glow) !important; }
