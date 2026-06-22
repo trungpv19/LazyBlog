@@ -38,6 +38,24 @@
         var csrfMeta = document.querySelector('meta[name="csrf-token"]');
         var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
 
+        // Upload status overlay — a small fixed pill at the top-right that
+        // shows "Uploading {filename}…" while the request is in flight.
+        // Auto-hides on success/error so the writer always knows whether
+        // anything is happening.
+        var uploadStatusEl = null;
+        function showUploadStatus(text) {
+            if (!uploadStatusEl) {
+                uploadStatusEl = document.createElement('div');
+                uploadStatusEl.id = 'upload-status';
+                document.body.appendChild(uploadStatusEl);
+            }
+            uploadStatusEl.textContent = text;
+            uploadStatusEl.classList.add('visible');
+        }
+        function hideUploadStatus() {
+            if (uploadStatusEl) uploadStatusEl.classList.remove('visible');
+        }
+
         function previewRender(plainText, previewEl) {
             clearTimeout(previewTimer);
             previewTimer = setTimeout(function () {
@@ -83,32 +101,39 @@
             // ![alt](returned-url) at the cursor on success.
             uploadImage: true,
             imageUploadFunction: function (file, onSuccess, onError) {
+                showUploadStatus('Uploading ' + (file.name || 'image') + '…');
+                // Re-read the meta tag each call so token rotation (e.g. on
+                // login) doesn't leave a stale value cached in closure.
+                var meta = document.querySelector('meta[name="csrf-token"]');
+                var token = meta ? meta.getAttribute('content') : '';
+
                 var form = new FormData();
                 form.append('file', file);
                 fetch('/admin/upload', {
                     method: 'POST',
-                    headers: { 'X-CSRF-Token': csrfToken },
+                    headers: { 'X-CSRF-Token': token },
                     body: form,
                     credentials: 'same-origin',
-                    redirect: 'manual',
                 }).then(function (r) {
-                    // Manual redirect handling: opaqueredirect = session
-                    // expired and Auth::requireAuth bounced us to /login.
-                    if (r.type === 'opaqueredirect' || r.status === 0) {
+                    // If we followed a redirect (fetch default), we landed
+                    // on the login page — session expired.
+                    if (r.redirected && r.url.indexOf('/admin/login') !== -1) {
+                        hideUploadStatus();
                         onError('Session expired — refresh the page and log in again.');
                         return;
                     }
-                    // Try JSON first; if the response isn't JSON (PHP error
-                    // page, 403 text, login HTML), surface the raw status +
-                    // body excerpt so the writer sees the actual problem.
+                    // Detect non-JSON responses (PHP error page, plain-text
+                    // 403, HTML login page) and surface the actual content.
                     var ctype = r.headers.get('content-type') || '';
                     if (ctype.indexOf('application/json') === -1) {
                         return r.text().then(function (body) {
+                            hideUploadStatus();
                             var excerpt = body.replace(/\s+/g, ' ').slice(0, 200);
                             onError('HTTP ' + r.status + ' ' + ctype + ' — ' + (excerpt || '(empty body)'));
                         });
                     }
                     return r.json().then(function (data) {
+                        hideUploadStatus();
                         if (!r.ok) {
                             onError('Upload failed (HTTP ' + r.status + '): ' + (data.error || 'unknown'));
                             return;
@@ -116,6 +141,7 @@
                         onSuccess(data.url);
                     });
                 }).catch(function (e) {
+                    hideUploadStatus();
                     onError('Network error: ' + (e.message || e));
                 });
             },

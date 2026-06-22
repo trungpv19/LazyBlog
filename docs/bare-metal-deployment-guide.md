@@ -37,7 +37,8 @@ what the installer did, or recover after an incident.
 6. [Set admin password](#6-set-admin-password)
 7. [Backups](#7-backups)
 8. [Update flow](#8-update-flow)
-9. [Troubleshooting](#9-troubleshooting)
+9. [Logs](#9-logs)
+10. [Troubleshooting](#10-troubleshooting)
 
 ---
 
@@ -215,7 +216,36 @@ sudo systemctl reload php8.2-fpm
 No DB migrations, no asset compile, no container rebuild. Tip: do
 `git pull --ff-only` so you fail fast if local changes exist.
 
-## 9. Troubleshooting
+## 9. Logs
+
+`install-vps.sh` configures these log destinations:
+
+| What | Where | How to tail |
+|------|-------|-------------|
+| Caddy request access | `/var/log/caddy/lazyblog-access.log` | `sudo tail -f /var/log/caddy/lazyblog-access.log` |
+| Caddy runtime / errors / TLS / startup | systemd journal | `sudo journalctl -u caddy -f` |
+| PHP-FPM errors (PHP fatal/warnings, `error_log()`) | systemd journal | `sudo journalctl -u php8.2-fpm -f` |
+| Backup cron output | `/var/log/lazyblog-backup.log` | `sudo tail -f /var/log/lazyblog-backup.log` |
+
+Caddy's access log auto-rotates in-process: 10 MB roll size, keep last 5
+files (~720 hours). No logrotate config needed. PHP errors land in the
+journal because the FPM pool sets `log_errors = On` with no explicit
+`error_log` path → goes to stderr → systemd captures it.
+
+Useful one-liners:
+
+```bash
+# Top 20 client IPs in the last hour
+sudo journalctl -u caddy --since "1 hour ago" | grep -oE 'remote_ip":"[^"]+' | sort | uniq -c | sort -rn | head -20
+
+# Recent 5xx responses
+sudo grep -E '"status":5[0-9]{2}' /var/log/caddy/lazyblog-access.log | tail
+
+# PHP fatal errors today
+sudo journalctl -u php8.2-fpm --since today | grep -iE "fatal|error"
+```
+
+## 10. Troubleshooting
 
 | Symptom | Likely cause + fix |
 |---------|-------------------|

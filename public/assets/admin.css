@@ -516,3 +516,36 @@ button.admin-btn-sm { font-size: 10px; }
         letter-spacing: 2px;
     }
 }
+
+/* ---------- Upload status pill (top-right floating notification) ---------- */
+#upload-status {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 1200;
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    padding: 10px 16px;
+    border-radius: 2px;
+    box-shadow: 0 0 12px var(--primary-glow-strong);
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+#upload-status.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+#upload-status.visible::before {
+    content: '◉ ';
+    animation: upload-pulse 1s ease-in-out infinite;
+}
+@keyframes upload-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.35; }
+}
