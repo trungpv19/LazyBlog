@@ -50,6 +50,7 @@ $tag = new App\Controllers\TagController($repo);
 $llmsCtl = new App\Controllers\LlmsController($llms);
 $feedCtl = new App\Controllers\FeedController($feed);
 $admin = new App\Controllers\AdminController($repo);
+$archive = new App\Controllers\ArchiveController($repo);
 
 $router = new App\Router();
 
@@ -72,6 +73,7 @@ $router->get('/tags/{tag}', fn (array $p) => $tag->show($p));
 $router->get('/llms.txt', fn () => $llmsCtl->index());
 $router->get('/llms-full.txt', fn () => $llmsCtl->full());
 $router->get('/feed.xml', fn () => $feedCtl->show());
+$router->get('/archive', fn () => $archive->show());
 $router->get('/', fn () => $home->index());
 
 $router->dispatch(
