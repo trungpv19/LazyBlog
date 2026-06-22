@@ -157,7 +157,12 @@ $favicon = 'data:image/svg+xml,'
 
     <link rel="stylesheet" href="/assets/site.css">
 </head>
-<body class="<?= $isHome ? 'is-home' : '' ?>">
+<body class="<?php
+    $bodyClasses = [];
+    if ($isHome) $bodyClasses[] = 'is-home';
+    if (str_starts_with($path, '/admin')) $bodyClasses[] = 'is-admin';
+    echo implode(' ', $bodyClasses);
+?>">
 
 <header>
     <?php $callsign = (string) Config::get('CALLSIGN', ''); if ($callsign !== ''): ?>

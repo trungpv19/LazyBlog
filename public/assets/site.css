@@ -202,6 +202,16 @@ main {
     main { max-width: 1020px; padding: 24px 48px 80px; }
 }
 
+/* Admin pages get a wider canvas — admin tables + edit form benefit from
+   more horizontal room than the reading-focused public pages. */
+body.is-admin main { max-width: 1180px; }
+@media (min-width: 1400px) {
+    body.is-admin main { max-width: 1320px; }
+}
+@media (min-width: 1600px) {
+    body.is-admin main { max-width: 1480px; }
+}
+
 /* The first heading in main shouldn't have a big top margin — header border
    already separates it from the brand area. */
 main > section:first-child > h2:first-child,
@@ -715,11 +725,11 @@ button.admin-btn-sm { font-size: 10px; }
     word-wrap: break-word;
 }
 /* Column width plan (desktop):
-   DATE 110px · TITLE flex · TAGS 240px · STATUS 50px · ACTIONS 130px */
+   DATE 110px · TITLE flex · TAGS 260px · STATUS 80px · ACTIONS 140px */
 .admin-table th:nth-child(1), .admin-table td:nth-child(1) { width: 110px; }
-.admin-table th:nth-child(3), .admin-table td:nth-child(3) { width: 240px; }
-.admin-table th:nth-child(4), .admin-table td:nth-child(4) { width: 60px; text-align: center; }
-.admin-table th:nth-child(5), .admin-table td:nth-child(5) { width: 130px; }
+.admin-table th:nth-child(3), .admin-table td:nth-child(3) { width: 260px; }
+.admin-table th:nth-child(4), .admin-table td:nth-child(4) { width: 80px; text-align: center; }
+.admin-table th:nth-child(5), .admin-table td:nth-child(5) { width: 140px; }
 .admin-table th {
     font-family: 'Share Tech Mono', monospace;
     font-size: 11px;
