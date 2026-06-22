@@ -632,6 +632,66 @@ footer {
     }
 }
 
+/* ---------- Tables (GFM) ----------
+   CRT terminal grid: mono font, accent borders, alternating row tint.
+   Horizontally scrolls when wider than the column on narrow screens. */
+.post-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    table-layout: auto;
+}
+.post-body thead {
+    background: var(--panel);
+    border-bottom: 1px solid var(--accent-dim);
+}
+.post-body th {
+    color: var(--accent);
+    font-weight: normal;
+    text-align: left;
+    padding: 10px 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-size: 11px;
+    white-space: nowrap;
+}
+.post-body td {
+    color: var(--text);
+    padding: 8px 14px;
+    border-bottom: 1px dashed var(--border);
+}
+.post-body tbody tr:nth-child(even) td {
+    background: rgba(255, 183, 0, 0.025);
+}
+.post-body tbody tr:hover td {
+    background: var(--primary-glow);
+}
+.post-body table code {
+    font-size: 12px;
+    padding: 1px 5px;
+}
+
+/* ---------- Video embeds (YouTube auto-embed from URL) ----------
+   Stays within the article column (unlike post-figure which breaks out
+   to full viewport). 16:9 aspect ratio via aspect-ratio. */
+.video-embed {
+    width: 100%;
+    margin: 28px 0;
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border: 1px solid var(--primary-dim);
+}
+.video-embed iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
 /* ---------- 404 page ---------- */
 .not-found-section {
     text-align: center;

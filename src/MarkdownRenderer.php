@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App;
 
 use League\CommonMark\CommonMarkConverter;
+use League\CommonMark\Extension\Table\TableExtension;
 
 /**
  * Markdown → HTML with the CRT design pattern library baked in.
@@ -35,6 +36,7 @@ final class MarkdownRenderer
             'html_input' => 'allow',
             'allow_unsafe_links' => false,
         ]);
+        $this->converter->getEnvironment()->addExtension(new TableExtension());
     }
 
     /**
@@ -45,6 +47,7 @@ final class MarkdownRenderer
         $this->injected = [];
 
         $pre = $this->preprocessStandaloneImages($markdown);
+        $pre = $this->preprocessYouTube($pre);
         $pre = $this->preprocessAdmonitions($pre);
         $html = (string) $this->converter->convert($pre);
         $html = $this->reinjectStashed($html);
@@ -54,6 +57,46 @@ final class MarkdownRenderer
         $toc = $this->extractToc($html);
 
         return ['html' => $html, 'toc' => $toc];
+    }
+
+    /**
+     * Replace lines containing ONLY a YouTube URL with a stashed iframe
+     * embed (privacy-friendly youtube-nocookie domain, lazy-loaded). Same
+     * fenced-code-block guard as the image preprocessor.
+     * Supported URL shapes:
+     *   https://www.youtube.com/watch?v=ID(&...)
+     *   https://youtu.be/ID
+     *   https://www.youtube.com/embed/ID
+     */
+    private function preprocessYouTube(string $md): string
+    {
+        $lines = preg_split('/\R/u', $md) ?: [];
+        $inFence = false;
+        $out = [];
+        $pattern = '#^\s*(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?(?:[^&\s]*&)*v=([a-zA-Z0-9_-]{11})|youtu\.be/([a-zA-Z0-9_-]{11})|youtube\.com/embed/([a-zA-Z0-9_-]{11}))[^\s]*\s*$#';
+
+        foreach ($lines as $line) {
+            if (preg_match('/^\s*(?:```|~~~)/u', $line)) {
+                $inFence = !$inFence;
+                $out[] = $line;
+                continue;
+            }
+            if (!$inFence && preg_match($pattern, $line, $m)) {
+                $id = $m[1] !== '' ? $m[1] : ($m[2] !== '' ? $m[2] : $m[3]);
+                if ($id !== '') {
+                    $html = '<figure class="video-embed">'
+                        . '<iframe src="https://www.youtube-nocookie.com/embed/' . $id . '" '
+                        . 'loading="lazy" '
+                        . 'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" '
+                        . 'allowfullscreen></iframe>'
+                        . '</figure>';
+                    $out[] = $this->stash($html);
+                    continue;
+                }
+            }
+            $out[] = $line;
+        }
+        return implode("\n", $out);
     }
 
     /**

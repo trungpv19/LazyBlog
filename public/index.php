@@ -29,6 +29,7 @@ header(
     . "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:; "
     . "img-src 'self' data: https:; "
     . "connect-src 'self'; "
+    . "frame-src https://www.youtube-nocookie.com https://www.youtube.com; "
     . "frame-ancestors 'self'; "
     . "base-uri 'self'; "
     . "form-action 'self';"

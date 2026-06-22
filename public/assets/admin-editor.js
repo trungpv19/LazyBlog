@@ -76,7 +76,7 @@
             toolbar: [
                 'bold', 'italic', 'heading', '|',
                 'quote', 'unordered-list', 'ordered-list', '|',
-                'code', 'link', 'image', '|',
+                'code', 'link', 'image', 'table', '|',
                 {
                     name: 'highlight',
                     action: function (editor) {
