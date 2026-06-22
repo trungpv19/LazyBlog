@@ -512,13 +512,14 @@ footer {
     .page-indicator { flex-basis: 100%; order: -1; }
 }
 
-/* Matching TOC link lights up when its h2 enters the viewport (set by JS) */
+/* Matching TOC link lights up when its h2 enters the viewport (set by JS).
+   Uses a highlighter-style background block (same look as ::selection). */
 .toc-list a.is-active {
-    color: var(--primary);
-    text-shadow: 0 0 6px var(--primary-glow-strong);
-}
-.post-toc-wrap .toc-list a.is-active {
-    border-bottom-color: var(--primary-dim);
+    background: var(--primary);
+    color: var(--bg);
+    padding: 0 4px;
+    text-shadow: none;
+    border-bottom-color: transparent;
 }
 @media (min-width: 768px) {
     .post-body .post-section { padding-left: 22px; margin: 40px 0; }
