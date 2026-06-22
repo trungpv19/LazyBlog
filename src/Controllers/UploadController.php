@@ -61,7 +61,13 @@ final class UploadController
         $relDir = '/uploads/' . date('Y/m');
         $absDir = $this->contentDir . $relDir;
         if (!is_dir($absDir) && !mkdir($absDir, 0755, true) && !is_dir($absDir)) {
-            $this->fail(500, 'Failed to create upload directory.');
+            $this->fail(500, 'Cannot create upload directory: ' . $absDir
+                . '. Check that the parent (' . $this->contentDir
+                . '/uploads) exists and is writable by php-fpm user.');
+        }
+        if (!is_writable($absDir)) {
+            $this->fail(500, 'Upload directory not writable: ' . $absDir
+                . '. chown to the php-fpm user (lazyblog) and chmod 755.');
         }
 
         // Random filename — short enough for a clean URL, long enough to

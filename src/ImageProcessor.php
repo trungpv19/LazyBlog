@@ -40,9 +40,19 @@ final class ImageProcessor
      */
     public static function processToWebp(string $srcPath, string $destPath): array
     {
+        // Sanity check: GD must be loaded with WebP support. Without this
+        // imagewebp() throws "Call to undefined function" which becomes a
+        // 500 HTML page — confusing for the writer in the editor.
+        if (!function_exists('\imagewebp')) {
+            throw new RuntimeException(
+                'PHP GD extension is missing (or missing WebP support). '
+                . 'On Debian/Ubuntu: sudo apt install php8.2-gd && sudo systemctl restart php8.2-fpm'
+            );
+        }
+
         $info = @getimagesize($srcPath);
         if ($info === false) {
-            throw new RuntimeException('Not a recognized image file.');
+            throw new RuntimeException('Not a recognized image file (getimagesize failed).');
         }
         [$srcW, $srcH, $type] = $info;
 
@@ -56,7 +66,11 @@ final class ImageProcessor
 
         $img = self::decode($srcPath, $type);
         if ($img === null) {
-            throw new RuntimeException('Unsupported image type.');
+            $err = error_get_last();
+            throw new RuntimeException(
+                'GD failed to decode image (type=' . $type . '). '
+                . ($err ? 'Last error: ' . $err['message'] : 'No error detail.')
+            );
         }
 
         try {
@@ -80,8 +94,12 @@ final class ImageProcessor
                 $newH = $srcH;
             }
 
-            if (!imagewebp($img, $destPath, self::WEBP_QUALITY)) {
-                throw new RuntimeException('Failed to encode WebP output.');
+            if (!\imagewebp($img, $destPath, self::WEBP_QUALITY)) {
+                $err = error_get_last();
+                throw new RuntimeException(
+                    'Failed to encode WebP output to ' . $destPath . '. '
+                    . ($err ? 'Last error: ' . $err['message'] : '')
+                );
             }
         } finally {
             imagedestroy($img);

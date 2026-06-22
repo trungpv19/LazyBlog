@@ -90,16 +90,33 @@
                     headers: { 'X-CSRF-Token': csrfToken },
                     body: form,
                     credentials: 'same-origin',
+                    redirect: 'manual',
                 }).then(function (r) {
+                    // Manual redirect handling: opaqueredirect = session
+                    // expired and Auth::requireAuth bounced us to /login.
+                    if (r.type === 'opaqueredirect' || r.status === 0) {
+                        onError('Session expired — refresh the page and log in again.');
+                        return;
+                    }
+                    // Try JSON first; if the response isn't JSON (PHP error
+                    // page, 403 text, login HTML), surface the raw status +
+                    // body excerpt so the writer sees the actual problem.
+                    var ctype = r.headers.get('content-type') || '';
+                    if (ctype.indexOf('application/json') === -1) {
+                        return r.text().then(function (body) {
+                            var excerpt = body.replace(/\s+/g, ' ').slice(0, 200);
+                            onError('HTTP ' + r.status + ' ' + ctype + ' — ' + (excerpt || '(empty body)'));
+                        });
+                    }
                     return r.json().then(function (data) {
                         if (!r.ok) {
-                            onError(data.error || ('HTTP ' + r.status));
+                            onError('Upload failed (HTTP ' + r.status + '): ' + (data.error || 'unknown'));
                             return;
                         }
                         onSuccess(data.url);
                     });
                 }).catch(function (e) {
-                    onError(e.message || 'Upload failed.');
+                    onError('Network error: ' + (e.message || e));
                 });
             },
             imageMaxSize: 10 * 1024 * 1024,
