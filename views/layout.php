@@ -164,8 +164,16 @@ $favicon = 'data:image/svg+xml,'
     $bodyClasses = [];
     if ($isHome) $bodyClasses[] = 'is-home';
     if (str_starts_with($path, '/admin')) $bodyClasses[] = 'is-admin';
+    $isPost = str_starts_with($path, '/posts/');
+    if ($isPost) $bodyClasses[] = 'is-post';
     echo implode(' ', $bodyClasses);
 ?>">
+
+<?php if ($isPost): ?>
+<div class="read-progress" aria-hidden="true">
+    <div class="read-progress-fill"></div>
+</div>
+<?php endif; ?>
 
 <header>
     <?php $callsign = (string) Config::get('CALLSIGN', ''); if ($callsign !== ''): ?>
@@ -250,6 +258,30 @@ document.getElementById('theme-toggle').addEventListener('click', function () {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }
+    update();
+})();
+
+/* Reading progress bar — CRT signal-strength style. Only present on
+   post pages (added by layout.php). Sets a CSS custom property to the
+   scroll-through-article percentage; CSS handles the fill + ticks. */
+(function () {
+    var bar = document.querySelector('.read-progress-fill');
+    if (!bar) return;
+    var ticking = false;
+    function update() {
+        var el = document.documentElement;
+        var max = el.scrollHeight - el.clientHeight;
+        var p = max > 0 ? Math.min(100, Math.max(0, (el.scrollTop / max) * 100)) : 0;
+        bar.style.width = p + '%';
+        ticking = false;
+    }
+    window.addEventListener('scroll', function () {
+        if (!ticking) {
+            window.requestAnimationFrame(update);
+            ticking = true;
+        }
+    }, { passive: true });
+    window.addEventListener('resize', update);
     update();
 })();
 

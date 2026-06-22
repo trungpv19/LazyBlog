@@ -884,6 +884,40 @@ html { scroll-behavior: smooth; }
 .copy-btn:hover { background: var(--primary-glow); border-color: var(--accent); }
 .copy-btn.copied { color: var(--primary); border-color: var(--primary); }
 
+/* ---------- Reading progress bar (CRT signal-strength meter) ----------
+   Fixed top stripe on /posts/* pages. Track has 12 vertical "tick" marks
+   like a frequency meter; the fill glows in --primary as the reader
+   scrolls. Hidden under the editor-fullscreen overlay. */
+.read-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--border);
+    z-index: 1100;
+    pointer-events: none;
+    /* Tick marks across the track */
+    background-image:
+        repeating-linear-gradient(
+            90deg,
+            transparent 0,
+            transparent calc(100% / 12 - 1px),
+            rgba(0, 0, 0, 0.6) calc(100% / 12 - 1px),
+            rgba(0, 0, 0, 0.6) calc(100% / 12)
+        );
+}
+.read-progress-fill {
+    height: 100%;
+    width: 0;
+    background: var(--primary);
+    box-shadow:
+        0 0 6px var(--primary),
+        0 0 14px var(--primary-glow-strong);
+    transition: width 0.08s linear;
+}
+body.editor-fullscreen-active .read-progress { display: none; }
+
 /* ---------- Archive page (transmission log heatmap) ----------
    GitHub-style activity grid: columns = weeks (Mon-start), rows = days.
    Cell intensity reflects post count for that day. Clicking a single-post
