@@ -557,32 +557,58 @@ footer {
     font-size: 13px;
 }
 
+/* All admin buttons share the SAME geometry + accent palette. Visual hierarchy
+   comes from a subtle filled background on .admin-btn-primary, not from a
+   different color. Only destructive actions break out into red. */
 .admin-btn {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
     font-family: 'Share Tech Mono', monospace;
     font-size: 11px;
     color: var(--accent);
     background: transparent;
     border: 1px solid var(--accent-dim);
-    padding: 7px 14px;
+    padding: 6px 14px;
     letter-spacing: 2px;
     text-decoration: none;
     border-radius: 2px;
     cursor: pointer;
-    transition: background 0.18s ease, border-color 0.18s ease;
+    text-transform: uppercase;
+    line-height: 1;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
-.admin-btn:hover { background: var(--primary-glow); border-color: var(--accent); }
+.admin-btn:hover {
+    background: var(--primary-glow);
+    border-color: var(--accent);
+    color: var(--accent);
+}
 .admin-btn-primary {
-    color: var(--primary);
-    border-color: var(--primary-dim);
+    background: var(--primary-glow);
+    border-color: var(--accent);
+    color: var(--accent);
 }
-.admin-btn-primary:hover { border-color: var(--primary); background: var(--primary-glow); }
+.admin-btn-primary:hover {
+    background: var(--accent);
+    color: var(--bg);
+}
 .admin-btn-danger {
-    color: #ff5555;
+    color: #ff7676;
     border-color: #663030;
 }
-.admin-btn-danger:hover { background: rgba(255, 80, 80, 0.12); border-color: #ff5555; }
-.admin-btn-sm { font-size: 10px; padding: 4px 8px; }
+.admin-btn-danger:hover {
+    background: rgba(255, 80, 80, 0.14);
+    border-color: #ff5555;
+    color: #ff9090;
+}
+.admin-btn-sm {
+    /* Same colors as .admin-btn, just slightly tighter padding so it fits
+       inside table rows without breaking layout. */
+    min-height: 26px;
+    font-size: 10px;
+    padding: 4px 10px;
+}
 
 .admin-error {
     color: #ff8a8a;
