@@ -90,6 +90,7 @@ playbook.
 | `docs/bare-metal-deployment-guide.md` | Manual VPS playbook (what `install-vps.sh` automates) |
 | `docs/docker-deployment-guide.md` | Docker workflow — dev compose + production image |
 | `docs/backup-and-restore.md` | Backup script, cron, restore drill |
+| `docs/seo-and-social.md` | OG tags, JSON-LD, llms.txt, RSS, how to test link previews |
 | `docs/security.md` | CSP, session hardening, production checklist |
 | `docs/system-architecture.md` | Request lifecycle, render pipeline, file layout |
 
