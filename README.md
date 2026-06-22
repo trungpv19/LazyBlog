@@ -259,26 +259,41 @@ docker build -f Dockerfile.prod -t lazyblog:latest .
 
 ### Run on the VPS
 
-```bash
-# Pull the image
-docker pull ghcr.io/hieuha/lazyblog:latest
+Clone the repo on the VPS, build the image in place, then run it. No
+registry needed.
 
-# Run, bind-mounting content/ + .env from the host so they survive image updates
+```bash
+# On the VPS
+cd /srv/lazyblog
+git clone https://github.com/hieuha/LazyBlog.git src
+cd src
+docker build -f Dockerfile.prod -t lazyblog:latest .
+
+# Run, bind-mounting content/ + .env from the host so they survive image rebuilds
 docker run -d \
     --name lazyblog \
     --restart unless-stopped \
     -v /srv/lazyblog/content:/var/www/html/content \
     -v /srv/lazyblog/.env:/var/www/html/.env:ro \
     -p 127.0.0.1:9000:9000 \
-    ghcr.io/hieuha/lazyblog:latest
+    lazyblog:latest
 ```
 
 Point Caddy at `127.0.0.1:9000` via `php_fastcgi 127.0.0.1:9000` in your
-`Caddyfile`. The root in Caddy stays `/srv/lazyblog/public` — Caddy serves
+`Caddyfile`. The root in Caddy stays `/srv/lazyblog/src/public` — Caddy serves
 static files (assets/, robots.txt, favicon) directly without going through PHP.
 
-Update flow: `docker pull` + `docker stop lazyblog && docker rm lazyblog &&
-docker run ...` — or wrap it in a systemd unit that re-pulls + restarts.
+Update flow:
+
+```bash
+cd /srv/lazyblog/src
+git pull
+docker build -f Dockerfile.prod -t lazyblog:latest .
+docker stop lazyblog && docker rm lazyblog
+docker run -d ... lazyblog:latest    # same flags as above
+```
+
+Wrap the four lines in a systemd unit or shell script for one-shot updates.
 
 ## Backup
 
