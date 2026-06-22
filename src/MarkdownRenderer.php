@@ -1,0 +1,208 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App;
+
+use League\CommonMark\CommonMarkConverter;
+
+/**
+ * Markdown → HTML with the CRT design pattern library baked in.
+ *
+ * Pipeline:
+ *   1. Pre-process custom `::: story` and `::: highlight` fenced blocks. The
+ *      rendered HTML for each block is STASHED in $injected, and the source is
+ *      replaced with a placeholder HTML comment (`<!--LAZY-INJ-N-->`). This
+ *      keeps CommonMark's block parser from being poisoned by raw `<div>` tags
+ *      whose surrounding blank-line spacing it may interpret unpredictably.
+ *   2. Run CommonMark over the markdown + placeholders.
+ *   3. Re-inject stashed HTML in place of each placeholder.
+ *   4. Post-process `<code>` tags matching unit patterns (e.g. `2.3 kHz`) into
+ *      `<span class="freq-tag">` chips.
+ *   5. Inject stable `id` attributes on h2/h3 so the TOC can deep-link.
+ *   6. Extract the TOC.
+ */
+final class MarkdownRenderer
+{
+    private CommonMarkConverter $converter;
+
+    /** @var array<int,string> */
+    private array $injected = [];
+
+    public function __construct()
+    {
+        $this->converter = new CommonMarkConverter([
+            'html_input' => 'allow',
+            'allow_unsafe_links' => false,
+        ]);
+    }
+
+    /**
+     * @return array{html:string, toc:list<array{level:int,id:string,text:string}>}
+     */
+    public function render(string $markdown): array
+    {
+        $this->injected = [];
+
+        $pre = $this->preprocessAdmonitions($markdown);
+        $html = (string) $this->converter->convert($pre);
+        $html = $this->reinjectStashed($html);
+        $html = $this->postprocessFreqTags($html);
+        $html = $this->injectHeadingIds($html);
+        $toc = $this->extractToc($html);
+
+        return ['html' => $html, 'toc' => $toc];
+    }
+
+    /**
+     * Replace `::: story icon="X" title="T" / body / :::` and
+     * `::: highlight / body / :::` fenced blocks with placeholders. The body
+     * is recursively rendered via CommonMark so writers can use full markdown
+     * (lists, bold, links, freq-tag-eligible code) inside admonitions.
+     */
+    private function preprocessAdmonitions(string $md): string
+    {
+        // Story block: requires opening line `::: story attrs...`
+        $md = (string) preg_replace_callback(
+            '/^:::[ \t]*story(?P<attrs>[^\n]*)\n(?P<body>.*?)\n^:::[ \t]*$/sm',
+            function (array $m): string {
+                $attrs = $m['attrs'];
+                $icon = '';
+                $title = '';
+                if (preg_match('/icon\s*=\s*"([^"]*)"/', $attrs, $am)) {
+                    $icon = $am[1];
+                }
+                if (preg_match('/title\s*=\s*"([^"]*)"/', $attrs, $am)) {
+                    $title = $am[1];
+                }
+
+                $iconAttr = $icon !== '' ? ' data-icon="' . htmlspecialchars($icon, ENT_QUOTES) . '"' : '';
+                $titleHtml = $title !== ''
+                    ? '<div class="story-title">' . htmlspecialchars($title, ENT_QUOTES) . '</div>'
+                    : '';
+                $inner = (string) $this->converter->convert($m['body']);
+
+                return $this->stash("<div class=\"story-card\"{$iconAttr}>\n{$titleHtml}\n{$inner}\n</div>");
+            },
+            $md,
+        );
+
+        // Highlight block
+        $md = (string) preg_replace_callback(
+            '/^:::[ \t]*highlight[ \t]*\n(?P<body>.*?)\n^:::[ \t]*$/sm',
+            function (array $m): string {
+                $inner = (string) $this->converter->convert($m['body']);
+                return $this->stash("<div class=\"highlight-box\">\n{$inner}\n</div>");
+            },
+            $md,
+        );
+
+        return $md;
+    }
+
+    /**
+     * Store rendered HTML and return a placeholder fenced by blank lines so
+     * CommonMark always parses it as its own HTML block (Type 2 — HTML comment).
+     */
+    private function stash(string $html): string
+    {
+        $idx = count($this->injected);
+        $this->injected[$idx] = $html;
+        return "\n\n<!--LAZY-INJ-{$idx}-->\n\n";
+    }
+
+    private function reinjectStashed(string $html): string
+    {
+        return (string) preg_replace_callback(
+            '/<!--LAZY-INJ-(\d+)-->/',
+            fn (array $m): string => $this->injected[(int) $m[1]] ?? '',
+            $html,
+        );
+    }
+
+    /**
+     * Add stable `id` slugs to h2 and h3 elements so the TOC can deep-link.
+     * Duplicates get -2, -3 suffixes via the seen-counter.
+     */
+    private function injectHeadingIds(string $html): string
+    {
+        $seen = [];
+        return (string) preg_replace_callback(
+            '/<(h[2-3])>(.*?)<\/\1>/u',
+            static function (array $m) use (&$seen): string {
+                $base = SlugUtil::fromTitle(strip_tags($m[2]));
+                if ($base === '') {
+                    return $m[0];
+                }
+                $id = $base;
+                if (isset($seen[$base])) {
+                    $seen[$base]++;
+                    $id = $base . '-' . $seen[$base];
+                } else {
+                    $seen[$base] = 1;
+                }
+                return "<{$m[1]} id=\"{$id}\">{$m[2]}</{$m[1]}>";
+            },
+            $html,
+        );
+    }
+
+    /**
+     * @return list<array{level:int,id:string,text:string}>
+     */
+    private function extractToc(string $html): array
+    {
+        $toc = [];
+        if (preg_match_all('/<(h[2-3]) id="([^"]+)">(.*?)<\/\1>/u', $html, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $m) {
+                $toc[] = [
+                    'level' => (int) substr($m[1], 1),
+                    'id' => $m[2],
+                    'text' => trim(strip_tags($m[3])),
+                ];
+            }
+        }
+        return $toc;
+    }
+
+    /**
+     * Wrap every `<h2>` plus its following siblings (up to the next `<h2>`)
+     * in a `<section class="post-section">` so each top-level section gets the
+     * CRT left-rail border that the SSTV reference HTML uses.
+     */
+    private function wrapH2Sections(string $html): string
+    {
+        $parts = preg_split(
+            '/(<h2[^>]*>.*?<\/h2>)/u',
+            $html,
+            -1,
+            PREG_SPLIT_DELIM_CAPTURE,
+        );
+        if ($parts === false || count($parts) <= 1) {
+            return $html;
+        }
+
+        $out = $parts[0]; // intro paragraphs (if any) before the first h2
+        $n = count($parts);
+        for ($i = 1; $i < $n; $i += 2) {
+            $h2 = $parts[$i] ?? '';
+            $body = $parts[$i + 1] ?? '';
+            $out .= '<section class="post-section">' . $h2 . $body . '</section>';
+        }
+        return $out;
+    }
+
+    /**
+     * Upgrade `<code>NN(.NN)?\s*UNIT</code>` to `.freq-tag` spans.
+     * Units recognized: Hz, kHz, MHz, GHz, MB, GB, TB, ms, s, min, km, m, cm, mm.
+     */
+    private function postprocessFreqTags(string $html): string
+    {
+        $units = '(?:Hz|kHz|MHz|GHz|MB|GB|TB|ms|s|min|km|m|cm|mm)';
+        return (string) preg_replace(
+            '/<code>(\d+(?:[.,]\d+)?(?:\s*[-–]\s*\d+(?:[.,]\d+)?)?\s*' . $units . ')<\/code>/u',
+            '<span class="freq-tag">$1</span>',
+            $html,
+        );
+    }
+}

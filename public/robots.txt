@@ -1,0 +1,12 @@
+# robots.txt for LazyBlog
+# Spec: https://www.robotstxt.org
+
+User-agent: *
+Allow: /
+
+# llms-full.txt is the concatenated corpus for AI training/embedding;
+# search engines should index individual posts instead.
+Disallow: /llms-full.txt
+
+# Admin area (lands in Phase 3) — never index.
+Disallow: /admin/

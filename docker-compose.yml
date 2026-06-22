@@ -1,0 +1,28 @@
+services:
+  app:
+    build: .
+    container_name: lazyblog-app
+    volumes:
+      - .:/var/www/html
+    working_dir: /var/www/html
+    environment:
+      PHP_OPCACHE_VALIDATE_TIMESTAMPS: "1"
+    restart: unless-stopped
+
+  web:
+    image: caddy:2-alpine
+    container_name: lazyblog-web
+    ports:
+      - "${WEB_PORT:-8080}:8080"
+    volumes:
+      - .:/var/www/html
+      - ./docker/Caddyfile.dev:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
