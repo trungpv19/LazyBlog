@@ -6,7 +6,7 @@ use App\Http;
 ?>
 
 <section>
-    <h2>Latest broadcasts</h2>
+    <h2>> LATEST BROADCASTS</h2>
 
     <?php if ($posts === []): ?>
         <p style="color: var(--text-dim);">// NO POSTS YET. AIRWAVES QUIET.</p>

@@ -29,8 +29,7 @@ $intensity = static function (int $count, bool $inRange): string {
 ?>
 
 <section class="archive-page">
-    <div class="section-tag">§ ARCHIVE — TRANSMISSION LOG</div>
-    <h2 class="archive-title">// <?= $total ?> TRANSMISSION<?= $total === 1 ? '' : 'S' ?></h2>
+    <h2 class="archive-title">> <?= $total ?> TRANSMISSION<?= $total === 1 ? '' : 'S' ?></h2>
     <p class="archive-range">
         FROM <?= Http::e($heatmap['firstDate']) ?>
         &nbsp;→&nbsp;
