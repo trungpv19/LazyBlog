@@ -9,6 +9,11 @@ Dotenv\Dotenv::createImmutable(__DIR__ . '/..')->safeLoad();
 App\Config::boot();
 date_default_timezone_set(App\Config::get('TIMEZONE', 'UTC'));
 
+// Start the session BEFORE any output so layout.php's Auth::check() (used by
+// the `[ ADMIN ]` header button, edit-link on posts, etc.) doesn't trigger
+// "headers already sent" warnings on public routes.
+App\Auth::start();
+
 $repo = new App\PostRepository();
 $renderer = new App\MarkdownRenderer();
 $llms = new App\LlmsBuilder($repo, __DIR__ . '/../content');
