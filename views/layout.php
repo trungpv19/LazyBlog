@@ -35,14 +35,20 @@ $pageDesc = $isPost && $post->summary !== null && $post->summary !== ''
 // og:type — `article` for posts, `website` otherwise.
 $ogType = $isPost ? 'article' : 'website';
 
-// og:image — frontmatter `image:` on posts wins; otherwise site-wide
-// SITE_OG_IMAGE env (set in .env). Telegram, Facebook, Slack, Twitter,
-// Discord all need an absolute URL — prepend SITE_URL when the value
-// starts with `/`. When absent: skip the tag (platforms fall back to
-// title-only card).
-$ogImageRaw = $isPost && !empty($post->image)
-    ? $post->image
-    : (string) Config::get('SITE_OG_IMAGE', '');
+// og:image — three-tier fallback:
+//   1. Per-post `image:` frontmatter
+//   2. First `![alt](url)` found in the body (auto-detect — best UX)
+//   3. Site-wide SITE_OG_IMAGE env
+// Telegram, Facebook, Slack, Twitter, Discord all need an absolute URL —
+// prepend SITE_URL when the value starts with `/`. When all three are
+// empty: skip the tag (platforms fall back to title-only card).
+$ogImageRaw = '';
+if ($isPost) {
+    $ogImageRaw = !empty($post->image) ? $post->image : ($post->firstBodyImage() ?? '');
+}
+if ($ogImageRaw === '') {
+    $ogImageRaw = (string) Config::get('SITE_OG_IMAGE', '');
+}
 $ogImage = '';
 if ($ogImageRaw !== '') {
     $ogImage = str_starts_with($ogImageRaw, 'http')

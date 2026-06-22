@@ -30,6 +30,20 @@ final class Post
     }
 
     /**
+     * Pull the first `![alt](url)` URL out of the body. Used as a fallback
+     * og:image source when the post has no frontmatter `image:` and no
+     * site-wide SITE_OG_IMAGE — so social previews still get a thumbnail
+     * the moment the post has any image at all.
+     */
+    public function firstBodyImage(): ?string
+    {
+        if (preg_match('/!\[[^\]]*\]\(([^)\s]+)/u', $this->bodyMarkdown, $m)) {
+            return $m[1];
+        }
+        return null;
+    }
+
+    /**
      * First ~200 chars of body with markdown punctuation stripped, used for
      * listings, RSS descriptions, and llms.txt entries.
      */
