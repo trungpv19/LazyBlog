@@ -213,6 +213,7 @@ LazyBlog/
 │   └── backup-content.sh    # local tarball by default; --remote for rsync
 ├── docs/
 │   ├── deployment-guide.md  # step-by-step VPS playbook
+│   ├── markdown-syntax.md   # what writers can use in post .md files
 │   └── system-architecture.md  # diagrams, request lifecycle, threat model
 ├── plans/                   # gitignored (private design + phase plans)
 ├── docker/

@@ -1,0 +1,194 @@
+# LazyBlog — Markdown Syntax Reference
+
+What you can write inside a `content/posts/YYYY-MM-DD-slug.md` body.
+Anything not listed here is **not** supported.
+
+The rendering pipeline lives in `src/MarkdownRenderer.php`. Parser is
+[league/commonmark](https://commonmark.thephpleague.com) v2 + GFM
+TableExtension, plus a handful of LazyBlog-specific pre/post processors.
+
+---
+
+## Standard CommonMark
+
+Everything in the CommonMark 0.31 spec works:
+
+- Headings (`#` … `######`) — H2 and H3 also get auto-injected IDs and
+  appear in the post's TOC
+- Bold (`**x**`), italic (`*x*`)
+- Inline code (`` `x` ``) and fenced code blocks (``` ```lang … ``` ```)
+- Lists: unordered (`-`/`*`) and ordered (`1.`)
+- Blockquotes (`> …`)
+- Links: `[text](url)`, `[text](url "title")`
+- Reference-style links: `[text][ref]` + `[ref]: url`
+- Horizontal rule: `---` or `***`
+- Raw HTML is **allowed** (`html_input => allow`) — useful for one-off
+  embeds, but you give up XSS protection for what you write
+
+Not supported (by design — kept the surface small):
+
+- Strikethrough (`~~x~~`)
+- Task lists (`- [ ]`)
+- Footnotes (`[^1]`)
+- Emoji shortcodes (`:smile:`)
+- Plain URL autolinking (write `<https://x.com>` or `[label](url)`)
+
+---
+
+## Tables (GFM)
+
+Pipe-style. The first row is the header; the second is required and
+defines per-column alignment.
+
+```markdown
+| Frequency | Mode     | Notes               |
+|-----------|---------:|:--------------------|
+| 14.230 MHz | SSTV    | RX-only window      |
+| 144.500 MHz| FM       | Calling, simplex    |
+```
+
+Renders full-width with uppercase amber header, dashed row borders, and
+alternating row tint. Wide tables scroll horizontally on mobile.
+
+---
+
+## Frequency / unit tags
+
+Any inline `<code>` whose content matches a number + recognized unit gets
+auto-promoted into a `<span class="freq-tag">` chip. The chip uses the
+accent color so RF / file-size / timing values stand out from the body.
+
+```markdown
+The downlink is on `137.625 MHz` and each pass writes about `8 MB` of IQ.
+```
+
+Recognized units: `Hz, kHz, MHz, GHz, MB, GB, TB, ms, s, min, km, m, cm, mm`
+
+Inline code that isn't a number + unit (e.g. `` `rsync` ``, `` `.env` ``)
+renders as a normal code span.
+
+---
+
+## Standalone images → full-width figure
+
+A line containing **only** `![alt](url)` gets wrapped in
+`<figure class="post-figure">`. The figure breaks out of the article
+column to viewport width on desktop, applies a `mix-blend-mode: multiply`
+overlay in the theme color (so photos feel native to the phosphor
+aesthetic), and shows the alt text as a centered `<figcaption>` below.
+
+```markdown
+![Hai chiếc dish array nhìn từ rooftop, hoàng hôn cam](https://example.com/photo.jpg)
+```
+
+Surrounding blank lines are inserted for you, so this also works inside
+flowing prose:
+
+```markdown
+This is the paragraph just before the photo.
+![Caption goes here](https://example.com/photo.jpg)
+And this paragraph comes right after.
+```
+
+To embed an image inline (not full-width, no caption), drop it inside a
+sentence — `see the diagram ![arrow](…) over here` — and it renders as a
+plain inline `<img>`.
+
+---
+
+## YouTube auto-embed
+
+A line containing **only** a YouTube URL becomes a 16:9 iframe embed
+(privacy-friendly `youtube-nocookie.com` domain, `loading="lazy"`).
+Supported URL shapes:
+
+```markdown
+https://www.youtube.com/watch?v=dQw4w9WgXcQ
+
+https://youtu.be/dQw4w9WgXcQ
+
+https://www.youtube.com/embed/dQw4w9WgXcQ
+```
+
+The same blank-line auto-insertion as images applies — write the URL on
+its own line and it gets promoted to a paragraph automatically.
+
+URLs inside prose (`check this https://youtu.be/abc video`) and inside
+fenced code blocks render as literal text, not embeds.
+
+---
+
+## Admonitions
+
+Two block-level callouts using a `:::` fence.
+
+### Highlight box
+
+For a "key fact / callout" panel. Renders as `<div class="highlight-box">`
+with a phosphor-tinted background.
+
+```markdown
+::: highlight
+SSTV transmissions are slow but resilient — a 36-second image can
+survive QSB that would kill a fast digital mode.
+:::
+```
+
+The body inside `:::` is recursively rendered as markdown — lists, bold,
+links, frequency tags all work.
+
+### Story card
+
+For a longer narrative block, with optional icon + title.
+
+```markdown
+::: story icon="🌕" title="First contact"
+On a January night in 2024, the dish picked up a faint birdie at
+137.100 MHz. It turned out to be METEOR M N2-3 — a satellite I hadn't
+even confirmed was alive.
+:::
+```
+
+The `icon=""` and `title=""` attrs are optional. Body is markdown.
+
+---
+
+## Heading IDs + TOC
+
+Every `<h2>` and `<h3>` in the post body gets:
+
+- An auto-generated ID derived from the heading text (kebab-case,
+  ASCII-folded for Vietnamese diacritics) — so you can link to
+  `/posts/slug#tieu-de-cua-toi`
+- An entry in the post's auto-generated table of contents (the
+  `§ TOC — NAVIGATION` box at the top of every post)
+
+You don't need to do anything to opt in. To opt **out** of the TOC for a
+specific heading, use H4+ (`####` etc.) — those aren't tracked.
+
+---
+
+## File and frontmatter conventions
+
+For completeness — these aren't markdown syntax but they determine how
+the file is picked up at all:
+
+- Filename: `content/posts/YYYY-MM-DD-slug.md` (the date and slug get
+  parsed out of the filename)
+- Frontmatter is YAML, fenced by `---`:
+
+```yaml
+---
+title: "SSTV — Hình Ảnh Qua Sóng Radio"
+date: "2026-06-22"
+author: "XV5HP"
+tags: [radio, sstv, ham]
+draft: false
+summary: "Decode SSTV images off the air with $20 of hardware."
+icon: "📻"
+---
+```
+
+Required: `title`, `date`. Everything else is optional. `draft: true`
+hides the post from listings and feeds (but the file at
+`/posts/{slug}.md` is still served if someone knows the URL).
