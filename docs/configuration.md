@@ -60,6 +60,7 @@ readers find the feed without a URL hint.
 | `POST /admin/save` | Validates + atomic write + cache invalidation |
 | `POST /admin/delete/{slug}` | CSRF-protected unlink |
 | `POST /admin/preview` | Server-side markdown render for EasyMDE preview pane |
+| `POST /admin/upload` | Image upload — strips metadata, resizes to ≤1600px, returns `{url}` pointing at `/uploads/YYYY/MM/...webp` |
 
 ## Reading-experience flags
 

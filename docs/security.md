@@ -27,6 +27,28 @@ Acceptable because posts are author-only. If multi-author writing is added
 later, switch to `'escape'` and re-implement admonition reinjection on the
 escaped form.
 
+## Image upload
+
+`/admin/upload` is a state-changing endpoint guarded by:
+
+- **Auth + CSRF**: `Auth::requireAuth` + `Csrf::requireValid` (token via
+  `X-CSRF-Token` header — body is multipart, not form-encoded)
+- **MIME whitelist** via `finfo` magic-byte check (PNG / JPEG / WebP only).
+  Client-sent `Content-Type` is ignored
+- **Raw byte cap**: 10 MB on the upload itself (`$_FILES['size']`)
+- **Pixel-count cap**: 40 megapixels max before GD decode — bounds RAM
+  usage and prevents decompression bombs
+- **Metadata strip**: source is decoded into a GD truecolor buffer, then
+  re-encoded as WebP. EXIF, GPS, ICC profile, and any vendor chunks are
+  dropped because GD only writes the pixel data
+- **Filename is randomized** (`bin2hex(random_bytes(8))`) so uploads
+  aren't guessable from a slug
+- **Original never persisted**: PHP's temp file is auto-cleaned at end
+  of request; only the cleaned WebP lives on disk
+- **Caddy serves `/uploads/*` directly** from `content/uploads/` —
+  PHP isn't in the hot path, so an attacker can't trick the server into
+  executing uploaded content as code (the dir contains only `.webp`)
+
 ## Auth + session
 
 - **CSRF**: every state-changing POST (login, logout, save, delete) is gated

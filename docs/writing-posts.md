@@ -74,6 +74,18 @@ through the same MarkdownRenderer used for public pages — so `::: highlight`,
 `::: story`, freq-tag chips, image figures, YouTube embeds all render correctly
 (EasyMDE's default marked.js can't parse them). Debounced 300ms.
 
+**Image upload**: drag-drop, paste from clipboard, or the `📤 upload-image`
+toolbar button. Backend strips ALL metadata (EXIF, GPS, ICC, vendor blobs),
+downscales to ≤1600px wide, converts to WebP @ q=82, and saves under
+`content/uploads/YYYY/MM/{rand}.webp`. The original (potentially carrying GPS
+coords or device info) is never persisted — only the cleaned WebP. Accepts
+PNG, JPEG, WebP up to 10 MB. EasyMDE auto-inserts `![alt](url)` at the cursor
+on success. Requires `php8.2-gd` extension (already installed by
+`install-vps.sh` and the Docker images).
+
+**Sticky toolbar**: the formatting toolbar stays pinned to the top of the
+viewport while you scroll a long post, so the buttons stay reachable.
+
 **Autosave** to `localStorage` keyed by slug, 1500ms delay — restored if you
 reopen the tab after an accidental close.
 

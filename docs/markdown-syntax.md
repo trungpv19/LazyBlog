@@ -94,6 +94,11 @@ To embed an image inline (not full-width, no caption), drop it inside a
 sentence — `see the diagram ![arrow](…) over here` — and it renders as a
 plain inline `<img>`.
 
+**Where the URL comes from**: paste any HTTPS URL, or use the admin UI's
+upload feature (drag-drop / clipboard paste / `📤 upload-image` toolbar
+button) — it'll insert `![alt](/uploads/YYYY/MM/{rand}.webp)` for you,
+already metadata-stripped and resized.
+
 ---
 
 ## YouTube auto-embed

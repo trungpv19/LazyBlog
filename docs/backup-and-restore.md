@@ -9,6 +9,7 @@ nothing.
 ```
 content/
 ├── posts/                  # your authored markdown files
+├── uploads/                # admin-UI image uploads, year/month subdirs
 ├── .index.json             # frontmatter cache — regenerated on demand
 ├── .llms.txt               # derived cache — regenerated on demand
 ├── .llms-full.txt          # derived cache — regenerated on demand
@@ -16,8 +17,10 @@ content/
 ```
 
 The `.*` dotfiles are caches that rebuild automatically when posts change,
-so the backup is technically `content/posts/` — but the script archives the
-whole `content/` directory which is simpler and only adds a few KB.
+so the only state you really need to preserve is `content/posts/` and
+`content/uploads/`. The script archives the whole `content/` directory
+which is simpler — caches add a few KB, uploads add whatever you've
+uploaded (typically a few MB per post with images).
 
 ## Helper script
 
