@@ -205,9 +205,17 @@ $favicon = 'data:image/svg+xml,'
         </div>
     <?php endif; ?>
 
-    <div class="footer-copyright">
-        <?= Http::e(strtoupper($siteTitle)) ?> TERMINAL // <?= date('Y') ?> // 73 DE <?= Http::e(strtoupper($siteTitle)) ?>
-    </div>
+    <?php
+        // Footer sign-off — configurable via FOOTER_SIGNOFF env. Supports {year}
+        // token for auto-update. Empty value hides the line entirely.
+        $footerSignoff = (string) Config::get('FOOTER_SIGNOFF', '');
+        if ($footerSignoff !== '') {
+            $footerSignoff = str_replace('{year}', date('Y'), $footerSignoff);
+        }
+    ?>
+    <?php if ($footerSignoff !== ''): ?>
+        <div class="footer-copyright"><?= Http::e($footerSignoff) ?></div>
+    <?php endif; ?>
 </footer>
 
 <button id="back-to-top" class="back-to-top" aria-label="Back to top" title="Back to top">↑</button>
