@@ -1,5 +1,9 @@
 # LazyBlog
 
+[![Release](https://img.shields.io/github/v/release/hieuha/LazyBlog?color=39ff14&label=release)](https://github.com/hieuha/LazyBlog/releases/latest)
+[![License](https://img.shields.io/badge/license-MIT-ffb700)](LICENSE)
+[![PHP](https://img.shields.io/badge/php-8.2%2B-39ff14)](composer.json)
+
 A simple personal blog. Posts are markdown files on disk, rendered by ~3000
 lines of plain PHP, served by Caddy + php-fpm. CRT phosphor terminal
 aesthetic. AI-friendly by design — every post is also available as raw
