@@ -43,8 +43,9 @@ use App\Http;
                 <?php foreach ($posts as $entry): ?>
                     <tr>
                         <td class="admin-mono"><?= Http::e((string) $entry['date']) ?></td>
-                        <td>
-                            <a href="/posts/<?= Http::e((string) $entry['slug']) ?>" target="_blank">
+                        <td class="admin-title-cell">
+                            <a href="/posts/<?= Http::e((string) $entry['slug']) ?>" target="_blank"
+                               title="<?= Http::e((string) $entry['title']) ?>">
                                 <?php if (!empty($entry['icon'])): ?><?= Http::e((string) $entry['icon']) ?> <?php endif; ?>
                                 <?= Http::e((string) $entry['title']) ?>
                             </a>

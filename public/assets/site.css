@@ -686,6 +686,28 @@ button.admin-btn-sm { font-size: 10px; }
     text-transform: uppercase;
 }
 .admin-table tbody tr:hover { background: var(--panel); }
+
+/* Long titles must stay on one line — keeps the row height stable and
+   prevents EDIT/DEL from drifting away from the date. Full title shown on
+   hover via the title="" attribute. */
+.admin-table .admin-title-cell {
+    max-width: 320px;
+    overflow: hidden;
+}
+.admin-table .admin-title-cell a {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+@media (min-width: 1024px) {
+    .admin-table .admin-title-cell { max-width: 460px; }
+}
+@media (min-width: 1400px) {
+    .admin-table .admin-title-cell { max-width: 620px; }
+}
 /* Action column: flex container, no special padding — fixed-height buttons
    line up naturally with vertical-align:top across all rows. */
 .admin-table td.admin-row-actions { white-space: nowrap; }
