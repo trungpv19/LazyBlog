@@ -26,7 +26,8 @@ final class TagController
         }
 
         $page = max(1, (int) ($_GET['page'] ?? 1));
-        $paged = \App\PostRepository::paginate($this->repo->byTag($tag), $page, 10);
+        $perPage = max(1, (int) \App\Config::get('POSTS_PER_PAGE', '10'));
+        $paged = \App\PostRepository::paginate($this->repo->byTag($tag), $page, $perPage);
 
         Http::render('tag', [
             'title' => '#' . $tag,

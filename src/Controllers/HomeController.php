@@ -17,7 +17,8 @@ final class HomeController
     public function index(): void
     {
         $page = max(1, (int) ($_GET['page'] ?? 1));
-        $paged = PostRepository::paginate($this->repo->published(), $page, 10);
+        $perPage = max(1, (int) Config::get('POSTS_PER_PAGE', '10'));
+        $paged = PostRepository::paginate($this->repo->published(), $page, $perPage);
 
         Http::render('home', [
             'title' => (string) Config::get('SITE_TITLE'),
