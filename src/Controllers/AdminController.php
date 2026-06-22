@@ -159,7 +159,9 @@ final class AdminController
     {
         Auth::requireAuth();
 
-        $raw = file_get_contents('php://input');
+        // Cap the preview payload at 256 KB — guards against accidental or
+        // malicious massive POSTs that would consume CPU in CommonMark.
+        $raw = file_get_contents('php://input', false, null, 0, 262_144);
         if (!is_string($raw)) {
             $raw = '';
         }
@@ -290,6 +292,10 @@ final class AdminController
     private static function safeRedirectTarget(string $url): bool
     {
         if ($url === '' || $url[0] !== '/' || str_starts_with($url, '//')) {
+            return false;
+        }
+        // Reject CRLF, tab, NUL — header injection vectors.
+        if (preg_match('/[\r\n\t\0]/', $url)) {
             return false;
         }
         return true;

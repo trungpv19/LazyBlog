@@ -9,6 +9,31 @@ Dotenv\Dotenv::createImmutable(__DIR__ . '/..')->safeLoad();
 App\Config::boot();
 date_default_timezone_set(App\Config::get('TIMEZONE', 'UTC'));
 
+// -----------------------------------------------------------------------------
+// Global defense-in-depth headers — Caddy sets these in prod via Caddyfile,
+// but this catches dev `php -S`, Apache via .htaccess, and any future
+// nginx setups too. Cheap to set on every request.
+// -----------------------------------------------------------------------------
+header_remove('X-Powered-By');                                  // hide PHP version
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: SAMEORIGIN');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header(
+    "Content-Security-Policy: "
+    . "default-src 'self'; "
+    // 'unsafe-inline' is required by the pre-paint theme script in layout.php
+    // and the inline scrollspy/back-to-top/copy-button scripts. EasyMDE loads
+    // from jsdelivr. No external script CDNs beyond that are allowed.
+    . "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+    . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
+    . "font-src 'self' https://fonts.gstatic.com data:; "
+    . "img-src 'self' data:; "
+    . "connect-src 'self'; "
+    . "frame-ancestors 'self'; "
+    . "base-uri 'self'; "
+    . "form-action 'self';"
+);
+
 // Start the session BEFORE any output so layout.php's Auth::check() (used by
 // the `[ ADMIN ]` header button, edit-link on posts, etc.) doesn't trigger
 // "headers already sent" warnings on public routes.

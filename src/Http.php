@@ -41,6 +41,12 @@ final class Http
 
     public static function redirect(string $location, int $code = 302): never
     {
+        // Strip CRLF + control chars to defeat HTTP response splitting.
+        // PHP 8 mostly already rejects these in header() but defense-in-depth.
+        $location = (string) preg_replace('/[\r\n\t\0]/', '', $location);
+        if ($location === '') {
+            $location = '/';
+        }
         http_response_code($code);
         header('Location: ' . $location);
         exit;
