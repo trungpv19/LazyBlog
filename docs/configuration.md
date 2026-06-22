@@ -1,0 +1,76 @@
+# Configuration
+
+## `.env` variables
+
+| Key | Required | Purpose |
+|-----|----------|---------|
+| `SITE_TITLE` | yes | Brand shown in header, `<title>`, and og:title |
+| `SITE_URL` | yes | Canonical URL base — used by og:url, llms.txt links, RSS guid |
+| `SITE_DESCRIPTION` | no | Default meta description; overridden by post `summary` on post pages |
+| `TIMEZONE` | yes | PHP `date_default_timezone_set` value (e.g. `Asia/Saigon`) |
+| `CALLSIGN` | no | Small line above the site title (e.g. `XV5HP // STATION // CITY`). Empty hides it |
+| `DEFAULT_AUTHOR` | no | Author shown when a post has no `author:` frontmatter |
+| `FOOTER_SIGNOFF` | no | Copyright line at the bottom. Supports `{year}` token. Empty hides the line |
+| `POSTS_PER_PAGE` | no | Page size on home + tag listings. Default `10` |
+| `ADMIN_PASSWORD_HASH` | yes for admin | bcrypt hash. Empty = login disabled — site is read-only |
+| `SESSION_NAME` | no | Cookie name. Default `lazyblog_sess` |
+| `SESSION_SECURE` | yes for HTTPS | `true` in production (HTTPS-only cookie); `false` for local HTTP dev |
+
+Generate the password hash with the interactive helper:
+
+```bash
+php scripts/hash-password.php
+# Paste the printed line into .env as ADMIN_PASSWORD_HASH="..."
+```
+
+Without `ADMIN_PASSWORD_HASH`, login is disabled and the site is read-only.
+You can still edit posts by writing markdown files into `content/posts/`.
+
+## URL routes
+
+### Public
+
+| Path | Purpose |
+|------|---------|
+| `/` | Home — paginated post list (`?page=N`) |
+| `/posts/{slug}` | Rendered HTML post |
+| `/posts/{slug}.md` | Raw markdown of the post (`text/markdown`) |
+| `/tags/{tag}` | Posts filtered by tag (`?page=N`) |
+| `/archive` | Posting heatmap + chronological list grouped by year |
+| `/search?q=...` | Diacritic-insensitive search across title, tags, body |
+| `/feed.xml` | RSS 2.0 of the latest 20 posts (ETag + 304) |
+| `/llms.txt` | Site index per [llmstxt.org](https://llmstxt.org) |
+| `/llms-full.txt` | Every published post concatenated for LLM consumption |
+| `/robots.txt` | `Disallow: /admin/` + `Disallow: /llms-full.txt` |
+
+Each rendered post page also includes `<link rel="alternate" type="text/markdown">`
+in `<head>` so AI agents auto-discover the raw source, and
+`<link rel="alternate" type="application/rss+xml" href="/feed.xml">` so RSS
+readers find the feed without a URL hint.
+
+### Admin (auth required)
+
+| Path | Purpose |
+|------|---------|
+| `GET /admin/login` · `POST /admin/login` | Single-password login (bcrypt) |
+| `POST /admin/logout` | CSRF-protected session destroy |
+| `GET /admin` | List every post — live · draft · scheduled |
+| `GET /admin/new` | Blank edit form |
+| `GET /admin/edit/{slug}` | Prefilled edit form |
+| `POST /admin/save` | Validates + atomic write + cache invalidation |
+| `POST /admin/delete/{slug}` | CSRF-protected unlink |
+| `POST /admin/preview` | Server-side markdown render for EasyMDE preview pane |
+
+## Reading-experience flags
+
+These are styling defaults baked into `public/assets/site.css`, not env vars
+— editing them means tweaking the CSS:
+
+- **Theme**: amber (default) ↔ green (toggle in header). Persists in `localStorage`
+- **CRT scanlines + vignette + bezel**: layered fixed overlays at z-index 998–1000
+- **Heading glow + chromatic-aberration RGB split**: respects `prefers-reduced-motion`
+- **Auto TOC** on posts with ≥3 headings — inline on mobile, floats to left rail on desktop
+- **Reading progress bar** on `/posts/*` — fixed top, fills with theme accent as you scroll
+- **Image full-bleed** + theme tint via `mix-blend-mode: multiply`
+- **Back-to-top** button after ~400px of scroll
+- **Code blocks** as HUD-style targeting frame (cross-grid bg + dashed border + language label + copy button)

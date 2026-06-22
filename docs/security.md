@@ -1,0 +1,83 @@
+# Security
+
+LazyBlog is single-author. The threat model is "drive-by web attacker" +
+"someone scans the open internet". Not multi-tenant, not high-value-target.
+Defenses below are scoped to that.
+
+## Application-layer defenses
+
+- `.env` is **never committed**. Web root is `public/`; `.env` lives one dir up
+- `content/` is fully gitignored — posts stay on the host
+- Caddy + `Dockerfile.prod` both block `/.env*`, `/Dockerfile`, `/docker-compose.yml`, dotfiles → 404
+- CommonMark `allow_unsafe_links: false` blocks `javascript:` URLs
+- All variables from frontmatter or URL params reach views via `Http::e()`
+  (`htmlspecialchars(ENT_QUOTES, 'UTF-8')`)
+- **Path traversal blocked**: URL slugs are never used as filesystem paths.
+  PostRepository looks up entries via the index cache (closed set from `glob()`)
+- **Atomic writes**: FileWriter uses `tempnam` + `LOCK_EX` + `rename`. Crash
+  mid-write leaves the previous file intact
+- **RSS XML safety**: FeedBuilder uses DOMDocument; never string-concatenates
+
+## Trust assumption: raw HTML in markdown
+
+`html_input: 'allow'` is set so the admonition placeholder bridge works.
+This means **raw HTML inside `.md` files is rendered as-is**.
+
+Acceptable because posts are author-only. If multi-author writing is added
+later, switch to `'escape'` and re-implement admonition reinjection on the
+escaped form.
+
+## Auth + session
+
+- **CSRF**: every state-changing POST (login, logout, save, delete) is gated
+  by `Csrf::requireValid()` — `random_bytes(32)`, `hash_equals` verify
+- **Open redirect**: `safeRedirectTarget()` validates `?next=` (must start
+  with `/`, not `//`, no CRLF/tab/NUL). `Http::redirect()` strips control
+  chars too
+- **Session hardening**: `session.use_strict_mode = 1`,
+  `session.use_only_cookies = 1`, `HttpOnly`, `SameSite=Lax`, `Secure` when
+  `SESSION_SECURE=true`. Session ID regenerated on login. 500ms delay on
+  failed password attempts
+- **Preview DoS**: `/admin/preview` reads at most 256KB from the request body
+
+## Response headers (set on every request)
+
+```
+X-Content-Type-Options: nosniff
+X-Frame-Options:        SAMEORIGIN
+Referrer-Policy:        strict-origin-when-cross-origin
+Permissions-Policy:     geolocation=(), camera=(), microphone=(), payment=()
+Content-Security-Policy: default-src 'self';
+    script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;
+    font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:;
+    img-src 'self' data: https:;
+    connect-src 'self';
+    frame-src https://www.youtube-nocookie.com https://www.youtube.com;
+    frame-ancestors 'self';
+    base-uri 'self';
+    form-action 'self';
+```
+
+`X-Powered-By` is removed so the PHP version doesn't leak.
+
+## Production hardening checklist
+
+Items done in code (verify on your specific deploy):
+
+- [x] Non-root user in `Dockerfile.prod` (`lazyblog` UID 1000)
+- [x] Non-root user in `scripts/install-vps.sh` (`lazyblog` system user, FPM pool isolated)
+- [x] `Content-Security-Policy` set at PHP layer (and at Caddy layer too via Caddyfile.example)
+- [x] PHP `display_errors=Off`, `log_errors=On`, `expose_php=Off`,
+      `opcache.validate_timestamps=0` baked into `Dockerfile.prod` + FPM pool
+- [x] Session strict-mode + cookie-only + HttpOnly + SameSite=Lax
+
+Items still on the human-operator:
+
+- [ ] `Strict-Transport-Security` uncommented in Caddyfile (after TLS proves stable for a week)
+- [ ] `SESSION_SECURE=true` in `.env`
+- [ ] `.env` mode `640`, owner `lazyblog:www-data`
+- [ ] `content/posts/` writable by php-fpm; rest read-only
+- [ ] Daily backup cron + at least weekly restore test
+- [ ] Fail2ban or Caddy rate-limit plugin on `/admin/login` if exposed publicly
+- [ ] DNS CAA record locking certs to LetsEncrypt

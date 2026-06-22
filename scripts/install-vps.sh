@@ -194,7 +194,9 @@ deploy_code() {
 prompt_hidden() {
     local prompt="$1"
     local var
-    read -r -s -p "$prompt" var
+    # Read from /dev/tty so this works when the script itself is being piped
+    # (e.g. `curl ... | sudo bash`) and stdin is not the terminal.
+    read -r -s -p "$prompt" var </dev/tty
     echo >&2
     printf '%s' "$var"
 }
@@ -231,14 +233,15 @@ setup_env() {
     default_host="$(hostname -I 2>/dev/null | awk '{print $1}')"
     default_host="${default_host:-localhost}"
 
-    read -r -p "Site title       [LazyBlog]: " site_title
+    # All reads from /dev/tty so `curl ... | sudo bash` keeps working.
+    read -r -p "Site title       [LazyBlog]: " site_title </dev/tty
     site_title="${site_title:-LazyBlog}"
-    read -r -p "Site URL         [http://$default_host]: " site_url
+    read -r -p "Site URL         [http://$default_host]: " site_url </dev/tty
     site_url="${site_url:-http://$default_host}"
-    read -r -p "Default author   [XV5HP]: " author
+    read -r -p "Default author   [XV5HP]: " author </dev/tty
     author="${author:-XV5HP}"
-    read -r -p "Callsign         [leave blank to skip]: " callsign
-    read -r -p "Timezone         [Asia/Saigon]: " tz
+    read -r -p "Callsign         [leave blank to skip]: " callsign </dev/tty
+    read -r -p "Timezone         [Asia/Saigon]: " tz </dev/tty
     tz="${tz:-Asia/Saigon}"
 
     # Inline-replace keys via a tiny PHP helper (quoted heredoc → bash
