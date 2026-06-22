@@ -53,6 +53,7 @@ $feedCtl = new App\Controllers\FeedController($feed);
 $admin = new App\Controllers\AdminController($repo);
 $archive = new App\Controllers\ArchiveController($repo);
 $search = new App\Controllers\SearchController(new App\Searcher($repo));
+$upload = new App\Controllers\UploadController(__DIR__ . '/../content');
 
 $router = new App\Router();
 
@@ -66,6 +67,7 @@ $router->get('/admin/edit/{slug}', fn (array $p) => $admin->editForm($p));
 $router->post('/admin/save', fn () => $admin->save());
 $router->post('/admin/delete/{slug}', fn (array $p) => $admin->delete($p));
 $router->post('/admin/preview', fn () => $admin->preview());
+$router->post('/admin/upload', fn () => $upload->upload());
 $router->get('/admin', fn () => $admin->index());
 
 // Public.

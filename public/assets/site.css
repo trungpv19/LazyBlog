@@ -48,7 +48,12 @@ html, body {
     font-size: 16px;
     line-height: 1.7;
     min-height: 100vh;
-    overflow-x: hidden;
+    /* `clip` (not `hidden`) so descendants can still use position: sticky.
+       `hidden` implicitly sets overflow-y: auto on the html/body element,
+       which creates a scroll container that breaks all inner sticky elements
+       (e.g. the editor toolbar in admin). `clip` blocks overflow without
+       establishing a scroll context. */
+    overflow-x: clip;
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
 }
@@ -816,10 +821,12 @@ html { scroll-behavior: smooth; }
     .post-toc-wrap {
         display: block;
         position: fixed;
-        top: 28px;
-        left: 20px;
+        /* Pushed down to clear the top-left CRT corner vignette which
+           was visibly darkening the TOC header. */
+        top: 72px;
+        left: 36px;
         width: 220px;
-        max-height: calc(100vh - 56px);
+        max-height: calc(100vh - 110px);
         overflow-y: auto;
         opacity: 0;
         pointer-events: none;

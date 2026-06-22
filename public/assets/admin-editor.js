@@ -79,10 +79,43 @@
             status: ['lines', 'words', 'cursor'],
             tabSize: 2,
             indentWithTabs: false,
+            // Drag/drop + paste + image-button upload. EasyMDE inserts
+            // ![alt](returned-url) at the cursor on success.
+            uploadImage: true,
+            imageUploadFunction: function (file, onSuccess, onError) {
+                var form = new FormData();
+                form.append('file', file);
+                fetch('/admin/upload', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-Token': csrfToken },
+                    body: form,
+                    credentials: 'same-origin',
+                }).then(function (r) {
+                    return r.json().then(function (data) {
+                        if (!r.ok) {
+                            onError(data.error || ('HTTP ' + r.status));
+                            return;
+                        }
+                        onSuccess(data.url);
+                    });
+                }).catch(function (e) {
+                    onError(e.message || 'Upload failed.');
+                });
+            },
+            imageMaxSize: 10 * 1024 * 1024,
+            imageAccept: 'image/png, image/jpeg, image/webp',
+            imageTexts: {
+                sbInit: 'Drop image or click to upload',
+                sbOnDragEnter: 'Drop to upload',
+                sbOnDrop: 'Uploading…',
+                sbProgress: 'Uploading {{progress}}%',
+                sbOnUploaded: 'Uploaded',
+                sizeUnits: ' B, KB, MB',
+            },
             toolbar: [
                 'bold', 'italic', 'heading', '|',
                 'quote', 'unordered-list', 'ordered-list', '|',
-                'code', 'link', 'image', 'table', '|',
+                'code', 'link', 'image', 'upload-image', 'table', '|',
                 {
                     name: 'highlight',
                     action: function (editor) {

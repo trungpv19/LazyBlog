@@ -1,0 +1,108 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Controllers;
+
+use App\Auth;
+use App\Csrf;
+use App\ImageProcessor;
+
+/**
+ * POST /admin/upload — multipart form upload of a single image.
+ *
+ * Auth + CSRF required (token via `X-CSRF-Token` header to match the
+ * preview endpoint pattern). Source image is decoded, downscaled if
+ * wider than ImageProcessor::MAX_WIDTH, and re-encoded as WebP — that
+ * strips ALL metadata (EXIF, GPS, color profile, etc.) as a side effect.
+ *
+ * Files land under content/uploads/YYYY/MM/{rand}.webp so the existing
+ * backup-content.sh cron picks them up automatically.
+ *
+ * Response on success: HTTP 200 + JSON {"url": "/uploads/YYYY/MM/...webp"}
+ * Response on failure: HTTP 400/413/415 + JSON {"error": "..."}
+ */
+final class UploadController
+{
+    private const MAX_BYTES = 10 * 1024 * 1024;  // 10 MB raw input cap
+    private const ACCEPTED_MIME = [
+        'image/jpeg' => true,
+        'image/png'  => true,
+        'image/webp' => true,
+    ];
+
+    public function __construct(private readonly string $contentDir)
+    {
+    }
+
+    public function upload(): void
+    {
+        Auth::requireAuth();
+        Csrf::requireValid();
+
+        header('Content-Type: application/json; charset=utf-8');
+
+        $file = $_FILES['file'] ?? null;
+        if (!is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            $this->fail(400, $this->uploadErrMessage((int) ($file['error'] ?? UPLOAD_ERR_NO_FILE)));
+        }
+
+        if ((int) $file['size'] > self::MAX_BYTES) {
+            $this->fail(413, 'File too large (max ' . (self::MAX_BYTES / 1024 / 1024) . ' MB).');
+        }
+
+        // Use finfo to read the magic bytes; don't trust the client-sent type.
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mime = (string) $finfo->file((string) $file['tmp_name']);
+        if (!isset(self::ACCEPTED_MIME[$mime])) {
+            $this->fail(415, "Unsupported image type: {$mime}. Allowed: jpeg, png, webp.");
+        }
+
+        $relDir = '/uploads/' . date('Y/m');
+        $absDir = $this->contentDir . $relDir;
+        if (!is_dir($absDir) && !mkdir($absDir, 0755, true) && !is_dir($absDir)) {
+            $this->fail(500, 'Failed to create upload directory.');
+        }
+
+        // Random filename — short enough for a clean URL, long enough to
+        // be unguessable for accidentally-public uploads.
+        $filename = bin2hex(random_bytes(8)) . '.webp';
+        $absPath = $absDir . '/' . $filename;
+
+        try {
+            $dims = ImageProcessor::processToWebp((string) $file['tmp_name'], $absPath);
+        } catch (\Throwable $e) {
+            $this->fail(400, $e->getMessage());
+        }
+
+        $url = $relDir . '/' . $filename;
+        echo json_encode([
+            'url' => $url,
+            'width' => $dims['width'],
+            'height' => $dims['height'],
+        ], JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
+     * @return never
+     */
+    private function fail(int $status, string $message): void
+    {
+        http_response_code($status);
+        echo json_encode(['error' => $message]);
+        exit;
+    }
+
+    private function uploadErrMessage(int $code): string
+    {
+        return match ($code) {
+            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'File too large.',
+            UPLOAD_ERR_PARTIAL    => 'Upload was interrupted.',
+            UPLOAD_ERR_NO_FILE    => 'No file uploaded.',
+            UPLOAD_ERR_NO_TMP_DIR => 'Server temp directory missing.',
+            UPLOAD_ERR_CANT_WRITE => 'Failed to write upload to disk.',
+            UPLOAD_ERR_EXTENSION  => 'Upload blocked by a PHP extension.',
+            default               => 'Unknown upload error.',
+        };
+    }
+}

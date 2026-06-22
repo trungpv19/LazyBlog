@@ -184,6 +184,11 @@ body.is-admin main { max-width: 1180px; }
     border-bottom: none;
     border-radius: 2px 2px 0 0;
     opacity: 1;
+    /* Stick the toolbar to the top of the viewport while scrolling so
+       the formatting buttons stay reachable inside long posts. */
+    position: sticky;
+    top: 0;
+    z-index: 50;
 }
 .EasyMDEContainer .editor-toolbar button {
     color: var(--text) !important;

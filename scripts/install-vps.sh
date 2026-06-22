@@ -123,9 +123,11 @@ ensure_php82() {
 
     # php8.2-intl ships the Normalizer class that composer 2.x (via
     # symfony/string) needs to render its own console output.
+    # php8.2-gd is required by the /admin/upload endpoint (image strip +
+    # resize + WebP encode).
     apt-get install -y -qq \
         php8.2-fpm php8.2-cli php8.2-mbstring \
-        php8.2-zip php8.2-xml php8.2-curl php8.2-intl
+        php8.2-zip php8.2-xml php8.2-curl php8.2-intl php8.2-gd
 
     # Pin the unversioned `php` command to 8.2 so composer + scripts use it.
     if command -v update-alternatives >/dev/null 2>&1; then
@@ -176,12 +178,14 @@ deploy_code() {
         composer install --no-dev --optimize-autoloader \
         --working-dir="$SRC_DIR" --no-interaction --quiet
 
-    # content/posts/ must be writeable by php-fpm (for admin UI saves).
-    # Group it with the same user; admin posts written by lazyblog itself.
-    mkdir -p "$SRC_DIR/content/posts"
+    # content/posts/ + content/uploads/ must be writeable by php-fpm
+    # (admin save + image upload). Both run as $APP_USER. Caddy serves
+    # /uploads/* from content/uploads/ directly so it needs read+x too.
+    mkdir -p "$SRC_DIR/content/posts" "$SRC_DIR/content/uploads"
     chown -R "$APP_USER:$APP_USER" "$SRC_DIR/content"
-    chmod 750 "$SRC_DIR/content"
-    chmod 750 "$SRC_DIR/content/posts"
+    chmod 755 "$SRC_DIR/content"
+    chmod 755 "$SRC_DIR/content/posts"
+    chmod 755 "$SRC_DIR/content/uploads"
 
     # Make CLI helper scripts executable so cron + manual invocations work
     # without the explicit `bash ...` prefix.
@@ -301,6 +305,12 @@ php_admin_value[display_errors]   = Off
 php_admin_value[log_errors]       = On
 php_admin_value[session.use_strict_mode] = 1
 php_admin_value[opcache.enable]   = 1
+; Bump memory_limit for image upload (GD decodes truecolor RGBA into ~4
+; bytes/pixel; a 15MP source needs ~60MB just for the buffer). 256M is
+; ample headroom + still safe for small VPS.
+php_admin_value[memory_limit]     = 256M
+php_admin_value[upload_max_filesize] = 12M
+php_admin_value[post_max_size]    = 12M
 php_admin_value[opcache.validate_timestamps] = 0
 EOF
 
@@ -339,6 +349,14 @@ $LISTEN_ADDR {
     # Block dotfiles (e.g. .env, .index.json) before anything else handles them.
     @dotfiles path /.*
     respond @dotfiles 404
+
+    # User-uploaded images live outside the webroot under
+    # \$SRC_DIR/content/uploads/ so the backup cron catches them.
+    # Serve directly here so Caddy handles caching/range/etag, not PHP.
+    handle_path /uploads/* {
+        root * $SRC_DIR/content/uploads
+        file_server
+    }
 
     # php_fastcgi handles routing for us — its built-in try_files logic
     # serves real files when they exist and falls through to /index.php
