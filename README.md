@@ -1,17 +1,22 @@
 # LazyBlog
 
-A simple personal blog. Posts are markdown files on disk, rendered by ~500 lines of
-plain PHP, served by Caddy + php-fpm. CRT phosphor terminal aesthetic. AI-friendly
-by design — every post is also available as raw `.md`, plus an `llms.txt` index.
+A simple personal blog. Posts are markdown files on disk, rendered by ~3000 lines
+of plain PHP across a dozen classes, served by Caddy + php-fpm. CRT phosphor
+terminal aesthetic. AI-friendly by design — every post is also available as raw
+`.md`, plus `llms.txt` / `llms-full.txt` indexes and a valid RSS 2.0 feed.
 
 No database. No framework. No build step. Backup with `rsync`.
 
 ```
 ┌─────────────────────────────────────────────────────┐
 │  CRT terminal layout  ·  green ↔ amber theme       │
-│  Markdown files       ·  llms.txt + raw .md         │
+│  Phosphor vignette    ·  chromatic-aberration heads  │
+│  Markdown files       ·  llms.txt + raw .md + RSS    │
 │  TOC + scrollspy      ·  code-block copy buttons    │
+│  Browser admin UI     ·  EasyMDE + server-side prev │
+│  Image full-bleed     ·  theme-tint multiply blend  │
 │  SEO + JSON-LD        ·  Open Graph + Twitter Card  │
+│  CSP + session hard.  ·  CSRF + atomic file writes  │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -52,13 +57,16 @@ title: "My First Post"
 date: 2026-06-22
 author: XV5HP            # optional, falls back to DEFAULT_AUTHOR env
 tags: [hello, intro]
-draft: false              # true → only visible in admin (Phase 3)
+draft: false              # true → hidden publicly + from llms.txt, shown in admin only
 icon: "🟢"                 # optional emoji shown next to title
 summary: "One-line description used in lists, meta tags, llms.txt."
 ---
 
 Body in **markdown**. Standard CommonMark, plus...
 ```
+
+Or write it from the browser at `/admin/edit/...` — see [Admin section](#admin)
+below.
 
 ### Markdown extensions
 
@@ -94,27 +102,48 @@ Plain inline code (no unit pattern) stays as plain `<code>`.
 
 ## URLs
 
+### Public
+
 | Path | Purpose |
 |------|---------|
-| `/` | Home — paginated post list |
+| `/` | Home — paginated post list (`?page=N`) |
 | `/posts/{slug}` | Rendered HTML post |
-| `/posts/{slug}.md` | Raw markdown of the post (text/markdown) |
-| `/tags/{tag}` | Posts filtered by tag |
-| `/llms.txt` | Site index + post summaries, per [llmstxt.org](https://llmstxt.org) |
-| `/llms-full.txt` | Every published post concatenated — for LLM training/embedding |
+| `/posts/{slug}.md` | Raw markdown of the post (`text/markdown`) |
+| `/tags/{tag}` | Posts filtered by tag (`?page=N`) |
+| `/feed.xml` | RSS 2.0 of latest 20 posts (ETag + 304) |
+| `/llms.txt` | Site index per [llmstxt.org](https://llmstxt.org) |
+| `/llms-full.txt` | Every published post concatenated for LLM training |
+| `/robots.txt` | `Disallow: /admin/` + `Disallow: /llms-full.txt` |
 
-Each rendered post page also includes a `<link rel="alternate" type="text/markdown">`
-in `<head>` so tools auto-discover the raw source.
+Each rendered post page includes `<link rel="alternate" type="text/markdown">`
+in `<head>` so AI agents auto-discover the raw source. Plus
+`<link rel="alternate" type="application/rss+xml" href="/feed.xml">` so RSS
+readers find the feed without a URL hint.
+
+### Admin (auth required)
+
+| Path | Purpose |
+|------|---------|
+| `GET /admin/login` · `POST /admin/login` | Single-password login (bcrypt) |
+| `POST /admin/logout` | CSRF-protected session destroy |
+| `GET /admin` | List every post — live / draft / scheduled |
+| `GET /admin/new` | Blank edit form |
+| `GET /admin/edit/{slug}` | Prefilled edit form |
+| `POST /admin/save` | Validates + atomic write + cache invalidation |
+| `POST /admin/delete/{slug}` | CSRF-protected unlink |
+| `POST /admin/preview` | Server-side markdown render for EasyMDE preview pane |
 
 ## Reading experience
 
 - **Theme toggle**: Green (phosphor terminal) ↔ Amber (warmer reader mode). Persists in `localStorage`.
-- **CRT scanlines** + subtle flicker on home (respects `prefers-reduced-motion`).
-- **Auto TOC** for posts with ≥3 headings. Inline on mobile; floats to left rail on desktop after scrolling.
-- **Scrollspy**: matching TOC link highlights as you scroll past each H2.
-- **Back-to-top** button appears after ~400px of scroll.
+- **CRT effects**: static 2px scanlines on every page, soft phosphor vignette darkening corners, subtle 8s flicker on home, chromatic-aberration RGB split on headings. All respect `prefers-reduced-motion`.
+- **Auto TOC** for posts with ≥3 headings. Inline on mobile; floats to left rail on desktop after scrolling. Scrollspy highlights the matching TOC link as you scroll past each H2.
+- **Image figures**: any `![alt](url)` on its own line auto-wraps in `<figure>`, breaks out to full viewport width, takes the theme color via `mix-blend-mode: multiply` overlay, and shows the alt text as a centered `<figcaption>`. Mobile keeps images inside the column.
+- **Back-to-top** button after ~400px of scroll.
 - **Code blocks** show a language label + COPY button.
-- **`[ HOME ]`** + theme toggle live in centered header actions row.
+- **Dashed underlines** site-wide for a softer terminal feel.
+- **Retro ASCII 404** with phosphor glow on missing routes.
+- **`[ HOME ]`** + `[ ADMIN ]` (when logged in) + theme toggle in the centered header actions row.
 
 ## SEO & social
 
@@ -126,42 +155,71 @@ Every page emits:
 - JSON-LD structured data (`Blog` on home, `BlogPosting` on posts — headline,
   datePublished, author, publisher, keywords)
 - For posts: `article:published_time`, `article:author`, one `article:tag` per tag
-- `<link rel="alternate" type="application/rss+xml" href="/feed.xml">` placeholder
-  (RSS itself ships in the upcoming Phase 5)
+- `<link rel="alternate" type="application/rss+xml" href="/feed.xml">` so feed readers auto-discover
 - Inline SVG favicon (no `/favicon.ico` 404)
+- `Content-Security-Policy` allowing only `self` + Google Fonts + jsdelivr (EasyMDE)
+- `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Content-Type-Options: nosniff`
+- `X-Powered-By` header removed so PHP version doesn't leak
 
 ## Project layout
 
 ```
 LazyBlog/
 ├── public/                  # web root (Caddy serves from here)
-│   ├── index.php            # front controller / router
+│   ├── index.php            # front controller, security headers, session
 │   ├── .htaccess            # Apache rewrite fallback
+│   ├── robots.txt
 │   └── assets/
-│       └── site.css         # single CSS file — theme tokens, layout, components
+│       ├── site.css         # public theme + layout (loaded on every page)
+│       ├── admin.css        # admin-only (loaded only on /admin/*)
+│       └── admin-editor.js  # EasyMDE setup + tag chips + unsaved guard
 ├── src/
 │   ├── Config.php           # env loader + required-key validation
 │   ├── Router.php           # tiny pattern-based router
-│   ├── Http.php             # render(), redirect(), e() escape helper
+│   ├── Http.php             # render(), redirect() (CRLF strip), e() escape
+│   ├── Auth.php             # session + password verify + strict_mode
+│   ├── Csrf.php             # per-session token, hash_equals verify
+│   ├── FileWriter.php       # atomic tempnam + rename writes
 │   ├── Post.php             # immutable post value object
-│   ├── PostRepository.php   # reads/writes markdown files + index cache
+│   ├── PostRepository.php   # read/write .md files + index cache
 │   ├── FrontmatterParser.php
 │   ├── MarkdownRenderer.php # admonitions → placeholder → CommonMark → reinject
 │   ├── SlugUtil.php         # diacritic-stripping slug helpers
 │   ├── LlmsBuilder.php      # llms.txt + llms-full.txt generators
-│   └── Controllers/         # HomeController, PostController, TagController, LlmsController
+│   ├── FeedBuilder.php      # RSS 2.0 via DOMDocument
+│   └── Controllers/
+│       ├── HomeController.php
+│       ├── PostController.php   # show + raw .md
+│       ├── TagController.php
+│       ├── LlmsController.php
+│       ├── FeedController.php   # /feed.xml with ETag + 304
+│       └── AdminController.php  # login, list, edit, save, delete, preview
 ├── views/
 │   ├── layout.php           # base HTML, SEO, header, footer
 │   ├── home.php
 │   ├── post.php
 │   ├── tag.php
-│   └── not-found.php
-├── content/
-│   └── posts/               # YYYY-MM-DD-slug.md files (gitignored)
+│   ├── not-found.php        # retro ASCII 404
+│   ├── _pagination.php      # shared prev/next + page indicator partial
+│   └── admin/
+│       ├── login.php
+│       ├── list.php
+│       └── edit.php         # EasyMDE + tag chip + server-side preview
+├── content/                 # gitignored
+│   └── posts/               # YYYY-MM-DD-slug.md files
+├── scripts/
+│   ├── hash-password.php    # bcrypt helper for ADMIN_PASSWORD_HASH
+│   └── backup-content.sh    # rsync content/ → remote (cron-friendly)
+├── docs/
+│   ├── deployment-guide.md  # step-by-step VPS playbook
+│   └── system-architecture.md  # diagrams, request lifecycle, threat model
+├── plans/                   # gitignored (private design + phase plans)
 ├── docker/
 │   └── Caddyfile.dev
-├── docker-compose.yml
-├── Dockerfile
+├── Caddyfile.example        # production HTTPS site block
+├── docker-compose.yml       # dev: Caddy + php-fpm bind-mount
+├── Dockerfile               # dev image
+├── Dockerfile.prod          # production: non-root, opcache, no bind mount
 ├── composer.json
 └── .env.example
 ```
@@ -171,12 +229,70 @@ LazyBlog/
 | Key | Purpose |
 |-----|---------|
 | `SITE_TITLE` | Brand shown in header + `<title>` + Open Graph |
-| `SITE_URL` | Used for canonical URLs, og:url, llms.txt, RSS |
+| `SITE_URL` | Canonical URLs, og:url, llms.txt links, RSS guid |
 | `SITE_DESCRIPTION` | Default meta description (overridden by post summary on post pages) |
 | `TIMEZONE` | PHP `date_default_timezone_set` value |
+| `CALLSIGN` | Small line above the site title (e.g. `XV5HP // STATION // CITY`). Empty hides it. |
 | `DEFAULT_AUTHOR` | Author shown when a post has no `author:` frontmatter |
-| `ADMIN_PASSWORD_HASH` | bcrypt hash for the admin (Phase 3, not yet active) |
-| `SESSION_*` | Session cookie settings (Phase 3) |
+| `FOOTER_SIGNOFF` | Copyright line at the bottom of every page. Supports `{year}` token. Empty hides the line. |
+| `POSTS_PER_PAGE` | Page size on home + tag listings. Default `10`. |
+| `ADMIN_PASSWORD_HASH` | bcrypt hash for the admin. Empty = login disabled. |
+| `SESSION_NAME` | Cookie name. Default `lazyblog_sess`. |
+| `SESSION_SECURE` | `true` in production (HTTPS only); `false` for local dev. |
+
+## Build & ship as Docker image
+
+The repo ships with two Dockerfiles:
+
+| File | Purpose | Code source |
+|------|---------|-------------|
+| `Dockerfile` | Local dev | Bind-mounted at runtime |
+| `Dockerfile.prod` | Production | Copied into the image at build time |
+
+### Build the production image
+
+```bash
+docker build -f Dockerfile.prod -t lazyblog:latest .
+# Result: ~80MB image with PHP 8.2-fpm + composer deps + your app code,
+# running as non-root user `lazyblog`. Opcache enabled, validate_timestamps=0.
+```
+
+### Push to a registry
+
+GitHub Container Registry example:
+
+```bash
+echo "$GHCR_PAT" | docker login ghcr.io -u hieuha --password-stdin
+docker tag lazyblog:latest ghcr.io/hieuha/lazyblog:latest
+docker tag lazyblog:latest ghcr.io/hieuha/lazyblog:$(git rev-parse --short HEAD)
+docker push ghcr.io/hieuha/lazyblog:latest
+docker push ghcr.io/hieuha/lazyblog:$(git rev-parse --short HEAD)
+```
+
+(Or Docker Hub: `docker tag lazyblog:latest hieuha/lazyblog:latest && docker push ...`)
+
+### Run on the VPS
+
+```bash
+# Pull the image
+docker pull ghcr.io/hieuha/lazyblog:latest
+
+# Run, bind-mounting content/ + .env from the host so they survive image updates
+docker run -d \
+    --name lazyblog \
+    --restart unless-stopped \
+    -v /srv/lazyblog/content:/var/www/html/content \
+    -v /srv/lazyblog/.env:/var/www/html/.env:ro \
+    -p 127.0.0.1:9000:9000 \
+    ghcr.io/hieuha/lazyblog:latest
+```
+
+Point Caddy at `127.0.0.1:9000` via `php_fastcgi 127.0.0.1:9000` in your
+`Caddyfile`. The root in Caddy stays `/srv/lazyblog/public` — Caddy serves
+static files (assets/, robots.txt, favicon) directly without going through PHP.
+
+Update flow: `docker pull` + `docker stop lazyblog && docker rm lazyblog &&
+docker run ...` — or wrap it in a systemd unit that re-pulls + restarts.
 
 ## Backup
 
@@ -202,18 +318,42 @@ app's git repo.
   escaped form.
 - All variables from frontmatter or URL params reach views via `Http::e()` /
   `htmlspecialchars(ENT_QUOTES, 'UTF-8')`.
-- Open redirect: `Http::redirect()` does no URL validation; only called internally.
-  When Phase 3 admin lands, validate `?next=` parameters before redirecting.
+- **CSRF**: every state-changing POST (login, logout, save, delete) is gated
+  by `Csrf::requireValid()` (random_bytes(32), hash_equals).
+- **Open redirect**: `safeRedirectTarget()` validates `?next=` (must start with
+  `/`, not `//`, no CRLF/tab/NUL). `Http::redirect()` strips control chars too.
+- **Session hardening**: `session.use_strict_mode = 1`, `session.use_only_cookies = 1`,
+  `HttpOnly`, `SameSite=Lax`, `Secure` when `SESSION_SECURE=true`, session ID
+  regenerated on login, 500ms delay on failed password attempts.
+- **Preview DoS**: `/admin/preview` reads at most 256KB from the request body.
+- **Response headers** set globally at boot: `X-Content-Type-Options: nosniff`,
+  `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`,
+  `Content-Security-Policy` allow-listing only self + Google Fonts + jsdelivr.
+  `X-Powered-By` removed.
+- **Path traversal blocked**: URL slugs are never used as filesystem paths;
+  PostRepository looks up entries via the index cache (closed set from `glob()`).
+- **Atomic writes**: FileWriter uses `tempnam` + `LOCK_EX` + `rename`. Crash
+  mid-write leaves the previous file intact.
+- **RSS XML safety**: FeedBuilder uses DOMDocument; never string-concatenates.
 
-### Hardening checklist for production (Phase 6)
+### Hardening checklist for production
 
-- [ ] `Strict-Transport-Security` header in Caddyfile
-- [ ] `Content-Security-Policy` (`default-src 'self'; font-src fonts.gstatic.com; style-src 'self' 'unsafe-inline' fonts.googleapis.com`)
-- [ ] Non-root user in production Dockerfile (php-fpm currently runs as root in dev)
-- [ ] `.env` mode `640`, owned by `lazyblog:www-data`
-- [ ] `content/posts/` writable by php-fpm; everything else read-only
-- [ ] Backup cron + integrity check
-- [ ] PHP `display_errors=Off`, `log_errors=On` in prod `php.ini`
+Items done in code (need verifying on your specific deploy):
+
+- [x] Non-root user in `Dockerfile.prod` (`lazyblog` UID 1000)
+- [x] `Content-Security-Policy` set at PHP layer (and at Caddy layer too)
+- [x] PHP `display_errors=Off`, `log_errors=On`, `expose_php=Off`, `opcache.validate_timestamps=0` baked into `Dockerfile.prod`
+- [x] Session strict-mode + cookie-only + HttpOnly + SameSite=Lax
+
+Items still on the human-operator (covered in `docs/deployment-guide.md`):
+
+- [ ] `Strict-Transport-Security` uncommented in Caddyfile (after TLS proves stable for a week)
+- [ ] `SESSION_SECURE=true` in `.env`
+- [ ] `.env` mode `640`, owner `lazyblog:www-data`
+- [ ] `content/posts/` writable by php-fpm; rest read-only
+- [ ] Backup cron via `scripts/backup-content.sh` + at least one restore test
+- [ ] Fail2ban or Caddy rate-limit plugin on `/admin/login` if exposed publicly
+- [ ] DNS CAA record locking certs to Let's Encrypt
 
 ## Plan & roadmap
 
