@@ -372,7 +372,7 @@ See `plans/260622-1036-personal-blog-php-markdown/plan.md` for the full multi-ph
 
 - **`Caddyfile.example`** — production HTTPS config with security headers, asset caching, dotfile blocking, optional rate-limit on `/admin/login`
 - **`Dockerfile.prod`** — non-root `lazyblog` user, opcache enabled with `validate_timestamps=0`, production php.ini (display_errors off, expose_php off, session.use_strict_mode=1), composer `--no-dev --optimize-autoloader` baked in
-- **`scripts/backup-content.sh`** — idempotent rsync of `content/` to a remote host; designed for cron
+- **`scripts/backup-content.sh`** — local timestamped tarballs by default (with retention), `--remote` switch for idempotent rsync; designed for cron
 - **`docs/deployment-guide.md`** — step-by-step Ubuntu/Debian VPS playbook covering: VPS provisioning + firewall, runtime install, app deploy as a dedicated `lazyblog` user, Caddy setup, DNS + TLS, admin password, backup cron, zero-downtime update flow, troubleshooting matrix, production-hardening checklist
 
 ### Phase 4 — Editor UX details
@@ -419,11 +419,13 @@ When editing a post at `/admin/edit/{slug}` you get:
 
 Set up:
 ```bash
-# 1. Generate a bcrypt hash for your admin password
-docker compose exec app php scripts/hash-password.php "your-real-password"
+# 1. Generate a bcrypt hash for your admin password (interactive — recommended)
+docker compose exec -it app php scripts/hash-password.php
+#    Or non-interactive (password visible in shell history / ps):
+#    docker compose exec app php scripts/hash-password.php "your-real-password"
 
-# 2. Paste the output into .env:
-#    ADMIN_PASSWORD_HASH="$2y$10$..."
+# 2. Paste the printed line into .env:
+#    ADMIN_PASSWORD_HASH="$2y$12$..."
 
 # 3. Restart
 docker compose restart app
