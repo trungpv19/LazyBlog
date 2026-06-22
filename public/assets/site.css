@@ -506,8 +506,45 @@ footer {
 }
 .not-found-section .callsign,
 .not-found-section .section-tag { text-align: center; }
-.not-found-section h2 { margin-top: 18px; }
-.not-found-section p { margin: 18px 0; }
+.not-found-section p { margin: 14px 0; }
+
+/* Retro block-art 404 — phosphor glow, no border, inline-block so the
+   monospaced pre stays narrow and centered on its own line. */
+.ascii-404 {
+    display: inline-block;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 24px 0 12px;
+    font-family: 'Share Tech Mono', 'Courier New', monospace;
+    font-size: clamp(7px, 1.6vw, 12px);
+    line-height: 1.05;
+    letter-spacing: 0;
+    color: var(--primary);
+    text-shadow:
+        0 0 6px var(--primary),
+        0 0 18px var(--primary-glow-strong),
+        0 0 36px var(--primary-glow);
+    white-space: pre;
+    overflow-x: auto;
+    user-select: none;
+    /* Subtle flicker matches the home-page CRT vibe */
+    animation: ascii-404-flicker 6s infinite;
+}
+@keyframes ascii-404-flicker {
+    0%, 96%, 100% { opacity: 1; }
+    97% { opacity: 0.85; }
+    98% { opacity: 1; }
+    99% { opacity: 0.92; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .ascii-404 { animation: none; }
+}
+
+.not-found-subtitle {
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
 
 /* ---------- Table of Contents ---------- */
 .toc {
