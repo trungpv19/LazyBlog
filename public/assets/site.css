@@ -694,8 +694,54 @@ footer {
     color: var(--text);
     border-color: var(--border);
 }
-/* Fullscreen mode honors the theme bg instead of forcing white */
-.EasyMDEContainer.sided--no-fullscreen ~ * { display: none; }
+
+/* Fullscreen + side-by-side: EasyMDE applies its own background:white via
+   .CodeMirror-fullscreen / .editor-toolbar.fullscreen with high specificity,
+   so we override with !important to keep the CRT theme. */
+.EasyMDEContainer .editor-toolbar.fullscreen,
+.editor-toolbar.fullscreen {
+    background: var(--panel) !important;
+    border: 1px solid var(--border) !important;
+    opacity: 1 !important;
+}
+.EasyMDEContainer .CodeMirror-fullscreen,
+.CodeMirror.CodeMirror-fullscreen {
+    background: var(--bg) !important;
+    color: var(--text) !important;
+    border: none !important;
+}
+.CodeMirror-fullscreen .CodeMirror-scroll,
+.EasyMDEContainer .CodeMirror-fullscreen .CodeMirror-scroll {
+    background: var(--bg) !important;
+}
+.editor-preview-side,
+.editor-preview-active-side,
+.EasyMDEContainer .editor-preview-side {
+    background: var(--bg) !important;
+    color: var(--text) !important;
+    border-left: 1px solid var(--border) !important;
+}
+.editor-preview-active,
+.EasyMDEContainer .editor-preview-active {
+    background: var(--bg) !important;
+    color: var(--text) !important;
+}
+/* Preview pane typography matches the post body style */
+.editor-preview h1, .editor-preview h2, .editor-preview h3,
+.editor-preview-side h1, .editor-preview-side h2, .editor-preview-side h3 {
+    color: var(--primary);
+    font-family: 'VT323', monospace;
+}
+.editor-preview a, .editor-preview-side a { color: var(--accent); }
+.editor-preview code, .editor-preview-side code,
+.editor-preview pre, .editor-preview-side pre {
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+/* Hide scanline overlay + flicker on fullscreen so the editor isn't covered */
+body.editor-fullscreen-active::before { display: none; }
+body.editor-fullscreen-active.is-home { animation: none; }
 
 /* Compact draft pill styled like a button — fits in the meta flex row */
 .admin-checkbox-pill {

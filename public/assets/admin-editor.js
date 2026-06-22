@@ -21,6 +21,14 @@
     if (bodyEl && window.EasyMDE) {
         var autosaveId = 'lazyblog-' + (slugEl && slugEl.value ? slugEl.value : 'new');
 
+        // Mirror fullscreen state to the body so we can hide the CRT scanline
+        // overlay while the editor takes over the viewport.
+        var observer = new MutationObserver(function () {
+            var fs = document.querySelector('.CodeMirror-fullscreen, .editor-toolbar.fullscreen');
+            document.body.classList.toggle('editor-fullscreen-active', !!fs);
+        });
+        observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+
         easyMDE = new EasyMDE({
             element: bodyEl,
             spellChecker: false,
