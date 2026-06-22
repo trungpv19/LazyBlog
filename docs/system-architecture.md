@@ -62,11 +62,12 @@ build step. Everything runs in a single Caddy + php-fpm container pair.
      ├─ indexStale()?  rebuildIndex() → writes .index.json + invalidates .llms*.txt + .feed.xml
      └─ file_get_contents on the matched .md
    - MarkdownRenderer::render($body)
+     ├─ preprocessStandaloneImages → insert blank lines around ![alt](url)-only lines
      ├─ preprocessAdmonitions  → ::: highlight / ::: story → <!--LAZY-INJ-N-->
      ├─ CommonMark convert     → HTML
      ├─ reinjectStashed        → restore admonition divs
      ├─ postprocessFreqTags    → <code>2.3 kHz</code> → <span class="freq-tag">
-     ├─ postprocessFigures     → <p><img alt><p> → <figure><img><figcaption>
+     ├─ postprocessFigures     → <p><img alt></p> → <figure><img><figcaption>
      ├─ injectHeadingIds       → <h2 id="slug">
      └─ extractToc             → list of {level,id,text}
    - Http::render('post', […])

@@ -138,7 +138,7 @@ readers find the feed without a URL hint.
 - **Theme toggle**: Green (phosphor terminal) ↔ Amber (warmer reader mode). Persists in `localStorage`.
 - **CRT effects**: static 2px scanlines on every page, soft phosphor vignette darkening corners, subtle 8s flicker on home, chromatic-aberration RGB split on headings. All respect `prefers-reduced-motion`.
 - **Auto TOC** for posts with ≥3 headings. Inline on mobile; floats to left rail on desktop after scrolling. Scrollspy highlights the matching TOC link as you scroll past each H2.
-- **Image figures**: any `![alt](url)` on its own line auto-wraps in `<figure>`, breaks out to full viewport width, takes the theme color via `mix-blend-mode: multiply` overlay, and shows the alt text as a centered `<figcaption>`. Mobile keeps images inside the column.
+- **Image figures**: any `![alt](url)` on its own line auto-wraps in `<figure>`, breaks out to full viewport width, takes the theme color via `mix-blend-mode: multiply` overlay, and shows the alt text as a centered `<figcaption>`. Mobile keeps images inside the column. Blank lines around the image are inserted for you — `text\n![alt](url)\n## Next` works without manual spacing.
 - **Back-to-top** button after ~400px of scroll.
 - **Code blocks** show a language label + COPY button.
 - **Dashed underlines** site-wide for a softer terminal feel.
@@ -209,7 +209,7 @@ LazyBlog/
 │   └── posts/               # YYYY-MM-DD-slug.md files
 ├── scripts/
 │   ├── hash-password.php    # bcrypt helper for ADMIN_PASSWORD_HASH
-│   └── backup-content.sh    # rsync content/ → remote (cron-friendly)
+│   └── backup-content.sh    # local tarball by default; --remote for rsync
 ├── docs/
 │   ├── deployment-guide.md  # step-by-step VPS playbook
 │   └── system-architecture.md  # diagrams, request lifecycle, threat model
@@ -257,20 +257,6 @@ docker build -f Dockerfile.prod -t lazyblog:latest .
 # running as non-root user `lazyblog`. Opcache enabled, validate_timestamps=0.
 ```
 
-### Push to a registry
-
-GitHub Container Registry example:
-
-```bash
-echo "$GHCR_PAT" | docker login ghcr.io -u hieuha --password-stdin
-docker tag lazyblog:latest ghcr.io/hieuha/lazyblog:latest
-docker tag lazyblog:latest ghcr.io/hieuha/lazyblog:$(git rev-parse --short HEAD)
-docker push ghcr.io/hieuha/lazyblog:latest
-docker push ghcr.io/hieuha/lazyblog:$(git rev-parse --short HEAD)
-```
-
-(Or Docker Hub: `docker tag lazyblog:latest hieuha/lazyblog:latest && docker push ...`)
-
 ### Run on the VPS
 
 ```bash
@@ -296,10 +282,14 @@ docker run ...` — or wrap it in a systemd unit that re-pulls + restarts.
 
 ## Backup
 
-The entire blog state lives under `content/`. Backup is:
+The entire blog state lives under `content/`. Use the helper script:
 
 ```bash
-rsync -avh /var/www/lazyblog/content/ user@backup-host:/backups/lazyblog/
+# Local timestamped tarball under ./backups/ (default)
+scripts/backup-content.sh
+
+# Or push to a remote host (idempotent rsync)
+scripts/backup-content.sh --remote user@backup-host:/backups/lazyblog/
 ```
 
 Optionally `git init content/` for per-post version history independent of the
@@ -372,7 +362,7 @@ See `plans/260622-1036-personal-blog-php-markdown/plan.md` for the full multi-ph
 
 - **`Caddyfile.example`** — production HTTPS config with security headers, asset caching, dotfile blocking, optional rate-limit on `/admin/login`
 - **`Dockerfile.prod`** — non-root `lazyblog` user, opcache enabled with `validate_timestamps=0`, production php.ini (display_errors off, expose_php off, session.use_strict_mode=1), composer `--no-dev --optimize-autoloader` baked in
-- **`scripts/backup-content.sh`** — local timestamped tarballs by default (with retention), `--remote` switch for idempotent rsync; designed for cron
+- **`scripts/backup-content.sh`** — local timestamped tarballs by default (`backups/content-YYYYMMDD-HHMMSS.tar.gz`); `--remote user@host:/path/` for idempotent rsync. Old archives are never auto-pruned — remove them manually. Auto-resolves project root so cron works regardless of CWD.
 - **`docs/deployment-guide.md`** — step-by-step Ubuntu/Debian VPS playbook covering: VPS provisioning + firewall, runtime install, app deploy as a dedicated `lazyblog` user, Caddy setup, DNS + TLS, admin password, backup cron, zero-downtime update flow, troubleshooting matrix, production-hardening checklist
 
 ### Phase 4 — Editor UX details

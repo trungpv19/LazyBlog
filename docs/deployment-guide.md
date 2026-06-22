@@ -125,8 +125,14 @@ curl -I https://blog.example.com/
 ## 6. Set admin password
 
 ```bash
+# Interactive (recommended — password never hits shell history or `ps`)
+sudo -u lazyblog php /var/www/lazyblog/scripts/hash-password.php
+
+# Or non-interactive (visible in shell history / ps — use only in trusted CI)
 sudo -u lazyblog php /var/www/lazyblog/scripts/hash-password.php "your-real-strong-password"
-# Copy the printed bcrypt line into .env as ADMIN_PASSWORD_HASH="..."
+
+# The script prints a ready-to-paste line — copy it into .env:
+#   ADMIN_PASSWORD_HASH="$2y$12$..."
 
 sudo systemctl restart php8.2-fpm    # re-read .env
 ```
@@ -136,20 +142,27 @@ disabled, so the admin is dormant until you set this.
 
 ## 7. Backups
 
-Daily rsync of `content/` to a separate host.
+Daily backup of `content/`. The script defaults to a local timestamped
+tarball; pass `--remote` for off-host rsync.
 
 ```bash
 sudo crontab -u lazyblog -e
-# Add:
+
+# Option A — local tarball under /var/backups/lazyblog/ (simplest)
 0 3 * * * /var/www/lazyblog/scripts/backup-content.sh \
-    /var/www/lazyblog/content/ \
-    user@backup-host:/backups/lazyblog/ \
+    --src /var/www/lazyblog/content \
+    --out /var/backups/lazyblog \
+    >> /var/log/lazyblog-backup.log 2>&1
+
+# Option B — rsync to a separate host (idempotent — only changed files)
+0 3 * * * /var/www/lazyblog/scripts/backup-content.sh \
+    --src /var/www/lazyblog/content \
+    --remote user@backup-host:/backups/lazyblog/ \
     >> /var/log/lazyblog-backup.log 2>&1
 ```
 
-The backup script (see `scripts/backup-content.sh`) is idempotent. If
-posting via the admin UI fails partway, the next backup catches the new
-`.md` regardless.
+The script never auto-deletes old archives — prune them manually when the
+backup directory grows too large.
 
 Optionally: `git init` inside `content/` for per-post version history that
 survives even if rsync fails:
