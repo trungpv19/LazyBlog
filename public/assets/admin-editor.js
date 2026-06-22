@@ -60,7 +60,9 @@
             element: bodyEl,
             spellChecker: false,
             forceSync: true,            // mirror back to the underlying textarea so form submit works
-            autoDownloadFontAwesome: true,
+            // Font Awesome is loaded explicitly from jsdelivr in edit.php — disabling
+            // EasyMDE's auto-download keeps the request inside our CSP allow-list.
+            autoDownloadFontAwesome: false,
             previewRender: previewRender,
             autosave: {
                 enabled: true,

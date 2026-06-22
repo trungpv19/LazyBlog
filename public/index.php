@@ -26,7 +26,7 @@ header(
     // from jsdelivr. No external script CDNs beyond that are allowed.
     . "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
     . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; "
-    . "font-src 'self' https://fonts.gstatic.com data:; "
+    . "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net data:; "
     . "img-src 'self' data: https:; "
     . "connect-src 'self'; "
     . "frame-ancestors 'self'; "
