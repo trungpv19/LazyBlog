@@ -375,12 +375,31 @@ $LISTEN_ADDR {
         -Server
     }
 
+    # Per-site access log. Caddy emits runtime/error events to the systemd
+    # journal by default — tail with \`journalctl -u caddy -f\`. Rotation
+    # is handled in-process by the roll_* options so we don't need
+    # logrotate.
+    log {
+        output file /var/log/caddy/lazyblog-access.log {
+            roll_size 10mb
+            roll_keep 5
+            roll_keep_for 720h
+        }
+        format console
+        level INFO
+    }
+
     file_server
 }
 EOF
 
+    # The caddy apt package creates /var/log/caddy with caddy:caddy
+    # ownership. Belt-and-braces: ensure it exists and is writable.
+    mkdir -p /var/log/caddy
+    chown -R caddy:caddy /var/log/caddy 2>/dev/null || true
+
     systemctl reload caddy
-    say "Caddy reloaded"
+    say "Caddy reloaded (access log → /var/log/caddy/lazyblog-access.log; errors → journalctl -u caddy)"
 }
 
 # ---------------------------------------------------------------------------
