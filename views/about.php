@@ -110,7 +110,18 @@ $streakUnitLabel = match ($stats['streak']['unit']) {
         <!-- Current streak card — Duolingo-style flame + big numeral.
              Driven by STREAK_UNIT env (day/week/month/year) and is
              independent of any badge's per-entry unit. -->
-        <section class="about-panel hud-frame about-streak<?= $stats['streak']['atRisk'] ? ' is-at-risk' : '' ?>">
+        <?php
+        $streakIsCold = $stats['streak']['current'] === 0;
+        $streakClasses = 'about-panel hud-frame about-streak';
+        if ($stats['streak']['atRisk']) {
+            $streakClasses .= ' is-at-risk';
+        } elseif ($streakIsCold) {
+            // Active streak lost — flame goes cold (grey, no glow) the
+            // same way Duolingo's blue/cold flame signals a broken run.
+            $streakClasses .= ' is-cold';
+        }
+        ?>
+        <section class="<?= $streakClasses ?>">
             <div class="about-streak-body">
                 <div class="about-streak-text">
                     <div class="about-panel-label">

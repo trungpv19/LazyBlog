@@ -376,14 +376,19 @@ a.about-contact-value:hover {
     flex: 0 0 auto;
     color: var(--primary);
     filter: drop-shadow(0 0 8px var(--primary-glow));
+    transition: color 0.3s ease, filter 0.3s ease, opacity 0.3s ease;
 }
-/* Dim the flame when nothing is on fire — 0-day streak still shows
- * the icon but reads visually quiet. */
-.about-streak[data-empty] .about-streak-flame,
-.about-streak-num:empty + * .about-streak-flame {
-    color: var(--text-dim);
+/* Streak broken — flame goes cold: muted grey, no glow. Numeric value
+ * stays readable so the operator can still see "0 WEEKS" clearly. */
+.about-streak.is-cold .about-streak-flame {
+    color: var(--border);
     filter: none;
-    opacity: 0.4;
+    opacity: 0.5;
+}
+.about-streak.is-cold .about-streak-num,
+.about-streak.is-cold .about-streak-unit {
+    color: var(--text-dim);
+    text-shadow: none;
 }
 .about-streak.is-at-risk .about-streak-flame {
     color: var(--accent);
