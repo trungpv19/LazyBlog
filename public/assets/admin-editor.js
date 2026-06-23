@@ -358,9 +358,21 @@
                         setStatus('Upload failed: ' + (data.error || 'unknown'), true);
                         return;
                     }
-                    target.value = data.url;
-                    // Re-fire change so the dirty-guard above + any
-                    // listeners pick up the new value.
+                    // Set via the native setter so any framework/observer
+                    // sitting on the prototype can't intercept the change.
+                    // Also mirror the value attribute so the form's
+                    // initial-state inspector + any server-side fallback
+                    // see a consistent URL. Fire both `input` and `change`
+                    // so every listener tier picks it up.
+                    var proto = window.HTMLInputElement && window.HTMLInputElement.prototype;
+                    var nativeSetter = proto && Object.getOwnPropertyDescriptor(proto, 'value').set;
+                    if (nativeSetter) {
+                        nativeSetter.call(target, data.url);
+                    } else {
+                        target.value = data.url;
+                    }
+                    target.setAttribute('value', data.url);
+                    target.dispatchEvent(new Event('input', { bubbles: true }));
                     target.dispatchEvent(new Event('change', { bubbles: true }));
                     setStatus('Uploaded → ' + data.url, false);
                 });
