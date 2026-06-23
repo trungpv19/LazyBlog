@@ -1,0 +1,57 @@
+{
+  "_": "LazyBlog badge catalogue. Single source of truth — edit in place to customise. Each entry: code, label, description, kind (one of BadgeKinds::executors()), params. Volume tier renders always (locked entries show N/M progress); hidden tier only renders when unlocked so codes here never leak in HTML until earned. See docs/badges.md for available kinds.",
+
+  "volume": [
+    { "code": "FIRST-TX",         "label": "FIRST TX",          "description": "Send the first transmission",            "kind": "post-count",           "params": { "threshold": 1 } },
+    { "code": "BROADCAST-X10",    "label": "BROADCAST ×10",     "description": "10 published transmissions",             "kind": "post-count",           "params": { "threshold": 10 } },
+    { "code": "BROADCAST-X25",    "label": "BROADCAST ×25",     "description": "25 published transmissions",             "kind": "post-count",           "params": { "threshold": 25 } },
+    { "code": "BROADCAST-X50",    "label": "BROADCAST ×50",     "description": "50 published transmissions",             "kind": "post-count",           "params": { "threshold": 50 } },
+    { "code": "BROADCAST-X100",   "label": "BROADCAST ×100",    "description": "100 published transmissions",            "kind": "post-count",           "params": { "threshold": 100 } },
+    { "code": "BROADCAST-X200",   "label": "BROADCAST ×200",    "description": "200 published transmissions",            "kind": "post-count",           "params": { "threshold": 200 } },
+
+    { "code": "ESSAYIST",         "label": "ESSAYIST",          "description": "1 transmission ≥ 2000 words",            "kind": "longest-post-words",   "params": { "threshold": 2000 } },
+    { "code": "LONG-FORM",        "label": "LONG-FORM OPERATOR","description": "1 transmission ≥ 5000 words",            "kind": "longest-post-words",   "params": { "threshold": 5000 } },
+    { "code": "TOME",             "label": "TOME",              "description": "1 transmission ≥ 10 000 words",          "kind": "longest-post-words",   "params": { "threshold": 10000 } },
+
+    { "code": "SERIES-INIT",      "label": "SERIES INITIATED",  "description": "First series with ≥3 published parts",   "kind": "series-min-parts",     "params": { "threshold": 3 } },
+    { "code": "SERIES-OPERATOR",  "label": "SERIES OPERATOR",   "description": "First series with ≥5 published parts",   "kind": "series-min-parts",     "params": { "threshold": 5 } },
+
+    { "code": "TAG-SPECIALIST",   "label": "TAG SPECIALIST",    "description": "≥10 posts in a single tag",              "kind": "tag-count",            "params": { "threshold": 10 } },
+    { "code": "TAG-MENTOR",       "label": "TAG MENTOR",        "description": "≥25 posts in a single tag",              "kind": "tag-count",            "params": { "threshold": 25 } },
+
+    { "code": "HALF-YEAR-ONLINE", "label": "HALF YEAR ONLINE",  "description": "Blog age ≥ 180 days",                    "kind": "blog-age-days",        "params": { "threshold": 180 } },
+    { "code": "ONE-YEAR-ONLINE",  "label": "ONE YEAR ONLINE",   "description": "Blog age ≥ 365 days",                    "kind": "blog-age-days",        "params": { "threshold": 365 } },
+    { "code": "TWO-YEAR-ONLINE",  "label": "TWO YEARS ONLINE",  "description": "Blog age ≥ 730 days",                    "kind": "blog-age-days",        "params": { "threshold": 730 } },
+
+    { "code": "SPARK-STREAK",     "label": "SPARK STREAK (4w)", "description": "Longest weekly streak ≥ 4 weeks",        "kind": "longest-streak-weeks", "params": { "threshold": 4 } },
+    { "code": "IRON-STREAK",      "label": "IRON STREAK (12w)", "description": "Longest weekly streak ≥ 12 weeks",       "kind": "longest-streak-weeks", "params": { "threshold": 12 } },
+    { "code": "MARATHON",         "label": "MARATHON (26w)",    "description": "Longest weekly streak ≥ 26 weeks",       "kind": "longest-streak-weeks", "params": { "threshold": 26 } },
+    { "code": "CENTURY-STREAK",   "label": "CENTURY STREAK",    "description": "Longest weekly streak ≥ 100 weeks",      "kind": "longest-streak-weeks", "params": { "threshold": 100 } }
+  ],
+
+  "hidden": [
+    { "code": "NIGHT-OWL",        "label": "NIGHT OWL",         "description": "Transmission between 00:00 and 04:00",   "kind": "time-window",          "params": { "hourFrom": 0,  "hourTo": 4 } },
+    { "code": "DAWN-PATROL",      "label": "DAWN PATROL",       "description": "Transmission between 05:00 and 07:00",   "kind": "time-window",          "params": { "hourFrom": 5,  "hourTo": 7 } },
+    { "code": "FRIDAY-NIGHT-TX",  "label": "FRIDAY NIGHT TX",   "description": "Friday transmission after 20:00",        "kind": "time-window",          "params": { "hourFrom": 20, "hourTo": 24, "dayOfWeek": 5 } },
+    { "code": "SATURDAY-LATE-TX", "label": "SATURDAY LATE TX",  "description": "Saturday transmission after 22:00",      "kind": "time-window",          "params": { "hourFrom": 22, "hourTo": 24, "dayOfWeek": 6 } },
+    { "code": "SUNDAY-MORNING-TX","label": "SUNDAY MORNING TX", "description": "Sunday transmission between 06:00–10:00","kind": "time-window",          "params": { "hourFrom": 6,  "hourTo": 10, "dayOfWeek": 7 } },
+
+    { "code": "COMEBACK",         "label": "COMEBACK",          "description": "Transmission after ≥ 30 days silent",    "kind": "gap-days",             "params": { "threshold": 30 } },
+    { "code": "LONG-SILENCE",     "label": "LONG SILENCE",      "description": "Transmission after ≥ 90 days silent",    "kind": "gap-days",             "params": { "threshold": 90 } },
+    { "code": "HIBERNATION",      "label": "HIBERNATION",       "description": "Transmission after ≥ 180 days silent",   "kind": "gap-days",             "params": { "threshold": 180 } },
+
+    { "code": "DOUBLE-TAP",       "label": "DOUBLE TAP",        "description": "2 transmissions on a single day",        "kind": "same-day-count",       "params": { "threshold": 2 } },
+    { "code": "TRIPLE-TAP",       "label": "TRIPLE TAP",        "description": "3 transmissions on a single day",        "kind": "same-day-count",       "params": { "threshold": 3 } },
+    { "code": "QUADRA-TAP",       "label": "QUADRA TAP",        "description": "4 transmissions on a single day",        "kind": "same-day-count",       "params": { "threshold": 4 } },
+
+    { "code": "BIRTHDAY-TX",      "label": "BIRTHDAY TX",       "description": "Transmission on the blog anniversary",   "kind": "anniversary",          "params": {} },
+
+    { "code": "NEW-YEAR-TX",      "label": "NEW YEAR TX",       "description": "Transmission on Jan 1",                  "kind": "date-suffix",          "params": { "mmDd": "-01-01" } },
+    { "code": "VALENTINES-TX",    "label": "VALENTINES TX",     "description": "Transmission on Feb 14",                 "kind": "date-suffix",          "params": { "mmDd": "-02-14" } },
+    { "code": "LEAP-YEAR",        "label": "LEAP YEAR TX",      "description": "Transmission on Feb 29",                 "kind": "date-suffix",          "params": { "mmDd": "-02-29" } },
+    { "code": "PI-DAY",           "label": "PI DAY",            "description": "Transmission on Mar 14",                 "kind": "date-suffix",          "params": { "mmDd": "-03-14" } },
+    { "code": "VN-NATIONAL-DAY",  "label": "VN NATIONAL DAY",   "description": "Transmission on Sep 2",                  "kind": "date-suffix",          "params": { "mmDd": "-09-02" } },
+    { "code": "HALLOWEEN-TX",     "label": "HALLOWEEN TX",      "description": "Transmission on Oct 31",                 "kind": "date-suffix",          "params": { "mmDd": "-10-31" } },
+    { "code": "CHRISTMAS-EVE-TX", "label": "CHRISTMAS EVE TX",  "description": "Transmission on Dec 24",                 "kind": "date-suffix",          "params": { "mmDd": "-12-24" } }
+  ]
+}

@@ -24,10 +24,9 @@ final class GamificationCalculator
     }
 
     /**
-     * Resolve the badge registry, defaulting to the bundled JSON config
-     * + the optional user override at `content/badges.json`. Allows tests
-     * to inject a custom registry without forcing every caller to wire
-     * it explicitly.
+     * Resolve the badge registry. Single source of truth lives at
+     * `content/badges.json`; tests can inject a custom registry through
+     * the constructor.
      */
     private function registry(): Badges\BadgeRegistry
     {
@@ -35,10 +34,7 @@ final class GamificationCalculator
             return $this->badgeRegistry;
         }
         $rootDir = dirname(__DIR__);
-        return new Badges\BadgeRegistry(
-            userPath: $rootDir . '/content/badges.json',
-            defaultsPath: $rootDir . '/src/Badges/badges.json',
-        );
+        return new Badges\BadgeRegistry($rootDir . '/content/badges.json');
     }
 
     /**

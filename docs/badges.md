@@ -1,8 +1,8 @@
 # Badges — Operator Flex on `/about`
 
-The `/about` page shows a TX STREAK panel (weekly cadence) and a BADGES
-grid. Both are derived entirely from the published-post set — no DB, no
-admin clicks. This doc covers how to customise the badge catalogue.
+The `/about` page shows a BADGES grid derived entirely from the
+published-post set — no DB, no admin clicks. This doc covers how to
+customise the catalogue.
 
 ## How it works
 
@@ -18,17 +18,16 @@ Each badge is declared in a JSON file. The compute logic lives in PHP
 "kinds" — small reusable templates — so adding a new badge of an
 existing pattern is just a new JSON entry, not a code change.
 
-## Default catalogue
+## Catalogue location
 
-LazyBlog ships with 10 volume badges and 8 hidden badges baked into
-`src/Badges/badges.json`. You don't need to touch anything for the
-defaults to work.
+The badge catalogue lives at **`content/badges.json`** (allowlisted in
+`.gitignore` so it ships with the repo). LazyBlog comes with 10 volume
+badges and 8 hidden badges out of the box. Edit the file in place to
+customise — there is no separate "default" path, this single file is
+the source of truth.
 
-## Customising
-
-To override the default catalogue, create `content/badges.json`. The
-loader uses your file as soon as it exists; delete it to fall back to
-the shipped defaults.
+If the file is missing or unreadable the BADGES panel is silently
+omitted from `/about`; nothing else breaks.
 
 ```json
 {
