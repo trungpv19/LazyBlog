@@ -77,6 +77,38 @@ final class PostRepository
     }
 
     /**
+     * Enumerate every distinct series across published posts, with
+     * part count + earliest/latest date for display on the /series
+     * index page. Sorted by latest activity desc (recently-updated
+     * series first).
+     *
+     * @return list<array{slug:string, title:string, count:int, firstDate:string, lastDate:string}>
+     */
+    public function allSeries(): array
+    {
+        $byKey = [];
+        foreach ($this->published() as $entry) {
+            $slug = $entry['series'] ?? null;
+            if (!is_string($slug) || $slug === '') continue;
+            if (!isset($byKey[$slug])) {
+                $byKey[$slug] = [
+                    'slug' => $slug,
+                    'title' => ucwords(str_replace(['-', '_'], ' ', $slug)),
+                    'count' => 0,
+                    'firstDate' => $entry['date'],
+                    'lastDate' => $entry['date'],
+                ];
+            }
+            $byKey[$slug]['count']++;
+            if ($entry['date'] < $byKey[$slug]['firstDate']) $byKey[$slug]['firstDate'] = $entry['date'];
+            if ($entry['date'] > $byKey[$slug]['lastDate'])  $byKey[$slug]['lastDate']  = $entry['date'];
+        }
+        $list = array_values($byKey);
+        usort($list, static fn (array $a, array $b): int => strcmp($b['lastDate'], $a['lastDate']));
+        return $list;
+    }
+
+    /**
      * Return all published posts in the given series, ordered by
      * explicit `part:` ascending, then date ascending. The chronological
      * fallback means a writer who doesn't bother with `part:` still gets

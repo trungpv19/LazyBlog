@@ -75,6 +75,7 @@ $router->get('/admin', fn () => $admin->index());
 $router->get('/posts/{slug}.md', fn (array $p) => $post->raw($p));
 $router->get('/posts/{slug}', fn (array $p) => $post->show($p));
 $router->get('/tags/{tag}', fn (array $p) => $tag->show($p));
+$router->get('/series', fn () => $series->index());
 $router->get('/series/{slug}', fn (array $p) => $series->show($p));
 $router->get('/llms.txt', fn () => $llmsCtl->index());
 $router->get('/llms-full.txt', fn () => $llmsCtl->full());

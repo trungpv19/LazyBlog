@@ -19,6 +19,18 @@ final class SeriesController
     }
 
     /**
+     * GET /series — index of every distinct series across published posts.
+     */
+    public function index(): void
+    {
+        $series = $this->repo->allSeries();
+        Http::render('series-index', [
+            'title' => 'Series // All Transmission Sequences',
+            'series' => $series,
+        ]);
+    }
+
+    /**
      * @param array<string,string> $params
      */
     public function show(array $params): void
