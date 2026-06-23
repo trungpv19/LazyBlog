@@ -53,7 +53,7 @@ use App\Http;
                         <td class="admin-col-series admin-mono">
                             <?php if (!empty($entry['series'])): ?>
                                 <a class="admin-series-chip" href="/series/<?= Http::e((string) $entry['series']) ?>" target="_blank">
-                                    📡 <?= Http::e((string) $entry['series']) ?>
+                                    <?= Http::e((string) $entry['series']) ?>
                                     <?php if (isset($entry['part']) && $entry['part'] !== null): ?>
                                         · P<?= (int) $entry['part'] ?>
                                     <?php endif; ?>

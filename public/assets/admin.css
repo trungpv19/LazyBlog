@@ -394,10 +394,10 @@ button.admin-btn-sm { font-size: 10px; }
     border-collapse: collapse;
     margin-top: 14px;
     font-size: 14px;
-    /* Explicit column widths — without this the browser auto-distributes by
-       content, so a row with many tags squeezed the title column. Fixed
-       layout gives the title cell space priority. */
-    table-layout: fixed;
+    /* Auto layout: browser distributes width by content. Combined with
+       white-space: nowrap on tight columns + wrap-friendly word-wrap on
+       text columns, the table reflows smoothly across viewport sizes. */
+    table-layout: auto;
 }
 .admin-table th, .admin-table td {
     text-align: left;
@@ -406,13 +406,14 @@ button.admin-btn-sm { font-size: 10px; }
     vertical-align: top;
     word-wrap: break-word;
 }
-/* Column width plan (desktop):
-   DATE 110 · TITLE flex · SERIES 200 · TAGS 240 · STATUS 80 · ACTIONS 140 */
-.admin-table th:nth-child(1), .admin-table td:nth-child(1) { width: 110px; }
-.admin-table th:nth-child(3), .admin-table td:nth-child(3) { width: 200px; }
-.admin-table th:nth-child(4), .admin-table td:nth-child(4) { width: 240px; }
-.admin-table th:nth-child(5), .admin-table td:nth-child(5) { width: 80px; text-align: center; }
-.admin-table th:nth-child(6), .admin-table td:nth-child(6) { width: 140px; }
+/* Fluid column behavior — no fixed px widths. Tight columns (DATE,
+   STATUS, ACTIONS) get nowrap so they shrink to content. TITLE, SERIES,
+   TAGS wrap naturally as the viewport narrows. table-layout: auto
+   (default) handles the rest. */
+.admin-table th:nth-child(1), .admin-table td:nth-child(1) { white-space: nowrap; }
+.admin-table th:nth-child(5), .admin-table td:nth-child(5) { white-space: nowrap; text-align: center; }
+.admin-table th:nth-child(6), .admin-table td:nth-child(6) { white-space: nowrap; }
+.admin-table .admin-col-series { max-width: 220px; }
 .admin-table th {
     font-family: 'Share Tech Mono', monospace;
     font-size: 11px;
