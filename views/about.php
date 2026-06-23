@@ -6,7 +6,7 @@
  *   firstDate:?string,lastDate:?string,
  *   daysOnline:?int,serverUptime:?string,
  *   streak:array{current:int,longest:int,atRisk:bool,nextDeadline:string,hasAny:bool},
- *   badges:list<array{code:string,label:string,description:string,tier:string,current:int,target:int,unlocked:bool,unlockedAt:?string}>
+ *   badges:list<array{code:string,label:string,description:string,tier:string,current:int,target:int,unlocked:bool,unlockedAt:?string,isRecentUnlock:bool}>
  * } $stats */
 
 use App\Auth;
@@ -133,8 +133,11 @@ $daysLabel = match (true) {
                             ? ($badge['label'] . ': unlocked' . ($badge['unlockedAt'] !== null ? ' on ' . $badge['unlockedAt'] : ''))
                             : ('Locked: ' . $badge['current'] . ' of ' . $badge['target'] . ' toward ' . $badge['label']);
                         ?>
-                        <?php $isHidden = ($badge['tier'] ?? 'volume') === 'hidden'; ?>
-                        <li class="about-badge <?= $isUnlocked ? 'is-unlocked' : 'is-locked' ?><?= $isHidden ? ' is-hidden-unlocked' : '' ?>"
+                        <?php
+                        $isHidden = ($badge['tier'] ?? 'volume') === 'hidden';
+                        $isRecent = !empty($badge['isRecentUnlock']);
+                        ?>
+                        <li class="about-badge <?= $isUnlocked ? 'is-unlocked' : 'is-locked' ?><?= $isHidden ? ' is-hidden-unlocked' : '' ?><?= $isRecent ? ' is-recent-unlock' : '' ?>"
                             aria-label="<?= Http::e($ariaLabel) ?>">
                             <div class="about-badge-head">
                                 <span class="about-badge-icon" aria-hidden="true"><?= $isHidden ? '[★]' : ($isUnlocked ? '[■]' : '[ ]') ?></span>

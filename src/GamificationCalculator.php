@@ -182,7 +182,8 @@ final class GamificationCalculator
      * @param array<string,int> $tagCounts
      * @return list<array{
      *   code:string,label:string,description:string,tier:string,
-     *   current:int,target:int,unlocked:bool,unlockedAt:?string
+     *   current:int,target:int,unlocked:bool,unlockedAt:?string,
+     *   isRecentUnlock:bool
      * }>
      */
     public function badges(array $publishedPosts, array $seriesList, array $tagCounts): array
@@ -247,6 +248,25 @@ final class GamificationCalculator
             $bGap = $b['target'] - $b['current'];
             return $aGap <=> $bGap;
         });
+
+        // Flag the single most-recently-unlocked entry so the view can
+        // pulse a subtle phosphor glow on it. Tier-agnostic — picks the
+        // freshest unlock across volume + hidden.
+        $maxDate = '';
+        $maxIdx = null;
+        foreach ($results as $idx => $b) {
+            if (empty($b['unlocked']) || empty($b['unlockedAt'])) {
+                continue;
+            }
+            if ((string) $b['unlockedAt'] > $maxDate) {
+                $maxDate = (string) $b['unlockedAt'];
+                $maxIdx = $idx;
+            }
+        }
+        foreach ($results as $idx => &$entry) {
+            $entry['isRecentUnlock'] = ($idx === $maxIdx);
+        }
+        unset($entry);
 
         return $results;
     }
