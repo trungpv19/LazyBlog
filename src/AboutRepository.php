@@ -60,7 +60,7 @@ final class AboutRepository
             callsign: self::nullableString($meta, 'callsign'),
             location: self::nullableString($meta, 'location'),
             status: self::nullableString($meta, 'status'),
-            avatar: self::nullableString($meta, 'avatar'),
+            avatar: self::safeAvatar(self::nullableString($meta, 'avatar')),
             contacts: self::parseContacts($meta['contacts'] ?? null),
             stack: self::parseStringList($meta['stack'] ?? null),
             currently: self::nullableString($meta, 'currently'),
@@ -175,9 +175,40 @@ final class AboutRepository
             $out[] = [
                 'label' => $label,
                 'value' => $value,
-                'url' => $url !== '' ? $url : null,
+                'url' => self::safeContactUrl($url),
             ];
         }
         return $out;
+    }
+
+    /**
+     * Defence-in-depth scheme whitelist for contact URLs. Anything not
+     * matching http(s) / mailto / tel / sms is dropped — the view then
+     * renders the contact as plain text instead of a clickable link.
+     * Catches accidental `javascript:` paste from an admin or a future
+     * import path that doesn't sanitise.
+     */
+    private static function safeContactUrl(string $url): ?string
+    {
+        if ($url === '') {
+            return null;
+        }
+        return preg_match('/^(https?|mailto|tel|sms):/i', $url) === 1 ? $url : null;
+    }
+
+    /**
+     * Defence-in-depth scheme whitelist for the avatar URL. Allows only
+     * site-relative paths (start with `/`) or absolute http(s) URLs.
+     * Drops `javascript:` / `data:` / arbitrary schemes that could leak
+     * out of the <img src> context in older browsers.
+     */
+    private static function safeAvatar(?string $url): ?string
+    {
+        if ($url === null) {
+            return null;
+        }
+        // The `(?!/)` lookahead rejects protocol-relative URLs ("//evil.com/x")
+        // which would otherwise resolve to http(s)://evil.com on the page.
+        return preg_match('#^(/(?!/)|https?://)#i', $url) === 1 ? $url : null;
     }
 }
