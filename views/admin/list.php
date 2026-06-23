@@ -28,6 +28,23 @@ use App\Http;
 
     <?php if ($flash !== null): ?>
         <p class="admin-flash">// <?= Http::e($flash) ?></p>
+        <?php
+        // Match a successful save / delete and drop the editor's
+        // localStorage draft for that slug. Also nuke the generic
+        // "new post" autosave key (`lazyblog-new`) so a fresh
+        // /admin/new doesn't repopulate from the just-saved post.
+        if (preg_match('/^(?:Saved|Deleted): (.+)$/', $flash, $m)):
+            $clearedSlug = $m[1];
+        ?>
+            <script>
+            (function () {
+                try {
+                    localStorage.removeItem('smde_lazyblog-' + <?= json_encode($clearedSlug) ?>);
+                    localStorage.removeItem('smde_lazyblog-new');
+                } catch (e) { /* localStorage unavailable — ignore */ }
+            })();
+            </script>
+        <?php endif; ?>
     <?php endif; ?>
 
     <?php if ($posts === []): ?>
