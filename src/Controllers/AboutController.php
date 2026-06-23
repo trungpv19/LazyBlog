@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\AboutRepository;
+use App\Config;
+use App\GamificationCalculator;
 use App\Http;
 use App\MarkdownRenderer;
 use App\PostRepository;
@@ -52,9 +54,17 @@ final class AboutController
      * Activity stats derived from the published post index + a peek at
      * `/proc/uptime` for the real server/container uptime. Cheap — runs
      * against the in-memory index cache the rest of the app uses; the
-     * uptime read is a single tiny file. Both null-safe.
+     * uptime read is a single tiny file. All null-safe.
      *
-     * @return array{posts:int,tags:int,series:int,firstDate:?string,lastDate:?string,daysOnline:?int,serverUptime:?string}
+     * `streak` is computed lazily here too, keyed off the same published
+     * index so we avoid a second filesystem walk.
+     *
+     * @return array{
+     *   posts:int,tags:int,series:int,
+     *   firstDate:?string,lastDate:?string,
+     *   daysOnline:?int,serverUptime:?string,
+     *   streak:array{current:int,longest:int,atRisk:bool,nextDeadline:string,hasAny:bool}
+     * }
      */
     private function buildStats(): array
     {
@@ -76,6 +86,11 @@ final class AboutController
                 ->days;
             $daysOnline = $diff !== false ? (int) $diff : null;
         }
+
+        $tz = new \DateTimeZone((string) Config::get('TIMEZONE', 'UTC'));
+        $calc = new GamificationCalculator($tz, new \DateTimeImmutable('now', $tz));
+        $streak = $calc->streak($published);
+
         return [
             'posts' => count($published),
             'tags' => count($this->posts->allTags()),
@@ -84,6 +99,7 @@ final class AboutController
             'lastDate' => $last,
             'daysOnline' => $daysOnline,
             'serverUptime' => self::readServerUptime(),
+            'streak' => $streak,
         ];
     }
 
