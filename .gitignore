@@ -49,8 +49,13 @@ pnpm-lock.yaml
 composer.lock
 
 # Content lives locally only — markdown posts, generated index, llms.txt,
-# feed cache, etc. Backup with rsync, not git.
-/content/
+# feed cache, etc. Backup with rsync, not git. Exceptions: shared config
+# files like the badge catalogue stay in git so deploys ship with sane
+# defaults out of the box. Use `/content/*` (not `/content/`) so the
+# `!` re-include below actually takes effect — git can't re-include a
+# child of a fully-excluded directory.
+/content/*
+!/content/badges.json
 
 # Stray pre-existing release artifact from project init — not part of LazyBlog.
 /release-manifest.json

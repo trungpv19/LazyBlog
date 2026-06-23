@@ -226,14 +226,33 @@ $favicon = 'data:image/svg+xml,'
     <link href="https://fonts.googleapis.com/css2?family=Play:wght@400;700&family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
 
     <?php
-    // Stylesheets split by concern so each file has its own ?v= cache-bust
-    // (changing one doesn't invalidate the others). Load order matters:
-    // base defines tokens, the rest consume them.
+    // Stylesheets split by concern, each with its own ?v= cache-bust.
+    // base/effects/components/post are universal (touched by header,
+    // footer, post-page-title used on /about, post-body code-block HUD
+    // for any markdown body). pages.css + about.css are route-scoped —
+    // see "Frontend assets" rule in .claude/rules/development-rules.md.
+    // Load order matters: base defines tokens, the rest consume them.
     foreach (['assets/base.css', 'assets/effects.css', 'assets/components.css',
-              'assets/post.css', 'assets/pages.css'] as $css):
+              'assets/post.css'] as $css):
     ?>
         <link rel="stylesheet" href="<?= Http::e(Http::asset($css)) ?>">
     <?php endforeach; ?>
+    <?php
+    // pages.css holds standalone-page styles only (.archive-*, .search-*,
+    // .ascii-404, .series-page used on both the /series index AND each
+    // /series/{slug} detail page). Skip it everywhere else so home /
+    // post / tag / about don't pay for unused rules.
+    $needsPages = $path === '/archive'
+        || $path === '/search'
+        || str_starts_with($path, '/series')
+        || http_response_code() === 404;
+    if ($needsPages):
+    ?>
+        <link rel="stylesheet" href="<?= Http::e(Http::asset('assets/pages.css')) ?>">
+    <?php endif; ?>
+    <?php if ($path === '/about'): ?>
+        <link rel="stylesheet" href="<?= Http::e(Http::asset('assets/about.css')) ?>">
+    <?php endif; ?>
     <?php if (str_starts_with($path, '/admin')): ?>
         <link rel="stylesheet" href="<?= Http::e(Http::asset('assets/admin.css')) ?>">
         <?php if (App\Auth::check()): ?>
@@ -260,7 +279,14 @@ $favicon = 'data:image/svg+xml,'
     <?php $callsign = (string) Config::get('CALLSIGN', ''); if ($callsign !== ''): ?>
         <div class="callsign"><?= Http::e($callsign) ?></div>
     <?php endif; ?>
-    <h1><a href="/" class="brand-link"><?= Http::e($siteTitle) ?></a></h1>
+    <?php /* Home is the only page where the site title IS the primary
+         heading; everywhere else (posts, /about, archive, etc.) the
+         content owns the H1 and the brand is decorative chrome. */ ?>
+    <?php if ($isHome): ?>
+        <h1><a href="/" class="brand-link"><?= Http::e($siteTitle) ?></a></h1>
+    <?php else: ?>
+        <p class="site-brand"><a href="/" class="brand-link"><?= Http::e($siteTitle) ?></a></p>
+    <?php endif; ?>
     <?php if ($siteDesc !== ''): ?>
         <div class="subtitle">// <?= Http::e($siteDesc) ?></div>
     <?php else: ?>
@@ -268,11 +294,11 @@ $favicon = 'data:image/svg+xml,'
     <?php endif; ?>
     <div class="header-actions">
         <a class="header-btn" href="/" aria-label="Back to home"<?= $isHome ? ' aria-current="page"' : '' ?>>[ HOME ]</a>
-        <a class="header-btn" href="/archive" aria-label="Archive"<?= $path === '/archive' ? ' aria-current="page"' : '' ?>>[ ARCHIVE ]</a>
         <?php if ($hasSeries): ?>
             <a class="header-btn" href="/series" aria-label="Series"<?= str_starts_with($path, '/series') ? ' aria-current="page"' : '' ?>>[ SERIES ]</a>
         <?php endif; ?>
         <a class="header-btn" href="/search" aria-label="Search"<?= $path === '/search' ? ' aria-current="page"' : '' ?>>[ SEARCH ]</a>
+        <a class="header-btn" href="/archive" aria-label="Archive"<?= $path === '/archive' ? ' aria-current="page"' : '' ?>>[ ARCHIVE ]</a>
         <?php if ($hasAbout): ?>
             <a class="header-btn" href="/about" aria-label="About"<?= $path === '/about' ? ' aria-current="page"' : '' ?>>[ ABOUT ]</a>
         <?php endif; ?>

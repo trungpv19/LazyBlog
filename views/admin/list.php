@@ -1,6 +1,10 @@
 <?php
 /** @var string $title */
 /** @var list<array<string,mixed>> $posts */
+/** @var int $page */
+/** @var int $totalPages */
+/** @var int $total */
+/** @var string $pageBaseUrl */
 /** @var string|null $flash */
 
 use App\Csrf;
@@ -10,7 +14,7 @@ use App\Http;
 <section>
     <div class="admin-header-row">
         <div>
-            <h2>ALL POSTS (<?= count($posts) ?>)</h2>
+            <h2>ALL POSTS (<?= (int) $total ?>)</h2>
         </div>
         <div class="admin-actions">
             <a class="admin-btn admin-btn-primary" href="/admin/new">[ NEW POST ]</a>
@@ -24,6 +28,23 @@ use App\Http;
 
     <?php if ($flash !== null): ?>
         <p class="admin-flash">// <?= Http::e($flash) ?></p>
+        <?php
+        // Match a successful save / delete and drop the editor's
+        // localStorage draft for that slug. Also nuke the generic
+        // "new post" autosave key (`lazyblog-new`) so a fresh
+        // /admin/new doesn't repopulate from the just-saved post.
+        if (preg_match('/^(?:Saved|Deleted): (.+)$/', $flash, $m)):
+            $clearedSlug = $m[1];
+        ?>
+            <script>
+            (function () {
+                try {
+                    localStorage.removeItem('smde_lazyblog-' + <?= json_encode($clearedSlug) ?>);
+                    localStorage.removeItem('smde_lazyblog-new');
+                } catch (e) { /* localStorage unavailable — ignore */ }
+            })();
+            </script>
+        <?php endif; ?>
     <?php endif; ?>
 
     <?php if ($posts === []): ?>
@@ -43,7 +64,7 @@ use App\Http;
             <tbody>
                 <?php foreach ($posts as $entry): ?>
                     <tr>
-                        <td class="admin-mono"><?= Http::e((string) $entry['date']) ?></td>
+                        <td class="admin-mono"><?= Http::e(substr((string) $entry['date'], 0, 10)) ?></td>
                         <td class="admin-title-cell">
                             <a href="/posts/<?= Http::e((string) $entry['slug']) ?>" target="_blank"
                                title="<?= Http::e((string) $entry['title']) ?>">
@@ -67,7 +88,7 @@ use App\Http;
                         <td class="admin-mono">
                             <?php if (!empty($entry['draft'])): ?>
                                 <span class="admin-status admin-status-draft" title="Draft" aria-label="Draft">Draft</span>
-                            <?php elseif ($entry['date'] > date('Y-m-d')): ?>
+                            <?php elseif (substr((string) $entry['date'], 0, 10) > date('Y-m-d')): ?>
                                 <span class="admin-status admin-status-scheduled" title="Scheduled" aria-label="Scheduled">Scheduled</span>
                             <?php else: ?>
                                 <span class="admin-status admin-status-live" title="Live" aria-label="Live">Live</span>
@@ -86,5 +107,6 @@ use App\Http;
                 <?php endforeach; ?>
             </tbody>
         </table>
+        <?php include __DIR__ . '/../_pagination.php'; ?>
     <?php endif; ?>
 </section>

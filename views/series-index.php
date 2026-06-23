@@ -16,13 +16,21 @@ use App\Http;
                 <li class="series-item series-item-card">
                     <div class="series-item-body">
                         <a class="series-item-title" href="/series/<?= Http::e($s['slug']) ?>">
-                            📡 <?= Http::e($s['title']) ?>
+                            <?= Http::e($s['title']) ?>
                         </a>
+                        <?php
+                        // Display dates collapse to YYYY-MM-DD — frontmatter
+                        // can carry full ISO datetime for the wall-clock
+                        // gamification kinds, but the listing only needs
+                        // the calendar day.
+                        $firstDate = substr((string) $s['firstDate'], 0, 10);
+                        $lastDate = substr((string) $s['lastDate'], 0, 10);
+                        ?>
                         <div class="series-item-meta">
                             <?= $s['count'] ?> part<?= $s['count'] === 1 ? '' : 's' ?>
-                            · <?= Http::e($s['firstDate']) ?>
-                            <?php if ($s['firstDate'] !== $s['lastDate']): ?>
-                                → <?= Http::e($s['lastDate']) ?>
+                            · <?= Http::e($firstDate) ?>
+                            <?php if ($firstDate !== $lastDate): ?>
+                                → <?= Http::e($lastDate) ?>
                             <?php endif; ?>
                         </div>
                     </div>

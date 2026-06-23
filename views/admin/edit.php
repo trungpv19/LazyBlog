@@ -4,7 +4,7 @@
 /** @var \App\Post|null $post */
 /** @var string $originalFilename */
 /** @var string|null $formError */
-/** @var array{date:string,slug:string,title:string,author:string,tags:string,draft:bool,icon:string,summary:string,body:string} $formValues */
+/** @var array{date:string,time:string,slug:string,title:string,author:string,tags:string,draft:bool,icon:string,summary:string,image:string,series:string,part:string,body:string} $formValues */
 
 use App\Csrf;
 use App\Http;
@@ -51,11 +51,16 @@ $isEdit = $mode === 'edit';
 
         <!-- Row 2: Date + Slug + Tags + Draft — secondary structural fields -->
         <div class="admin-form-row">
-            <div class="admin-field" style="flex: 0 0 140px">
+            <div class="admin-field" style="flex: 0 0 150px">
                 <label class="admin-label" for="date">Date</label>
-                <input type="text" name="date" id="date" required
+                <input type="date" name="date" id="date" required
                        value="<?= Http::e($formValues['date']) ?>"
-                       pattern="\d{4}-\d{2}-\d{2}"
+                       class="admin-input admin-mono">
+            </div>
+            <div class="admin-field" style="flex: 0 0 110px">
+                <label class="admin-label" for="time">Time <span class="admin-label-hint">(opt)</span></label>
+                <input type="time" name="time" id="time" step="1"
+                       value="<?= Http::e($formValues['time']) ?>"
                        class="admin-input admin-mono">
             </div>
             <div class="admin-field" style="flex: 1 1 200px">
@@ -91,13 +96,32 @@ $isEdit = $mode === 'edit';
                    placeholder="One-line description shown in post lists and meta tags.">
         </div>
 
-        <!-- Social-card image (per-post og:image override) -->
+        <!-- Social-card image (per-post og:image override). The input
+             accepts a path or absolute URL; the upload button POSTs the
+             chosen file to /admin/upload and writes the returned path
+             back into the input. Drop-in to keep the field useful for
+             externally-hosted images too. -->
         <div class="admin-field">
             <label class="admin-label" for="image">Social image <span class="admin-label-hint">(optional · og:image · falls back to first body image)</span></label>
-            <input type="text" name="image" id="image"
-                   value="<?= Http::e($formValues['image']) ?>"
-                   class="admin-input"
-                   placeholder="/uploads/2026/06/cover.webp  or  https://…">
+            <div class="admin-input-with-upload">
+                <input type="text" name="image" id="image"
+                       value="<?= Http::e($formValues['image']) ?>"
+                       class="admin-input"
+                       placeholder="/uploads/2026/06/cover.webp  or  https://…">
+                <!-- Mirror field — JS upload writes here too, server reads
+                     either one. Belt + braces against any browser quirk
+                     that drops the visible input's JS-assigned value
+                     from the form serialization. -->
+                <input type="hidden" name="image_mirror" id="image-mirror"
+                       value="<?= Http::e($formValues['image']) ?>">
+                <input type="file" id="image-upload" accept="image/*" hidden>
+                <button type="button" id="image-upload-btn"
+                        class="admin-btn admin-btn-sm"
+                        data-target="image"
+                        data-mirror="image-mirror"
+                        data-file-input="image-upload">UPLOAD</button>
+            </div>
+            <div id="image-upload-status" class="admin-label-hint" hidden></div>
         </div>
 
         <!-- Series — slug + optional part number side by side -->

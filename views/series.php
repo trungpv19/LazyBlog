@@ -21,7 +21,7 @@ use App\Http;
                         <?= Http::e($entry['title']) ?>
                     </a>
                     <div class="series-item-meta">
-                        <span class="series-date"><?= Http::e($entry['date']) ?></span>
+                        <span class="series-date"><?= Http::e(substr((string) $entry['date'], 0, 10)) ?></span>
                         <?php if (!empty($entry['summary'])): ?>
                             · <span class="series-summary"><?= Http::e($entry['summary']) ?></span>
                         <?php endif; ?>

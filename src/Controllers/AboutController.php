@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\AboutRepository;
+use App\Config;
+use App\GamificationCalculator;
 use App\Http;
 use App\MarkdownRenderer;
 use App\PostRepository;
@@ -52,14 +54,26 @@ final class AboutController
      * Activity stats derived from the published post index + a peek at
      * `/proc/uptime` for the real server/container uptime. Cheap — runs
      * against the in-memory index cache the rest of the app uses; the
-     * uptime read is a single tiny file. Both null-safe.
+     * uptime read is a single tiny file. All null-safe.
      *
-     * @return array{posts:int,tags:int,series:int,firstDate:?string,lastDate:?string,daysOnline:?int,serverUptime:?string}
+     * @return array{
+     *   posts:int,tags:int,series:int,
+     *   firstDate:?string,lastDate:?string,
+     *   daysOnline:?int,serverUptime:?string,
+     *   badges:list<array{code:string,label:string,description:string,tier:string,current:int,target:int,unlocked:bool,unlockedAt:?string,isRecentUnlock:bool}>,
+     *   streak:array{current:int,longest:int,atRisk:bool,unit:string}
+     * }
      */
     private function buildStats(): array
     {
         $published = $this->posts->published();
-        $dates = array_column($published, 'date');
+        // Reduce to date-only keys so mixed `YYYY-MM-DD` / ISO datetime
+        // entries display consistently and sort by calendar day, not by
+        // string length.
+        $dates = array_map(
+            static fn (array $e): string => substr((string) $e['date'], 0, 10),
+            $published,
+        );
         sort($dates);
         $first = $dates[0] ?? null;
         $last = $dates === [] ? null : $dates[count($dates) - 1];
@@ -70,6 +84,20 @@ final class AboutController
                 ->days;
             $daysOnline = $diff !== false ? (int) $diff : null;
         }
+
+        $tz = new \DateTimeZone((string) Config::get('TIMEZONE', 'UTC'));
+        $calc = new GamificationCalculator($tz, new \DateTimeImmutable('now', $tz));
+        $badges = $calc->badges(
+            $published,
+            $this->posts->allSeries(),
+            $this->posts->tagCounts(),
+        );
+        // Standalone "Current Streak" card — driven by STREAK_UNIT env,
+        // independent of any individual badge's per-entry unit. The
+        // card visualises ongoing writing cadence at a glance.
+        $streakUnit = (string) Config::get('STREAK_UNIT', GamificationCalculator::UNIT_WEEK);
+        $streak = $calc->streakSummaryForUnit($streakUnit, $published);
+
         return [
             'posts' => count($published),
             'tags' => count($this->posts->allTags()),
@@ -78,6 +106,8 @@ final class AboutController
             'lastDate' => $last,
             'daysOnline' => $daysOnline,
             'serverUptime' => self::readServerUptime(),
+            'badges' => $badges,
+            'streak' => $streak,
         ];
     }
 

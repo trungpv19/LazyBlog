@@ -91,15 +91,16 @@ $intensity = static function (int $count, bool $inRange): string {
                 <h3 class="archive-year-label">─ <?= Http::e($year) ?> ─</h3>
                 <ul class="archive-list">
                     <?php foreach ($yearPosts as $entry): ?>
-                        <li class="archive-item" id="day-<?= Http::e($entry['date']) ?>">
-                            <span class="archive-date"><?= Http::e($entry['date']) ?></span>
+                        <?php $entryDate = substr((string) $entry['date'], 0, 10); ?>
+                        <li class="archive-item" id="day-<?= Http::e($entryDate) ?>">
+                            <span class="archive-date"><?= Http::e($entryDate) ?></span>
                             <a class="archive-link" href="/posts/<?= Http::e($entry['slug']) ?>">
                                 <?php if (!empty($entry['icon'])): ?><span class="archive-icon"><?= Http::e($entry['icon']) ?></span> <?php endif; ?>
                                 <?= Http::e($entry['title']) ?>
                             </a>
                             <?php if (!empty($entry['series'])): ?>
                                 <a class="post-series-tag" href="/series/<?= Http::e((string) $entry['series']) ?>" onclick="event.stopPropagation()">
-                                    📡 <?= Http::e((string) $entry['series']) ?><?php
+                                    <?= Http::e((string) $entry['series']) ?><?php
                                         if (isset($entry['part']) && $entry['part'] !== null) echo ' · P' . (int) $entry['part'];
                                     ?>
                                 </a>

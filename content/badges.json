@@ -1,0 +1,74 @@
+{
+  "_": "LazyBlog badge catalogue. Single source of truth — edit in place to customise. Each entry: code, label, description, kind (one of BadgeKinds::executors()), params. Volume tier renders always (locked entries show N/M progress); hidden tier only renders when unlocked so codes here never leak in HTML until earned. See docs/badges.md for available kinds.",
+
+  "volume": [
+    { "code": "FIRST-TX",         "label": "FIRST TX",          "description": "Send the first transmission",            "kind": "post-count",           "params": { "threshold": 1 } },
+    { "code": "BROADCAST-X10",    "label": "BROADCAST ×10",     "description": "10 published transmissions",             "kind": "post-count",           "params": { "threshold": 10 } },
+    { "code": "BROADCAST-X25",    "label": "BROADCAST ×25",     "description": "25 published transmissions",             "kind": "post-count",           "params": { "threshold": 25 } },
+    { "code": "BROADCAST-X50",    "label": "BROADCAST ×50",     "description": "50 published transmissions",             "kind": "post-count",           "params": { "threshold": 50 } },
+    { "code": "BROADCAST-X100",   "label": "BROADCAST ×100",    "description": "100 published transmissions",            "kind": "post-count",           "params": { "threshold": 100 } },
+    { "code": "BROADCAST-X200",   "label": "BROADCAST ×200",    "description": "200 published transmissions",            "kind": "post-count",           "params": { "threshold": 200 } },
+
+    { "code": "ESSAYIST",         "label": "ESSAYIST",          "description": "1 transmission ≥ 2000 words",            "kind": "longest-post-words",   "params": { "threshold": 2000 } },
+    { "code": "LONG-FORM",        "label": "LONG-FORM OPERATOR","description": "1 transmission ≥ 5000 words",            "kind": "longest-post-words",   "params": { "threshold": 5000 } },
+    { "code": "TOME",             "label": "TOME",              "description": "1 transmission ≥ 10 000 words",          "kind": "longest-post-words",   "params": { "threshold": 10000 } },
+
+    { "code": "IMAGE-RICH",       "label": "IMAGE RICH",        "description": "1 transmission with ≥ 5 images",         "kind": "body-pattern-count",   "params": { "threshold": 5,  "pattern": "image" } },
+    { "code": "CODE-HEAVY",       "label": "CODE HEAVY",        "description": "1 transmission with ≥ 3 code blocks",    "kind": "body-pattern-count",   "params": { "threshold": 3,  "pattern": "code-block" } },
+    { "code": "LINK-CURATOR",     "label": "LINK CURATOR",      "description": "1 transmission with ≥ 10 external links","kind": "body-pattern-count",   "params": { "threshold": 10, "pattern": "external-link" } },
+    { "code": "QUOTE-PHILOSOPHER","label": "QUOTE PHILOSOPHER", "description": "1 transmission with ≥ 3 blockquotes",    "kind": "body-pattern-count",   "params": { "threshold": 3,  "pattern": "blockquote" } },
+
+    { "code": "SERIES-INIT",      "label": "SERIES INITIATED",  "description": "First series with ≥3 published parts",   "kind": "series-min-parts",     "params": { "threshold": 3 } },
+    { "code": "SERIES-OPERATOR",  "label": "SERIES OPERATOR",   "description": "First series with ≥5 published parts",   "kind": "series-min-parts",     "params": { "threshold": 5 } },
+
+    { "code": "SERIES-X3",        "label": "SERIES ×3",         "description": "Run 3 distinct series",                  "kind": "series-count",         "params": { "threshold": 3 } },
+    { "code": "SERIES-X5",        "label": "SERIES ×5",         "description": "Run 5 distinct series",                  "kind": "series-count",         "params": { "threshold": 5 } },
+    { "code": "SERIES-X10",       "label": "SERIES ×10",        "description": "Run 10 distinct series",                 "kind": "series-count",         "params": { "threshold": 10 } },
+
+    { "code": "TAG-SPECIALIST",   "label": "TAG SPECIALIST",    "description": "≥10 posts in a single tag",              "kind": "tag-count",            "params": { "threshold": 10 } },
+    { "code": "TAG-MENTOR",       "label": "TAG MENTOR",        "description": "≥25 posts in a single tag",              "kind": "tag-count",            "params": { "threshold": 25 } },
+
+    { "code": "HALF-YEAR-ONLINE", "label": "HALF YEAR ONLINE",  "description": "Blog age ≥ 180 days",                    "kind": "blog-age-days",        "params": { "threshold": 180 } },
+    { "code": "ONE-YEAR-ONLINE",  "label": "ONE YEAR ONLINE",   "description": "Blog age ≥ 365 days",                    "kind": "blog-age-days",        "params": { "threshold": 365 } },
+    { "code": "TWO-YEAR-ONLINE",  "label": "TWO YEARS ONLINE",  "description": "Blog age ≥ 730 days",                    "kind": "blog-age-days",        "params": { "threshold": 730 } },
+
+    { "code": "DAILY-STREAK-X7",   "label": "DAILY STREAK (7 days)",     "description": "Longest streak ≥ 7 consecutive days",     "kind": "longest-streak", "params": { "threshold": 7,   "unit": "day" } },
+    { "code": "DAILY-STREAK-X30",  "label": "DAILY STREAK (30 days)",    "description": "Longest streak ≥ 30 consecutive days",    "kind": "longest-streak", "params": { "threshold": 30,  "unit": "day" } },
+    { "code": "SPARK-STREAK",      "label": "SPARK STREAK (4 weeks)",    "description": "Longest streak ≥ 4 consecutive weeks",    "kind": "longest-streak", "params": { "threshold": 4,   "unit": "week" } },
+    { "code": "IRON-STREAK",       "label": "IRON STREAK (12 weeks)",    "description": "Longest streak ≥ 12 consecutive weeks",   "kind": "longest-streak", "params": { "threshold": 12,  "unit": "week" } },
+    { "code": "MARATHON",          "label": "MARATHON (26 weeks)",       "description": "Longest streak ≥ 26 consecutive weeks",   "kind": "longest-streak", "params": { "threshold": 26,  "unit": "week" } },
+    { "code": "CENTURY-STREAK",    "label": "CENTURY STREAK (100 weeks)","description": "Longest streak ≥ 100 consecutive weeks",  "kind": "longest-streak", "params": { "threshold": 100, "unit": "week" } },
+    { "code": "MONTHLY-STREAK-X6", "label": "MONTHLY STREAK (6 months)", "description": "Longest streak ≥ 6 consecutive months",   "kind": "longest-streak", "params": { "threshold": 6,   "unit": "month" } },
+    { "code": "MONTHLY-STREAK-X12","label": "MONTHLY STREAK (12 months)","description": "Longest streak ≥ 12 consecutive months",  "kind": "longest-streak", "params": { "threshold": 12,  "unit": "month" } },
+    { "code": "YEARLY-STREAK-X2",  "label": "YEARLY STREAK (2 years)",   "description": "Longest streak ≥ 2 consecutive years",    "kind": "longest-streak", "params": { "threshold": 2,   "unit": "year" } },
+    { "code": "YEARLY-STREAK-X5",  "label": "YEARLY STREAK (5 years)",   "description": "Longest streak ≥ 5 consecutive years",    "kind": "longest-streak", "params": { "threshold": 5,   "unit": "year" } }
+  ],
+
+  "hidden": [
+    { "code": "NIGHT-OWL",        "label": "NIGHT OWL",         "description": "Transmission between 00:00 and 04:00",   "kind": "time-window",          "params": { "hourFrom": 0,  "hourTo": 4 } },
+    { "code": "DAWN-PATROL",      "label": "DAWN PATROL",       "description": "Transmission between 05:00 and 07:00",   "kind": "time-window",          "params": { "hourFrom": 5,  "hourTo": 7 } },
+    { "code": "EARLY-MORNING-TX", "label": "EARLY MORNING TX",  "description": "Transmission between 06:00 and 09:00",   "kind": "time-window",          "params": { "hourFrom": 6,  "hourTo": 9 } },
+    { "code": "LUNCH-BREAK-TX",   "label": "LUNCH BREAK TX",    "description": "Transmission during nghỉ trưa 12:00–14:00","kind": "time-window",          "params": { "hourFrom": 12, "hourTo": 14 } },
+    { "code": "FRIDAY-NIGHT-TX",  "label": "FRIDAY NIGHT TX",   "description": "Friday transmission after 20:00",        "kind": "time-window",          "params": { "hourFrom": 20, "hourTo": 24, "dayOfWeek": 5 } },
+    { "code": "SATURDAY-LATE-TX", "label": "SATURDAY LATE TX",  "description": "Saturday transmission after 22:00",      "kind": "time-window",          "params": { "hourFrom": 22, "hourTo": 24, "dayOfWeek": 6 } },
+    { "code": "SUNDAY-MORNING-TX","label": "SUNDAY MORNING TX", "description": "Sunday transmission between 06:00–10:00","kind": "time-window",          "params": { "hourFrom": 6,  "hourTo": 10, "dayOfWeek": 7 } },
+
+    { "code": "COMEBACK",         "label": "COMEBACK",          "description": "Transmission after ≥ 30 days silent",    "kind": "gap-days",             "params": { "threshold": 30 } },
+    { "code": "LONG-SILENCE",     "label": "LONG SILENCE",      "description": "Transmission after ≥ 90 days silent",    "kind": "gap-days",             "params": { "threshold": 90 } },
+    { "code": "HIBERNATION",      "label": "HIBERNATION",       "description": "Transmission after ≥ 180 days silent",   "kind": "gap-days",             "params": { "threshold": 180 } },
+
+    { "code": "DOUBLE-TAP",       "label": "DOUBLE TAP",        "description": "2 transmissions on a single day",        "kind": "same-day-count",       "params": { "threshold": 2 } },
+    { "code": "TRIPLE-TAP",       "label": "TRIPLE TAP",        "description": "3 transmissions on a single day",        "kind": "same-day-count",       "params": { "threshold": 3 } },
+    { "code": "QUADRA-TAP",       "label": "QUADRA TAP",        "description": "4 transmissions on a single day",        "kind": "same-day-count",       "params": { "threshold": 4 } },
+
+    { "code": "BIRTHDAY-TX",      "label": "BIRTHDAY TX",       "description": "Transmission on the blog anniversary",   "kind": "anniversary",          "params": {} },
+
+    { "code": "NEW-YEAR-TX",      "label": "NEW YEAR TX",       "description": "Transmission on Jan 1",                  "kind": "date-suffix",          "params": { "mmDd": "-01-01" } },
+    { "code": "VALENTINES-TX",    "label": "VALENTINES TX",     "description": "Transmission on Feb 14",                 "kind": "date-suffix",          "params": { "mmDd": "-02-14" } },
+    { "code": "LEAP-YEAR",        "label": "LEAP YEAR TX",      "description": "Transmission on Feb 29",                 "kind": "date-suffix",          "params": { "mmDd": "-02-29" } },
+    { "code": "PI-DAY",           "label": "PI DAY",            "description": "Transmission on Mar 14",                 "kind": "date-suffix",          "params": { "mmDd": "-03-14" } },
+    { "code": "VN-NATIONAL-DAY",  "label": "VN NATIONAL DAY",   "description": "Transmission on Sep 2",                  "kind": "date-suffix",          "params": { "mmDd": "-09-02" } },
+    { "code": "HALLOWEEN-TX",     "label": "HALLOWEEN TX",      "description": "Transmission on Oct 31",                 "kind": "date-suffix",          "params": { "mmDd": "-10-31" } },
+    { "code": "CHRISTMAS-EVE-TX", "label": "CHRISTMAS EVE TX",  "description": "Transmission on Dec 24",                 "kind": "date-suffix",          "params": { "mmDd": "-12-24" } }
+  ]
+}

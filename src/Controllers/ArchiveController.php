@@ -24,9 +24,12 @@ final class ArchiveController
     {
         $posts = $this->repo->published();
         // Index posts by date for O(1) lookup while walking the calendar.
+        // Key on the date part only so ISO datetime posts still bucket
+        // alongside same-day legacy date-only posts.
         $byDate = [];
         foreach ($posts as $p) {
-            $byDate[$p['date']][] = $p;
+            $key = substr((string) $p['date'], 0, 10);
+            $byDate[$key][] = $p;
         }
 
         $heatmap = $this->buildHeatmap($byDate);

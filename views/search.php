@@ -88,7 +88,7 @@ $highlight = static function (string $text, string $q) use ($fold): string {
             <?php foreach ($hits as $hit): ?>
                 <li class="search-item">
                     <div class="search-result-meta">
-                        <span class="search-date"><?= Http::e($hit['date']) ?></span>
+                        <span class="search-date"><?= Http::e(substr((string) $hit['date'], 0, 10)) ?></span>
                         <?php foreach ($hit['tags'] as $tag): ?>
                             <a class="tag-chip" href="/tags/<?= Http::e($tag) ?>">#<?= Http::e($tag) ?></a>
                         <?php endforeach; ?>

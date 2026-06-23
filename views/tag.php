@@ -16,10 +16,10 @@ use App\Http;
             <?php foreach ($posts as $entry): ?>
                 <li class="post-item">
                     <div class="post-meta">
-                        <span class="post-date"><?= Http::e($entry['date']) ?></span>
+                        <span class="post-date"><?= Http::e(substr((string) $entry['date'], 0, 10)) ?></span>
                         <?php if (!empty($entry['series'])): ?>
                             <a class="post-series-tag" href="/series/<?= Http::e((string) $entry['series']) ?>">
-                                📡 <?= Http::e((string) $entry['series']) ?><?php
+                                <?= Http::e((string) $entry['series']) ?><?php
                                     if (isset($entry['part']) && $entry['part'] !== null) echo ' · PART ' . (int) $entry['part'];
                                 ?>
                             </a>

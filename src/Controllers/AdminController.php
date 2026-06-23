@@ -81,9 +81,24 @@ final class AdminController
     {
         Auth::requireAuth();
 
+        // Server-side pagination — reuses the POSTS_PER_PAGE env that
+        // home + tag listings already honour so a single dial controls
+        // the whole site's list density.
+        $perPage = max(1, (int) Config::get('POSTS_PER_PAGE', '10'));
+        $all = $this->repo->all();
+        $total = count($all);
+        $totalPages = max(1, (int) ceil($total / $perPage));
+        $page = max(1, min($totalPages, (int) ($_GET['page'] ?? 1)));
+        $offset = ($page - 1) * $perPage;
+        $posts = array_slice($all, $offset, $perPage);
+
         Http::render('admin/list', [
             'title' => 'Admin',
-            'posts' => $this->repo->all(),
+            'posts' => $posts,
+            'page' => $page,
+            'totalPages' => $totalPages,
+            'total' => $total,
+            'pageBaseUrl' => '/admin',
             'flash' => self::consumeFlash(),
         ]);
     }
@@ -94,7 +109,15 @@ final class AdminController
     {
         Auth::requireAuth();
 
-        $today = (new \DateTimeImmutable('today'))->format('Y-m-d');
+        // Pre-fill date + clock time at form open so the new post lands
+        // with the operator's *actual* wall-clock by default — matters
+        // for the time-of-day gamification kinds (NIGHT-OWL etc.). The
+        // operator can still wipe the time field if they want a
+        // legacy date-only entry.
+        $tz = new \DateTimeZone((string) Config::get('TIMEZONE', 'UTC'));
+        $nowLocal = new \DateTimeImmutable('now', $tz);
+        $today = $nowLocal->format('Y-m-d');
+        $nowTime = $nowLocal->format('H:i:s');
         Http::render('admin/edit', [
             'title' => 'New Post',
             'mode' => 'new',
@@ -103,6 +126,7 @@ final class AdminController
             'formError' => null,
             'formValues' => [
                 'date' => $today,
+                'time' => $nowTime,
                 'slug' => '',
                 'title' => '',
                 'author' => (string) Config::get('DEFAULT_AUTHOR', ''),
@@ -132,7 +156,26 @@ final class AdminController
             return;
         }
 
-        $originalFilename = $post->date . '-' . $post->slug . '.md';
+        // Filename is always date-only — strip any ISO datetime tail so
+        // edit-with-rename detection still matches against the actual file.
+        $originalFilename = $post->displayDate() . '-' . $post->slug . '.md';
+
+        // Split ISO datetime back into discrete date + time fields so the
+        // form re-populates as a plain `YYYY-MM-DD` plus `HH:MM[:SS]`.
+        $editDate = $post->displayDate();
+        $editTime = '';
+        if ($post->hasExplicitTime() && preg_match('/T(\d{2}:\d{2}(?::\d{2})?)/', $post->date, $m)) {
+            $editTime = $m[1];
+        }
+
+        // Social image: if no explicit `image:` frontmatter is set, fall
+        // back to the first body image so the field reflects what
+        // og:image will actually render. Saving the form persists this
+        // value explicitly — making the implicit fallback durable.
+        $editImage = $post->image ?? '';
+        if ($editImage === '') {
+            $editImage = $post->firstBodyImage() ?? '';
+        }
 
         Http::render('admin/edit', [
             'title' => 'Edit: ' . $post->title,
@@ -141,7 +184,8 @@ final class AdminController
             'originalFilename' => $originalFilename,
             'formError' => null,
             'formValues' => [
-                'date' => $post->date,
+                'date' => $editDate,
+                'time' => $editTime,
                 'slug' => $post->slug,
                 'title' => $post->title,
                 'author' => $post->author ?? '',
@@ -149,7 +193,7 @@ final class AdminController
                 'draft' => $post->draft,
                 'icon' => $post->icon ?? '',
                 'summary' => $post->summary ?? '',
-                'image' => $post->image ?? '',
+                'image' => $editImage,
                 'series' => $post->series ?? '',
                 'part' => $post->part !== null ? (string) $post->part : '',
                 'body' => $post->bodyMarkdown,
@@ -243,12 +287,13 @@ final class AdminController
     // ----- Helpers -----
 
     /**
-     * @return array{date:string,slug:string,title:string,author:string,tags:string,draft:bool,icon:string,summary:string,body:string}
+     * @return array{date:string,time:string,slug:string,title:string,author:string,tags:string,draft:bool,icon:string,summary:string,image:string,series:string,part:string,body:string}
      */
     private static function readFormValues(): array
     {
         return [
             'date' => trim((string) ($_POST['date'] ?? '')),
+            'time' => trim((string) ($_POST['time'] ?? '')),
             'slug' => trim((string) ($_POST['slug'] ?? '')),
             'title' => trim((string) ($_POST['title'] ?? '')),
             'author' => trim((string) ($_POST['author'] ?? '')),
@@ -256,7 +301,13 @@ final class AdminController
             'draft' => !empty($_POST['draft']),
             'icon' => trim((string) ($_POST['icon'] ?? '')),
             'summary' => trim((string) ($_POST['summary'] ?? '')),
-            'image' => trim((string) ($_POST['image'] ?? '')),
+            // Prefer the visible input; fall back to the JS-driven mirror
+            // (`image_mirror`) so uploads survive any browser quirk where
+            // the visible input's JS-assigned value drops out of the form
+            // serialization but the hidden mirror still carries the URL.
+            'image' => trim((string) ($_POST['image'] ?? '')) !== ''
+                ? trim((string) $_POST['image'])
+                : trim((string) ($_POST['image_mirror'] ?? '')),
             'series' => trim((string) ($_POST['series'] ?? '')),
             'part' => trim((string) ($_POST['part'] ?? '')),
             'body' => (string) ($_POST['body'] ?? ''),
@@ -264,7 +315,7 @@ final class AdminController
     }
 
     /**
-     * @param array{date:string,slug:string,title:string,author:string,tags:string,draft:bool,icon:string,summary:string,body:string} $v
+     * @param array{date:string,time:string,slug:string,title:string,author:string,tags:string,draft:bool,icon:string,summary:string,image:string,series:string,part:string,body:string} $v
      */
     private static function buildPostFromForm(array $v): Post
     {
@@ -279,6 +330,20 @@ final class AdminController
         }
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $v['date'])) {
             throw new \RuntimeException('Date must be YYYY-MM-DD.');
+        }
+
+        // Optional clock time. When present, fold it into the date as an
+        // ISO datetime so time-of-day-sensitive features (e.g. NIGHT-OWL
+        // gamification) can read a real wall-clock from the frontmatter.
+        $date = $v['date'];
+        if ($v['time'] !== '') {
+            if (!preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $v['time'])) {
+                throw new \RuntimeException('Time must be HH:MM or HH:MM:SS.');
+            }
+            $timeFull = strlen($v['time']) === 5 ? $v['time'] . ':00' : $v['time'];
+            $tz = new \DateTimeZone((string) Config::get('TIMEZONE', 'UTC'));
+            $offset = (new \DateTimeImmutable('now', $tz))->format('P');
+            $date = $v['date'] . 'T' . $timeFull . $offset;
         }
 
         /** @var list<string> $tags */
@@ -299,7 +364,7 @@ final class AdminController
         return new Post(
             slug: $v['slug'],
             title: $v['title'],
-            date: $v['date'],
+            date: $date,
             tags: $tags,
             draft: $v['draft'],
             bodyMarkdown: $v['body'],

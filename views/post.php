@@ -25,18 +25,18 @@ $renderTocList = function () use ($toc): void {
 
 <article class="post-article">
     <div class="section-tag">
-        § TRANSMISSION — <?= Http::e($post->date) ?><?php
+        § TRANSMISSION — <?= Http::e($post->displayDate()) ?><?php
             if ($post->author !== null && $post->author !== '') {
                 echo ' — ' . Http::e($post->author);
             }
         ?>
     </div>
-    <h2 class="post-page-title">
+    <h1 class="post-page-title">
         <?php if ($post->icon !== null && $post->icon !== ''): ?>
             <span class="post-icon"><?= Http::e($post->icon) ?></span>
         <?php endif; ?>
         <?= Http::e($post->title) ?>
-    </h2>
+    </h1>
 
     <?php if ($post->tags !== []): ?>
         <div class="post-meta-tags">
@@ -48,7 +48,7 @@ $renderTocList = function () use ($toc): void {
 
     <?php if ($seriesNav !== null): ?>
         <a class="series-banner" href="/series/<?= Http::e($seriesNav['slug']) ?>" aria-label="View full series">
-            <span class="series-banner-label">📡 PART <?= $seriesNav['position'] ?> OF <?= $seriesNav['total'] ?></span>
+            <span class="series-banner-label">§ PART <?= $seriesNav['position'] ?> OF <?= $seriesNav['total'] ?></span>
             <span class="series-banner-title"><?= Http::e($seriesNav['title']) ?></span>
         </a>
     <?php endif; ?>
