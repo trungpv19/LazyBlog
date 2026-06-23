@@ -63,7 +63,8 @@ final class AboutController
      *   posts:int,tags:int,series:int,
      *   firstDate:?string,lastDate:?string,
      *   daysOnline:?int,serverUptime:?string,
-     *   streak:array{current:int,longest:int,atRisk:bool,nextDeadline:string,hasAny:bool}
+     *   streak:array{current:int,longest:int,atRisk:bool,nextDeadline:string,hasAny:bool},
+     *   badges:list<array{code:string,label:string,description:string,current:int,target:int,unlocked:bool,unlockedAt:?string}>
      * }
      */
     private function buildStats(): array
@@ -90,6 +91,11 @@ final class AboutController
         $tz = new \DateTimeZone((string) Config::get('TIMEZONE', 'UTC'));
         $calc = new GamificationCalculator($tz, new \DateTimeImmutable('now', $tz));
         $streak = $calc->streak($published);
+        $badges = $calc->badges(
+            $published,
+            $this->posts->allSeries(),
+            $this->posts->tagCounts(),
+        );
 
         return [
             'posts' => count($published),
@@ -100,6 +106,7 @@ final class AboutController
             'daysOnline' => $daysOnline,
             'serverUptime' => self::readServerUptime(),
             'streak' => $streak,
+            'badges' => $badges,
         ];
     }
 

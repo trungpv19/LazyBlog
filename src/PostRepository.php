@@ -211,6 +211,23 @@ final class PostRepository
         return $list;
     }
 
+    /**
+     * Post-count per tag across published posts. Useful for surfaces that
+     * need to rank tags by activity (e.g. the TAG-SPECIALIST badge).
+     *
+     * @return array<string,int>
+     */
+    public function tagCounts(): array
+    {
+        $counts = [];
+        foreach ($this->published() as $entry) {
+            foreach ($entry['tags'] as $tag) {
+                $counts[$tag] = ($counts[$tag] ?? 0) + 1;
+            }
+        }
+        return $counts;
+    }
+
     public function invalidateCaches(): void
     {
         @unlink($this->indexPath);

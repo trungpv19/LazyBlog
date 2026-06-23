@@ -150,4 +150,86 @@ final class GamificationCalculator
         $daysToSunday = 7 - (int) $this->now->format('N');
         return $this->now->modify("+{$daysToSunday} days")->format('Y-m-d');
     }
+
+    /**
+     * Run the volume badge catalogue against the published-post set and
+     * supporting indices. Each badge entry comes back enriched with
+     * current/target progress + an `unlocked` flag + the date it became
+     * available, sorted unlocked-first (newest first), then locked
+     * closest-to-target first.
+     *
+     * @param list<array{date:string,tags:list<string>,file:string,...}> $publishedPosts
+     * @param list<array{slug:string,count:int,firstDate:string,lastDate:string,title:string}> $seriesList
+     * @param array<string,int> $tagCounts
+     * @return list<array{
+     *   code:string,label:string,description:string,
+     *   current:int,target:int,unlocked:bool,unlockedAt:?string
+     * }>
+     */
+    public function badges(array $publishedPosts, array $seriesList, array $tagCounts): array
+    {
+        // Lazy body load for LONG-FORM word count. The index doesn't carry
+        // post bodies (listings don't need them), so we re-read here. For a
+        // 200-post blog this is ~5–10ms — acceptable for a one-shot page.
+        $postsWithBody = array_map(static function (array $p): array {
+            $path = (string) ($p['file'] ?? '');
+            $body = '';
+            if ($path !== '' && is_file($path)) {
+                $raw = (string) @file_get_contents($path);
+                if ($raw !== '') {
+                    [, $body] = FrontmatterParser::parse($raw);
+                }
+            }
+            $hasTime = preg_match('/\d{2}:\d{2}/', (string) $p['date']) === 1;
+            return $p + ['bodyForWordCount' => $body, 'hasTime' => $hasTime];
+        }, $publishedPosts);
+
+        $first = null;
+        if ($publishedPosts !== []) {
+            $dates = array_map(
+                static fn (array $p): string => substr((string) $p['date'], 0, 10),
+                $publishedPosts,
+            );
+            sort($dates);
+            $first = $dates[0];
+        }
+
+        $streak = $this->streak($publishedPosts);
+
+        $ctx = [
+            'posts' => $postsWithBody,
+            'seriesList' => $seriesList,
+            'tagCounts' => $tagCounts,
+            'longestStreakWeeks' => $streak['longest'],
+            'firstDate' => $first,
+            'todayDate' => $this->now->format('Y-m-d'),
+            'tz' => $this->tz,
+        ];
+
+        $results = [];
+        foreach (\App\Badges\BadgeCatalog::all() as $def) {
+            $progress = ($def['compute'])($ctx);
+            $results[] = [
+                'code' => $def['code'],
+                'label' => $def['label'],
+                'description' => $def['description'],
+            ] + $progress;
+        }
+
+        // Sort: unlocked first (newest unlockedAt first), then locked by
+        // smallest remaining gap so "almost there" entries surface up.
+        usort($results, static function (array $a, array $b): int {
+            if ($a['unlocked'] !== $b['unlocked']) {
+                return $b['unlocked'] <=> $a['unlocked'];
+            }
+            if ($a['unlocked']) {
+                return strcmp((string) $b['unlockedAt'], (string) $a['unlockedAt']);
+            }
+            $aGap = $a['target'] - $a['current'];
+            $bGap = $b['target'] - $b['current'];
+            return $aGap <=> $bGap;
+        });
+
+        return $results;
+    }
 }

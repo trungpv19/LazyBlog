@@ -5,7 +5,8 @@
  *   posts:int,tags:int,series:int,
  *   firstDate:?string,lastDate:?string,
  *   daysOnline:?int,serverUptime:?string,
- *   streak:array{current:int,longest:int,atRisk:bool,nextDeadline:string,hasAny:bool}
+ *   streak:array{current:int,longest:int,atRisk:bool,nextDeadline:string,hasAny:bool},
+ *   badges:list<array{code:string,label:string,description:string,current:int,target:int,unlocked:bool,unlockedAt:?string}>
  * } $stats */
 
 use App\Auth;
@@ -118,6 +119,39 @@ $daysLabel = match (true) {
                         ⚠ STREAK AT RISK — TX NEEDED THIS WEEK
                     </div>
                 <?php endif; ?>
+            </section>
+        <?php endif; ?>
+
+        <?php if ($stats['badges'] !== []): ?>
+            <section class="about-panel hud-frame about-badges">
+                <div class="about-panel-label">&gt; BADGES</div>
+                <ul class="about-badges-grid">
+                    <?php foreach ($stats['badges'] as $badge): ?>
+                        <?php
+                        $isUnlocked = (bool) $badge['unlocked'];
+                        $ariaLabel = $isUnlocked
+                            ? ($badge['label'] . ': unlocked' . ($badge['unlockedAt'] !== null ? ' on ' . $badge['unlockedAt'] : ''))
+                            : ('Locked: ' . $badge['current'] . ' of ' . $badge['target'] . ' toward ' . $badge['label']);
+                        ?>
+                        <li class="about-badge <?= $isUnlocked ? 'is-unlocked' : 'is-locked' ?>"
+                            aria-label="<?= Http::e($ariaLabel) ?>">
+                            <div class="about-badge-head">
+                                <span class="about-badge-icon" aria-hidden="true"><?= $isUnlocked ? '[■]' : '[ ]' ?></span>
+                                <span class="about-badge-code"><?= Http::e($badge['code']) ?></span>
+                            </div>
+                            <div class="about-badge-meta">
+                                <?php if (!$isUnlocked): ?>
+                                    <span class="about-badge-progress">
+                                        <?= (int) $badge['current'] ?>/<?= (int) $badge['target'] ?>
+                                    </span>
+                                <?php elseif ($badge['unlockedAt'] !== null): ?>
+                                    <span class="about-badge-date"><?= Http::e($badge['unlockedAt']) ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="about-badge-desc"><?= Http::e($badge['description']) ?></div>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
             </section>
         <?php endif; ?>
 

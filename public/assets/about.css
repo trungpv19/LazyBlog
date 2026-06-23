@@ -366,9 +366,79 @@ a.about-contact-value:hover {
     letter-spacing: 0.06em;
 }
 
+/* ───── BADGES panel ─────
+ * Auto-fit tile grid. Unlocked badges glow phosphor; locked tiles dim
+ * with a dashed border and surface their N/M progress. Tier-agnostic at
+ * the structural level — hidden-tier tweaks come from .is-hidden-unlocked
+ * in the next phase.
+ */
+.about-badges-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 10px;
+}
+.about-badge {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    padding: 10px 12px;
+    font-family: 'Share Tech Mono', monospace;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 86px;
+}
+.about-badge.is-locked {
+    opacity: 0.5;
+    border-style: dashed;
+}
+.about-badge.is-unlocked {
+    border-color: var(--primary-dim);
+}
+.about-badge-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+.about-badge-icon {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+}
+.about-badge.is-unlocked .about-badge-icon {
+    color: var(--primary);
+    text-shadow: 0 0 4px var(--primary-glow);
+}
+.about-badge-code {
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+}
+.about-badge.is-unlocked .about-badge-code {
+    color: var(--primary);
+    text-shadow: 0 0 4px var(--primary-glow);
+}
+.about-badge-meta {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+}
+.about-badge-desc {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    line-height: 1.35;
+    margin-top: auto;
+}
+
 @media (max-width: 600px) {
     .about-identity { gap: 16px; }
     .about-avatar-photo { width: 140px; height: 140px; }
     .about-contact-label { min-width: 100px; }
     .about-streak-grid { grid-template-columns: 1fr; }
+    .about-badges-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 400px) {
+    .about-badges-grid { grid-template-columns: 1fr; }
 }
