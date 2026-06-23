@@ -108,10 +108,17 @@ $isEdit = $mode === 'edit';
                        value="<?= Http::e($formValues['image']) ?>"
                        class="admin-input"
                        placeholder="/uploads/2026/06/cover.webp  or  https://…">
+                <!-- Mirror field — JS upload writes here too, server reads
+                     either one. Belt + braces against any browser quirk
+                     that drops the visible input's JS-assigned value
+                     from the form serialization. -->
+                <input type="hidden" name="image_mirror" id="image-mirror"
+                       value="<?= Http::e($formValues['image']) ?>">
                 <input type="file" id="image-upload" accept="image/*" hidden>
                 <button type="button" id="image-upload-btn"
                         class="admin-btn admin-btn-sm"
                         data-target="image"
+                        data-mirror="image-mirror"
                         data-file-input="image-upload">UPLOAD</button>
             </div>
             <div id="image-upload-status" class="admin-label-hint" hidden></div>

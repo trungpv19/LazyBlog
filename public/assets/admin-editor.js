@@ -322,6 +322,7 @@
         var fileInput = document.getElementById(btn.dataset.fileInput);
         if (!target || !fileInput) return;
         var statusEl = document.getElementById(btn.dataset.target + '-upload-status');
+        var mirrorEl = btn.dataset.mirror ? document.getElementById(btn.dataset.mirror) : null;
 
         function setStatus(text, isError) {
             if (!statusEl) return;
@@ -372,6 +373,13 @@
                         target.value = data.url;
                     }
                     target.setAttribute('value', data.url);
+                    // Write the mirror field so the form serialization
+                    // always carries the URL even if the visible input's
+                    // JS-set value gets dropped somewhere along the way.
+                    if (mirrorEl) {
+                        mirrorEl.value = data.url;
+                        mirrorEl.setAttribute('value', data.url);
+                    }
                     target.dispatchEvent(new Event('input', { bubbles: true }));
                     target.dispatchEvent(new Event('change', { bubbles: true }));
                     setStatus('Uploaded → ' + data.url, false);

@@ -301,7 +301,13 @@ final class AdminController
             'draft' => !empty($_POST['draft']),
             'icon' => trim((string) ($_POST['icon'] ?? '')),
             'summary' => trim((string) ($_POST['summary'] ?? '')),
-            'image' => trim((string) ($_POST['image'] ?? '')),
+            // Prefer the visible input; fall back to the JS-driven mirror
+            // (`image_mirror`) so uploads survive any browser quirk where
+            // the visible input's JS-assigned value drops out of the form
+            // serialization but the hidden mirror still carries the URL.
+            'image' => trim((string) ($_POST['image'] ?? '')) !== ''
+                ? trim((string) $_POST['image'])
+                : trim((string) ($_POST['image_mirror'] ?? '')),
             'series' => trim((string) ($_POST['series'] ?? '')),
             'part' => trim((string) ($_POST['part'] ?? '')),
             'body' => (string) ($_POST['body'] ?? ''),
