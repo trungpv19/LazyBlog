@@ -1237,6 +1237,20 @@ a.heatmap-cell:hover {
     border-radius: 1px;
 }
 
+/* Series link styled to match the surrounding date meta on the home
+   feed — e.g. "2026-06-19 // XV5HP // rtl-sdr-cho-nguoi-moi - P1".
+   Inherits the meta's dim color but glows on hover. */
+.post-date-series {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px dashed transparent;
+}
+.post-date-series:hover {
+    color: var(--primary);
+    border-bottom-color: var(--primary-dim);
+    text-shadow: 0 0 6px var(--primary-glow-strong);
+}
+
 /* ---------- Series chip (inline tag on listings) ----------
    Used on home, tag, and archive pages to mark a post that belongs to
    a series. Dashed amber border distinguishes it from tag-chips so the

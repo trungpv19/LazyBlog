@@ -14,18 +14,11 @@ use App\Http;
         <ul class="post-list">
             <?php foreach ($posts as $entry): ?>
                 <li class="post-item">
-                    <?php if ($entry['tags'] !== [] || !empty($entry['series'])): ?>
+                    <?php if ($entry['tags'] !== []): ?>
                         <div class="post-meta">
                             <?php foreach ($entry['tags'] as $t): ?>
                                 <a class="tag-chip" href="/tags/<?= Http::e($t) ?>">#<?= Http::e($t) ?></a>
                             <?php endforeach; ?>
-                            <?php if (!empty($entry['series'])): ?>
-                                <a class="post-series-tag" href="/series/<?= Http::e((string) $entry['series']) ?>">
-                                    📡 <?= Http::e((string) $entry['series']) ?><?php
-                                        if (isset($entry['part']) && $entry['part'] !== null) echo ' · PART ' . (int) $entry['part'];
-                                    ?>
-                                </a>
-                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
                     <a class="post-title-link" href="/posts/<?= Http::e($entry['slug']) ?>">
@@ -43,7 +36,9 @@ use App\Http;
                                 if (!empty($entry['author'])) {
                                     echo ' // ' . Http::e((string) $entry['author']);
                                 }
-                            ?>
+                            ?><?php if (!empty($entry['series'])): ?> // <a class="post-date-series" href="/series/<?= Http::e((string) $entry['series']) ?>"><?= Http::e((string) $entry['series']) ?><?php
+                                if (isset($entry['part']) && $entry['part'] !== null) echo ' - P' . (int) $entry['part'];
+                            ?></a><?php endif; ?>
                         </span>
                     </div>
                 </li>
