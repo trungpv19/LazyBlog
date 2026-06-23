@@ -67,25 +67,38 @@ no wall-clock and can't trigger NIGHT-OWL etc.
 
 ## Available kinds
 
-| Kind | What unlocks | Params |
-|------|--------------|--------|
-| `post-count` | N or more published posts | `threshold` (int) |
-| `longest-post-words` | Any single post has ≥N words | `threshold` (int, default 5000) |
-| `body-pattern-count` | Any single post has ≥N markdown elements of a pattern | `threshold` (int), `pattern` (`"image"`/`"code-block"`/`"external-link"`/`"blockquote"`) |
-| `series-min-parts` | First series has ≥N published parts | `threshold` (int) |
-| `tag-count` | Any single tag has ≥N posts | `threshold` (int) |
-| `blog-age-days` | Blog age (today − first post) ≥ N days | `threshold` (int) |
-| `longest-streak` | Longest streak ≥ N consecutive periods | `threshold` (int), `unit` (`"day"`/`"week"`/`"month"`/`"year"`, default `"week"`) |
-| `time-window` | Post published within hour window | `hourFrom`, `hourTo` (0–24), optional `dayOfWeek` (1=Mon..7=Sun) |
-| `gap-days` | Post after ≥N days since previous post | `threshold` (int) |
-| `same-day-count` | ≥N posts on the same calendar day | `threshold` (int) |
-| `anniversary` | Post on the same month-day as the first post | (none) |
-| `date-suffix` | Post date ends with a specific `-MM-DD` | `mmDd` (string, e.g. `"-02-29"`) |
+| Kind | What unlocks | Params | Defaults |
+|------|--------------|--------|----------|
+| `post-count` | N or more published posts | `threshold` (int) | `threshold: 1` |
+| `longest-post-words` | Any single post has ≥N words | `threshold` (int) | `threshold: 5000` |
+| `body-pattern-count` | Any single post has ≥N markdown elements of a pattern | `threshold` (int), `pattern` (`"image"` / `"code-block"` / `"external-link"` / `"blockquote"`) | `threshold: 5`, `pattern` required |
+| `series-min-parts` | First series has ≥N published parts | `threshold` (int) | `threshold: 3` |
+| `tag-count` | Any single tag has ≥N posts | `threshold` (int) | `threshold: 10` |
+| `blog-age-days` | Blog age (today − first post) ≥ N days | `threshold` (int) | `threshold: 365` |
+| `longest-streak` | Longest streak ≥ N consecutive periods | `threshold` (int), `unit` (`"day"` / `"week"` / `"month"` / `"year"`) | `threshold: 12`, `unit: "week"` |
+| `time-window` | Post published within hour window (requires explicit ISO datetime in frontmatter) | `hourFrom`, `hourTo` (0–24), optional `dayOfWeek` (1=Mon..7=Sun) | `hourFrom: 0`, `hourTo: 24` |
+| `gap-days` | Post after ≥N days of silence | `threshold` (int) | `threshold: 30` |
+| `same-day-count` | ≥N posts on the same calendar day | `threshold` (int) | `threshold: 2` |
+| `anniversary` | Post on the same month-day as the first post | (none) | — |
+| `date-suffix` | Post date ends with a specific `-MM-DD` | `mmDd` (string, e.g. `"-02-29"`) | required, skipped if missing/invalid |
 
-Entries with an unrecognised `kind` are skipped and logged to PHP error
-log — they don't break `/about`. Mistyped `params` keys fall back to
-sensible defaults where possible (e.g. `post-count` defaults to
-`threshold: 1`).
+### Aliases
+
+- `longest-streak-weeks` → alias for `longest-streak` (kept so older
+  configs from before the unit refactor keep working). New entries
+  should use `longest-streak` with an explicit `unit` param.
+
+### Failure modes
+
+- **Unknown `kind`** → entry is skipped, error logged to PHP `error_log`,
+  `/about` keeps rendering the rest of the catalogue.
+- **Missing required `params`** (e.g. `body-pattern-count` without
+  `pattern`, `date-suffix` without `mmDd`) → entry stays locked at
+  `0/threshold` and an error is logged.
+- **Mistyped `params` keys** → kind falls back to the documented
+  defaults above for that field.
+- **Missing or malformed `content/badges.json`** → BADGES panel is
+  omitted from `/about` entirely; nothing else breaks.
 
 ## Streak badges
 
