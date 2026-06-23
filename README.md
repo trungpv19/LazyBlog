@@ -35,12 +35,12 @@ browser caches per-file without manual asset rotation.
 |---|---|
 | ![Home — amber (default)](docs/screenshot/home-amber.webp) | ![Home — green theme](docs/screenshot/home.webp) |
 | _Home — amber (default theme)_ | _Home — green theme toggle_ |
-| ![Single post with TOC + reading progress + figure](docs/screenshot/post.webp) | ![Archive heatmap + grouped list](docs/screenshot/archive.webp) |
-| _Single post — TOC, reading progress, full-bleed figure_ | _`/archive` — heatmap + posts grouped by year_ |
-| ![Search results with snippet + highlight](docs/screenshot/search.webp) | ![Admin post list](docs/screenshot/admin-home.webp) |
-| _`/search` — diacritic-insensitive, highlighted snippets_ | _`/admin` — post management with EasyMDE editor_ |
-| ![About page with streak flame + badge grid](docs/screenshot/about.webp) | |
-| _`/about` — operator profile, current-streak flame, JSON-driven badge grid (volume + hidden tiers), bio, transmission log_ | |
+| ![Single post with TOC + reading progress + figure](docs/screenshot/post.webp) | ![About page with streak flame + badge grid](docs/screenshot/about.webp) |
+| _Single post — TOC, reading progress, full-bleed figure_ | _`/about` — operator profile, streak flame, JSON-driven badge grid_ |
+
+![Archive heatmap, search results, admin post list](docs/screenshot/triptych-archive-search-admin.webp)
+
+_Left to right: `/archive` heatmap + posts by year · `/search` diacritic-insensitive highlighted snippets · `/admin` post management with EasyMDE editor._
 
 ## Stack
 
