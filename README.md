@@ -25,6 +25,7 @@ browser caches per-file without manual asset rotation.
 │  Search + Archive     ·  reading-progress meter     │
 │  SEO + JSON-LD        ·  Open Graph + Twitter Card  │
 │  CSP + session hard.  ·  CSRF + atomic file writes  │
+│  Writing streak card  ·  JSON-driven badge catalog  │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -38,8 +39,8 @@ browser caches per-file without manual asset rotation.
 | _Single post — TOC, reading progress, full-bleed figure_ | _`/archive` — heatmap + posts grouped by year_ |
 | ![Search results with snippet + highlight](docs/screenshot/search.webp) | ![Admin post list](docs/screenshot/admin-home.webp) |
 | _`/search` — diacritic-insensitive, highlighted snippets_ | _`/admin` — post management with EasyMDE editor_ |
-| ![About page operator profile with HUD frames](docs/screenshot/about.webp) | |
-| _`/about` — operator profile, HUD frames, stats grid, transmission log_ | |
+| ![About page with streak flame + badge grid](docs/screenshot/about.webp) | |
+| _`/about` — operator profile, current-streak flame, JSON-driven badge grid (volume + hidden tiers), bio, transmission log_ | |
 
 ## Stack
 
@@ -105,13 +106,18 @@ playbook.
 LazyBlog/
 ├── public/              # web root (front controller + assets)
 │   └── assets/          # base/effects/components/post/pages.css + admin.css + admin-editor.js
-├── src/                 # PHP — Router, Controllers, PostRepository, MarkdownRenderer, Http (asset cache-bust)...
+├── src/                 # PHP — Router, Controllers, PostRepository, MarkdownRenderer, Http...
+│   └── Badges/          # gamification: BadgeKinds (compute templates) + BadgeRegistry (loader)
 ├── views/               # layout, post, home, tag, admin/*
-├── content/posts/       # YYYY-MM-DD-slug.md files (gitignored)
+├── content/             # markdown posts + about + badges.json (mostly gitignored)
+│   ├── posts/           # YYYY-MM-DD-slug.md
+│   ├── about.md         # /about page source
+│   └── badges.json      # streak + badge catalogue (allowlisted in .gitignore)
 ├── scripts/
-│   ├── install-vps.sh   # one-shot bare-metal installer
+│   ├── install-vps.sh        # one-shot bare-metal installer
 │   ├── hash-password.php
-│   └── backup-content.sh
+│   ├── backup-content.sh
+│   └── test-gamification.php # streak math fixtures
 ├── docs/                # detailed docs (see table above)
 ├── Caddyfile.example    # production HTTPS site block
 ├── docker-compose.yml   # dev: Caddy + php-fpm bind-mount
