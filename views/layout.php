@@ -234,6 +234,9 @@ $favicon = 'data:image/svg+xml,'
     ?>
         <link rel="stylesheet" href="<?= Http::e(Http::asset($css)) ?>">
     <?php endforeach; ?>
+    <?php if ($path === '/about'): ?>
+        <link rel="stylesheet" href="<?= Http::e(Http::asset('assets/about.css')) ?>">
+    <?php endif; ?>
     <?php if (str_starts_with($path, '/admin')): ?>
         <link rel="stylesheet" href="<?= Http::e(Http::asset('assets/admin.css')) ?>">
         <?php if (App\Auth::check()): ?>
