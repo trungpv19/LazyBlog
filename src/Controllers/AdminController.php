@@ -110,6 +110,9 @@ final class AdminController
                 'draft' => false,
                 'icon' => '',
                 'summary' => '',
+                'image' => '',
+                'series' => '',
+                'part' => '',
                 'body' => '',
             ],
         ]);
@@ -146,6 +149,9 @@ final class AdminController
                 'draft' => $post->draft,
                 'icon' => $post->icon ?? '',
                 'summary' => $post->summary ?? '',
+                'image' => $post->image ?? '',
+                'series' => $post->series ?? '',
+                'part' => $post->part !== null ? (string) $post->part : '',
                 'body' => $post->bodyMarkdown,
             ],
         ]);
@@ -250,6 +256,9 @@ final class AdminController
             'draft' => !empty($_POST['draft']),
             'icon' => trim((string) ($_POST['icon'] ?? '')),
             'summary' => trim((string) ($_POST['summary'] ?? '')),
+            'image' => trim((string) ($_POST['image'] ?? '')),
+            'series' => trim((string) ($_POST['series'] ?? '')),
+            'part' => trim((string) ($_POST['part'] ?? '')),
             'body' => (string) ($_POST['body'] ?? ''),
         ];
     }
@@ -282,6 +291,11 @@ final class AdminController
             }
         }
 
+        // Normalize series slug (lowercase + kebab-friendly) so a typo'd
+        // capitalization doesn't fork the series into two groups.
+        $series = $v['series'] !== '' ? strtolower(trim($v['series'])) : null;
+        $part = ($v['part'] !== '' && is_numeric($v['part'])) ? (int) $v['part'] : null;
+
         return new Post(
             slug: $v['slug'],
             title: $v['title'],
@@ -292,6 +306,9 @@ final class AdminController
             icon: $v['icon'] !== '' ? $v['icon'] : null,
             summary: $v['summary'] !== '' ? $v['summary'] : null,
             author: $v['author'] !== '' ? $v['author'] : null,
+            image: $v['image'] !== '' ? $v['image'] : null,
+            series: $series,
+            part: $part,
         );
     }
 

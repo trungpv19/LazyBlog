@@ -91,6 +91,33 @@ $isEdit = $mode === 'edit';
                    placeholder="One-line description shown in post lists and meta tags.">
         </div>
 
+        <!-- Social-card image (per-post og:image override) -->
+        <div class="admin-field">
+            <label class="admin-label" for="image">Social image <span class="admin-label-hint">(optional · og:image · falls back to first body image)</span></label>
+            <input type="text" name="image" id="image"
+                   value="<?= Http::e($formValues['image']) ?>"
+                   class="admin-input"
+                   placeholder="/uploads/2026/06/cover.webp  or  https://…">
+        </div>
+
+        <!-- Series — slug + optional part number side by side -->
+        <div class="admin-row">
+            <div class="admin-field" style="flex: 2 1 0">
+                <label class="admin-label" for="series">Series <span class="admin-label-hint">(optional · slug shared across all parts)</span></label>
+                <input type="text" name="series" id="series"
+                       value="<?= Http::e($formValues['series']) ?>"
+                       class="admin-input"
+                       placeholder="rtl-sdr-cho-nguoi-moi">
+            </div>
+            <div class="admin-field" style="flex: 0 0 110px">
+                <label class="admin-label" for="part">Part # <span class="admin-label-hint">(opt)</span></label>
+                <input type="number" name="part" id="part" min="1" step="1"
+                       value="<?= Http::e($formValues['part']) ?>"
+                       class="admin-input"
+                       placeholder="1">
+            </div>
+        </div>
+
         <!-- Body — the focus -->
         <div class="admin-field">
             <label class="admin-label" for="body">Body <span class="admin-label-hint">(markdown)</span></label>

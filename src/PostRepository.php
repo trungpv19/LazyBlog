@@ -231,6 +231,15 @@ final class PostRepository
         if ($post->summary !== null && $post->summary !== '') {
             $meta['summary'] = $post->summary;
         }
+        if ($post->image !== null && $post->image !== '') {
+            $meta['image'] = $post->image;
+        }
+        if ($post->series !== null && $post->series !== '') {
+            $meta['series'] = $post->series;
+        }
+        if ($post->part !== null) {
+            $meta['part'] = $post->part;
+        }
 
         // Inline tags array (`[a, b]`) is friendlier than YAML's default
         // block style for short lists.
