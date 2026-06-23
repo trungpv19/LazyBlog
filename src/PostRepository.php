@@ -70,9 +70,12 @@ final class PostRepository
     public function published(): array
     {
         $today = (new \DateTimeImmutable('today'))->format('Y-m-d');
+        // Compare on the date part only — ISO datetime entries would
+        // otherwise lexicographically exceed plain `YYYY-MM-DD` today and
+        // get filtered as future posts.
         return array_values(array_filter(
             $this->all(),
-            static fn (array $e): bool => !$e['draft'] && $e['date'] <= $today,
+            static fn (array $e): bool => !$e['draft'] && substr((string) $e['date'], 0, 10) <= $today,
         ));
     }
 
@@ -230,7 +233,9 @@ final class PostRepository
         if (!SlugUtil::valid($post->slug)) {
             throw new RuntimeException("Invalid slug: {$post->slug}");
         }
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $post->date)) {
+        // Accept either `YYYY-MM-DD` (legacy) or ISO datetime
+        // `YYYY-MM-DDTHH:MM:SS±TZ` (enables wall-clock-aware features).
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}([+-]\d{2}:\d{2}|Z)?)?$/', $post->date)) {
             throw new RuntimeException("Invalid date format: {$post->date}");
         }
 
@@ -238,7 +243,10 @@ final class PostRepository
             mkdir($this->postsDir, 0775, true);
         }
 
-        $filename = $post->date . '-' . $post->slug . '.md';
+        // Filename always uses the date part only — uniqueness is by day,
+        // and `:` would be illegal on many filesystems anyway.
+        $filenameDate = substr($post->date, 0, 10);
+        $filename = $filenameDate . '-' . $post->slug . '.md';
         $path = $this->postsDir . '/' . $filename;
 
         // Refuse to clobber an unrelated post with a different previous filename.
@@ -468,8 +476,18 @@ final class PostRepository
     }
 
     /**
-     * Symfony YAML parses unquoted `2026-06-22` as a Unix int timestamp.
-     * Coerce any sensible representation back to `YYYY-MM-DD`.
+     * Coerce frontmatter `date:` to a canonical string. Symfony YAML
+     * parses bare `2026-06-22` as a Unix int and a quoted ISO datetime as
+     * a `\DateTimeInterface`; either is reduced back to a string.
+     *
+     * Accepted output shapes:
+     *   - `YYYY-MM-DD`             (date-only, legacy)
+     *   - `YYYY-MM-DDTHH:MM:SS±TZ` (ISO datetime, preserves wall-clock time)
+     *
+     * A DateTime whose time is exactly midnight is treated as "no time
+     * intent" and collapses to date-only so date-only posts coming back
+     * from YAML's int-timestamp path don't accidentally become ISO
+     * datetimes with a misleading T00:00 component.
      */
     private static function normalizeDate(mixed $raw, string $fallback): string
     {
@@ -477,7 +495,10 @@ final class PostRepository
             return date('Y-m-d', $raw);
         }
         if ($raw instanceof \DateTimeInterface) {
-            return $raw->format('Y-m-d');
+            if ((int) $raw->format('His') === 0) {
+                return $raw->format('Y-m-d');
+            }
+            return $raw->format('Y-m-d\TH:i:sP');
         }
         if (is_string($raw) && $raw !== '') {
             return $raw;

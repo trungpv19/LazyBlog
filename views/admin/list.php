@@ -43,7 +43,7 @@ use App\Http;
             <tbody>
                 <?php foreach ($posts as $entry): ?>
                     <tr>
-                        <td class="admin-mono"><?= Http::e((string) $entry['date']) ?></td>
+                        <td class="admin-mono"><?= Http::e(substr((string) $entry['date'], 0, 10)) ?></td>
                         <td class="admin-title-cell">
                             <a href="/posts/<?= Http::e((string) $entry['slug']) ?>" target="_blank"
                                title="<?= Http::e((string) $entry['title']) ?>">
@@ -67,7 +67,7 @@ use App\Http;
                         <td class="admin-mono">
                             <?php if (!empty($entry['draft'])): ?>
                                 <span class="admin-status admin-status-draft" title="Draft" aria-label="Draft">Draft</span>
-                            <?php elseif ($entry['date'] > date('Y-m-d')): ?>
+                            <?php elseif (substr((string) $entry['date'], 0, 10) > date('Y-m-d')): ?>
                                 <span class="admin-status admin-status-scheduled" title="Scheduled" aria-label="Scheduled">Scheduled</span>
                             <?php else: ?>
                                 <span class="admin-status admin-status-live" title="Live" aria-label="Live">Live</span>

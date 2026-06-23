@@ -86,4 +86,43 @@ final class Post
             return $this->date;
         }
     }
+
+    /**
+     * Date-only display form. ISO datetime entries collapse to their
+     * `YYYY-MM-DD` prefix so visible date labels don't suddenly grow a
+     * timezone tail; metadata sinks (RSS, OG, JSON-LD) keep using
+     * `$date` directly to preserve the precision when present.
+     */
+    public function displayDate(): string
+    {
+        return substr($this->date, 0, 10);
+    }
+
+    /**
+     * Parsed datetime for the post. Falls back to midday on the date part
+     * when the frontmatter holds only `YYYY-MM-DD` (no time). Gamification
+     * features that need wall-clock time should also gate on
+     * `hasExplicitTime()` so legacy date-only posts don't accidentally
+     * trigger e.g. NIGHT-OWL via the midday fallback.
+     */
+    public function dateTime(): \DateTimeImmutable
+    {
+        $tz = new \DateTimeZone((string) Config::get('TIMEZONE', 'UTC'));
+        try {
+            return new \DateTimeImmutable($this->date, $tz);
+        } catch (\Throwable) {
+            $dateOnly = substr($this->date, 0, 10);
+            return new \DateTimeImmutable($dateOnly . 'T12:00:00', $tz);
+        }
+    }
+
+    /**
+     * True when the frontmatter `date:` carries an explicit time component
+     * (ISO datetime form like `2024-03-15T02:30:00+07:00`), false when it's
+     * a bare `YYYY-MM-DD`. Gates time-of-day-sensitive features.
+     */
+    public function hasExplicitTime(): bool
+    {
+        return preg_match('/\d{2}:\d{2}/', $this->date) === 1;
+    }
 }

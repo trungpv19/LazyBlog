@@ -103,6 +103,7 @@ final class AdminController
             'formError' => null,
             'formValues' => [
                 'date' => $today,
+                'time' => '',
                 'slug' => '',
                 'title' => '',
                 'author' => (string) Config::get('DEFAULT_AUTHOR', ''),
@@ -132,7 +133,17 @@ final class AdminController
             return;
         }
 
-        $originalFilename = $post->date . '-' . $post->slug . '.md';
+        // Filename is always date-only — strip any ISO datetime tail so
+        // edit-with-rename detection still matches against the actual file.
+        $originalFilename = $post->displayDate() . '-' . $post->slug . '.md';
+
+        // Split ISO datetime back into discrete date + time fields so the
+        // form re-populates as a plain `YYYY-MM-DD` plus `HH:MM[:SS]`.
+        $editDate = $post->displayDate();
+        $editTime = '';
+        if ($post->hasExplicitTime() && preg_match('/T(\d{2}:\d{2}(?::\d{2})?)/', $post->date, $m)) {
+            $editTime = $m[1];
+        }
 
         Http::render('admin/edit', [
             'title' => 'Edit: ' . $post->title,
@@ -141,7 +152,8 @@ final class AdminController
             'originalFilename' => $originalFilename,
             'formError' => null,
             'formValues' => [
-                'date' => $post->date,
+                'date' => $editDate,
+                'time' => $editTime,
                 'slug' => $post->slug,
                 'title' => $post->title,
                 'author' => $post->author ?? '',
@@ -243,12 +255,13 @@ final class AdminController
     // ----- Helpers -----
 
     /**
-     * @return array{date:string,slug:string,title:string,author:string,tags:string,draft:bool,icon:string,summary:string,body:string}
+     * @return array{date:string,time:string,slug:string,title:string,author:string,tags:string,draft:bool,icon:string,summary:string,image:string,series:string,part:string,body:string}
      */
     private static function readFormValues(): array
     {
         return [
             'date' => trim((string) ($_POST['date'] ?? '')),
+            'time' => trim((string) ($_POST['time'] ?? '')),
             'slug' => trim((string) ($_POST['slug'] ?? '')),
             'title' => trim((string) ($_POST['title'] ?? '')),
             'author' => trim((string) ($_POST['author'] ?? '')),
@@ -264,7 +277,7 @@ final class AdminController
     }
 
     /**
-     * @param array{date:string,slug:string,title:string,author:string,tags:string,draft:bool,icon:string,summary:string,body:string} $v
+     * @param array{date:string,time:string,slug:string,title:string,author:string,tags:string,draft:bool,icon:string,summary:string,image:string,series:string,part:string,body:string} $v
      */
     private static function buildPostFromForm(array $v): Post
     {
@@ -279,6 +292,20 @@ final class AdminController
         }
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $v['date'])) {
             throw new \RuntimeException('Date must be YYYY-MM-DD.');
+        }
+
+        // Optional clock time. When present, fold it into the date as an
+        // ISO datetime so time-of-day-sensitive features (e.g. NIGHT-OWL
+        // gamification) can read a real wall-clock from the frontmatter.
+        $date = $v['date'];
+        if ($v['time'] !== '') {
+            if (!preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $v['time'])) {
+                throw new \RuntimeException('Time must be HH:MM or HH:MM:SS.');
+            }
+            $timeFull = strlen($v['time']) === 5 ? $v['time'] . ':00' : $v['time'];
+            $tz = new \DateTimeZone((string) Config::get('TIMEZONE', 'UTC'));
+            $offset = (new \DateTimeImmutable('now', $tz))->format('P');
+            $date = $v['date'] . 'T' . $timeFull . $offset;
         }
 
         /** @var list<string> $tags */
@@ -299,7 +326,7 @@ final class AdminController
         return new Post(
             slug: $v['slug'],
             title: $v['title'],
-            date: $v['date'],
+            date: $date,
             tags: $tags,
             draft: $v['draft'],
             bodyMarkdown: $v['body'],

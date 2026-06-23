@@ -32,7 +32,7 @@ use App\Http;
                     <?php endif; ?>
                     <div class="post-date-row">
                         <span class="post-date">
-                            <?= Http::e($entry['date']) ?><?php
+                            <?= Http::e(substr((string) $entry['date'], 0, 10)) ?><?php
                                 if (!empty($entry['author'])) {
                                     echo ' // ' . Http::e((string) $entry['author']);
                                 }

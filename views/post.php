@@ -25,7 +25,7 @@ $renderTocList = function () use ($toc): void {
 
 <article class="post-article">
     <div class="section-tag">
-        § TRANSMISSION — <?= Http::e($post->date) ?><?php
+        § TRANSMISSION — <?= Http::e($post->displayDate()) ?><?php
             if ($post->author !== null && $post->author !== '') {
                 echo ' — ' . Http::e($post->author);
             }

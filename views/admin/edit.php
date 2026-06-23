@@ -4,7 +4,7 @@
 /** @var \App\Post|null $post */
 /** @var string $originalFilename */
 /** @var string|null $formError */
-/** @var array{date:string,slug:string,title:string,author:string,tags:string,draft:bool,icon:string,summary:string,body:string} $formValues */
+/** @var array{date:string,time:string,slug:string,title:string,author:string,tags:string,draft:bool,icon:string,summary:string,image:string,series:string,part:string,body:string} $formValues */
 
 use App\Csrf;
 use App\Http;
@@ -56,6 +56,12 @@ $isEdit = $mode === 'edit';
                 <input type="text" name="date" id="date" required
                        value="<?= Http::e($formValues['date']) ?>"
                        pattern="\d{4}-\d{2}-\d{2}"
+                       class="admin-input admin-mono">
+            </div>
+            <div class="admin-field" style="flex: 0 0 110px">
+                <label class="admin-label" for="time">Time <span class="admin-label-hint">(opt)</span></label>
+                <input type="time" name="time" id="time" step="1"
+                       value="<?= Http::e($formValues['time']) ?>"
                        class="admin-input admin-mono">
             </div>
             <div class="admin-field" style="flex: 1 1 200px">

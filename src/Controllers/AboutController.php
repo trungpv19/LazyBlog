@@ -59,7 +59,13 @@ final class AboutController
     private function buildStats(): array
     {
         $published = $this->posts->published();
-        $dates = array_column($published, 'date');
+        // Reduce to date-only keys so mixed `YYYY-MM-DD` / ISO datetime
+        // entries display consistently and sort by calendar day, not by
+        // string length.
+        $dates = array_map(
+            static fn (array $e): string => substr((string) $e['date'], 0, 10),
+            $published,
+        );
         sort($dates);
         $first = $dates[0] ?? null;
         $last = $dates === [] ? null : $dates[count($dates) - 1];
