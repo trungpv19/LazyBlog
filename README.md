@@ -97,6 +97,7 @@ playbook.
 | `docs/seo-and-social.md` | OG tags, JSON-LD, llms.txt, RSS, how to test link previews |
 | `docs/security.md` | CSP, session hardening, production checklist |
 | `docs/system-architecture.md` | Request lifecycle, render pipeline, file layout |
+| `docs/badges.md` | TX streak + customisable badge catalogue on `/about` |
 
 ## Project layout (high level)
 

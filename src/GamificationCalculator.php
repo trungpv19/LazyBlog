@@ -19,7 +19,26 @@ final class GamificationCalculator
     public function __construct(
         private readonly \DateTimeZone $tz,
         private readonly \DateTimeImmutable $now,
+        private readonly ?Badges\BadgeRegistry $badgeRegistry = null,
     ) {
+    }
+
+    /**
+     * Resolve the badge registry, defaulting to the bundled JSON config
+     * + the optional user override at `content/badges.json`. Allows tests
+     * to inject a custom registry without forcing every caller to wire
+     * it explicitly.
+     */
+    private function registry(): Badges\BadgeRegistry
+    {
+        if ($this->badgeRegistry !== null) {
+            return $this->badgeRegistry;
+        }
+        $rootDir = dirname(__DIR__);
+        return new Badges\BadgeRegistry(
+            userPath: $rootDir . '/content/badges.json',
+            defaultsPath: $rootDir . '/src/Badges/badges.json',
+        );
     }
 
     /**
@@ -162,7 +181,7 @@ final class GamificationCalculator
      * @param list<array{slug:string,count:int,firstDate:string,lastDate:string,title:string}> $seriesList
      * @param array<string,int> $tagCounts
      * @return list<array{
-     *   code:string,label:string,description:string,
+     *   code:string,label:string,description:string,tier:string,
      *   current:int,target:int,unlocked:bool,unlockedAt:?string
      * }>
      */
@@ -206,15 +225,14 @@ final class GamificationCalculator
             'tz' => $this->tz,
         ];
 
-        $results = [];
-        foreach (\App\Badges\BadgeCatalog::all() as $def) {
-            $progress = ($def['compute'])($ctx);
-            $results[] = [
-                'code' => $def['code'],
-                'label' => $def['label'],
-                'description' => $def['description'],
-            ] + $progress;
-        }
+        $registry = $this->registry();
+        // Volume tier always rendered (locked entries surface N/M progress).
+        // Hidden tier filters to unlocked entries inside the registry so
+        // locked codes never make it into the HTML response.
+        $results = array_merge(
+            $registry->evaluateVolume($ctx),
+            $registry->evaluateHidden($ctx),
+        );
 
         // Sort: unlocked first (newest unlockedAt first), then locked by
         // smallest remaining gap so "almost there" entries surface up.

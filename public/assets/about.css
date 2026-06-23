@@ -420,6 +420,16 @@ a.about-contact-value:hover {
     color: var(--primary);
     text-shadow: 0 0 4px var(--primary-glow);
 }
+/* Hidden tier uses the accent token so unlocked surprises read visually
+ * distinct from volume milestones, even on monochrome reads. */
+.about-badge.is-hidden-unlocked {
+    border-color: var(--accent-dim);
+}
+.about-badge.is-hidden-unlocked .about-badge-icon,
+.about-badge.is-hidden-unlocked .about-badge-code {
+    color: var(--accent);
+    text-shadow: 0 0 4px var(--accent);
+}
 .about-badge-meta {
     font-size: 0.78rem;
     color: var(--text-dim);
