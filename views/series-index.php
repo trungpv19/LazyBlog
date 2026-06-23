@@ -6,8 +6,7 @@ use App\Http;
 ?>
 
 <section class="series-page">
-    <h2 class="series-page-title">> ALL SERIES</h2>
-    <p class="series-meta"><?= count($series) ?> SERIES TOTAL</p>
+    <h2 class="series-page-title">> ALL SERIES (<?= count($series) ?>)</h2>
 
     <?php if ($series === []): ?>
         <p style="color: var(--text-dim);">// NO SERIES YET. Add `series: my-slug` frontmatter to any post to start one.</p>
