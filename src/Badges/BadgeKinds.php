@@ -30,6 +30,7 @@ final class BadgeKinds
         return [
             'post-count'           => self::postCount(),
             'longest-post-words'   => self::longestPostWords(),
+            'body-pattern-count'   => self::bodyPatternCount(),
             'series-min-parts'     => self::seriesMinParts(),
             'tag-count'            => self::tagCount(),
             'blog-age-days'        => self::blogAgeDays(),
@@ -97,6 +98,61 @@ final class BadgeKinds
             $unlocked = $bestWords >= $threshold;
             return [
                 'current' => min($bestWords, $threshold),
+                'target' => $threshold,
+                'unlocked' => $unlocked,
+                'unlockedAt' => $unlocked ? $bestDate : null,
+            ];
+        };
+    }
+
+    /**
+     * Count occurrences of a named markdown element pattern inside a
+     * single post body — image, fenced code block, external link, or
+     * blockquote — and unlock when any post crosses the threshold.
+     *
+     * `params.pattern` selects which element to count:
+     *   - `image`         — `![alt](url)` figures
+     *   - `code-block`    — triple-backtick fenced blocks
+     *   - `external-link` — `[text](http(s)://...)` Markdown links
+     *   - `blockquote`    — lines starting with `> `
+     *
+     * Custom patterns can be added by extending the switch below; each
+     * one is a fixed regex against the raw markdown body, so the kind
+     * stays predictable and JSON entries don't smuggle arbitrary code.
+     */
+    private static function bodyPatternCount(): \Closure
+    {
+        return static function (array $params, array $ctx): array {
+            $threshold = (int) ($params['threshold'] ?? 5);
+            $pattern = (string) ($params['pattern'] ?? '');
+            $regex = match ($pattern) {
+                'image' => '/!\[[^\]]*\]\([^)\s]+/u',
+                'code-block' => '/```/u',
+                'external-link' => '/(?<!!)\[[^\]]+\]\(https?:\/\/[^)\s]+/u',
+                'blockquote' => '/^>\s/um',
+                default => null,
+            };
+            if ($regex === null) {
+                error_log("LazyBlog: body-pattern-count unknown pattern '{$pattern}'");
+                return ['current' => 0, 'target' => $threshold, 'unlocked' => false, 'unlockedAt' => null];
+            }
+            // Code-block fences come in pairs (open + close); divide so
+            // "≥3 code blocks" actually means three real blocks.
+            $divisor = $pattern === 'code-block' ? 2 : 1;
+            $bestCount = 0;
+            $bestDate = null;
+            foreach ($ctx['posts'] as $p) {
+                $body = (string) ($p['bodyForWordCount'] ?? '');
+                $matches = preg_match_all($regex, $body) ?: 0;
+                $count = (int) ($matches / $divisor);
+                if ($count > $bestCount) {
+                    $bestCount = $count;
+                    $bestDate = substr((string) $p['date'], 0, 10);
+                }
+            }
+            $unlocked = $bestCount >= $threshold;
+            return [
+                'current' => min($bestCount, $threshold),
                 'target' => $threshold,
                 'unlocked' => $unlocked,
                 'unlockedAt' => $unlocked ? $bestDate : null,

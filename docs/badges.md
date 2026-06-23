@@ -71,6 +71,7 @@ no wall-clock and can't trigger NIGHT-OWL etc.
 |------|--------------|--------|
 | `post-count` | N or more published posts | `threshold` (int) |
 | `longest-post-words` | Any single post has ≥N words | `threshold` (int, default 5000) |
+| `body-pattern-count` | Any single post has ≥N markdown elements of a pattern | `threshold` (int), `pattern` (`"image"`/`"code-block"`/`"external-link"`/`"blockquote"`) |
 | `series-min-parts` | First series has ≥N published parts | `threshold` (int) |
 | `tag-count` | Any single tag has ≥N posts | `threshold` (int) |
 | `blog-age-days` | Blog age (today − first post) ≥ N days | `threshold` (int) |
