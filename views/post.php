@@ -68,7 +68,7 @@ $renderTocList = function () use ($toc): void {
         <nav class="series-nav" aria-label="Series navigation">
             <?php if ($seriesNav['prev'] !== null): ?>
                 <a class="series-nav-link series-nav-prev" href="/posts/<?= Http::e($seriesNav['prev']['slug']) ?>">
-                    <span class="series-nav-direction">← PREV</span>
+                    <span class="series-nav-direction">← PREV · PART <?= $seriesNav['position'] - 1 ?> OF <?= $seriesNav['total'] ?></span>
                     <span class="series-nav-title"><?= Http::e($seriesNav['prev']['title']) ?></span>
                 </a>
             <?php else: ?>
@@ -76,7 +76,7 @@ $renderTocList = function () use ($toc): void {
             <?php endif; ?>
             <?php if ($seriesNav['next'] !== null): ?>
                 <a class="series-nav-link series-nav-next" href="/posts/<?= Http::e($seriesNav['next']['slug']) ?>">
-                    <span class="series-nav-direction">NEXT →</span>
+                    <span class="series-nav-direction">NEXT · PART <?= $seriesNav['position'] + 1 ?> OF <?= $seriesNav['total'] ?> →</span>
                     <span class="series-nav-title"><?= Http::e($seriesNav['next']['title']) ?></span>
                 </a>
             <?php else: ?>

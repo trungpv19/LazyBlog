@@ -8,8 +8,7 @@ use App\Http;
 ?>
 
 <section class="series-page">
-    <div class="section-tag">§ SERIES — TRANSMISSION SEQUENCE</div>
-    <h2 class="series-page-title">📡 <?= Http::e($seriesTitle) ?></h2>
+    <h2 class="series-page-title">> <?= Http::e($seriesTitle) ?></h2>
     <p class="series-meta"><?= count($posts) ?> PART<?= count($posts) === 1 ? '' : 'S' ?> · slug: <code><?= Http::e($seriesSlug) ?></code></p>
 
     <ul class="series-list">

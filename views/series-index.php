@@ -6,8 +6,7 @@ use App\Http;
 ?>
 
 <section class="series-page">
-    <div class="section-tag">§ SERIES — TRANSMISSION SEQUENCES</div>
-    <h2 class="series-page-title">📡 ALL SERIES</h2>
+    <h2 class="series-page-title">> ALL SERIES</h2>
     <p class="series-meta"><?= count($series) ?> SERIES TOTAL</p>
 
     <?php if ($series === []): ?>
@@ -16,7 +15,6 @@ use App\Http;
         <ul class="series-list">
             <?php foreach ($series as $s): ?>
                 <li class="series-item series-item-card">
-                    <span class="series-part-no"><?= sprintf('%02d', $s['count']) ?></span>
                     <div class="series-item-body">
                         <a class="series-item-title" href="/series/<?= Http::e($s['slug']) ?>">
                             📡 <?= Http::e($s['title']) ?>
