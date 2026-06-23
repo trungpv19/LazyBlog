@@ -109,7 +109,15 @@ final class AdminController
     {
         Auth::requireAuth();
 
-        $today = (new \DateTimeImmutable('today'))->format('Y-m-d');
+        // Pre-fill date + clock time at form open so the new post lands
+        // with the operator's *actual* wall-clock by default — matters
+        // for the time-of-day gamification kinds (NIGHT-OWL etc.). The
+        // operator can still wipe the time field if they want a
+        // legacy date-only entry.
+        $tz = new \DateTimeZone((string) Config::get('TIMEZONE', 'UTC'));
+        $nowLocal = new \DateTimeImmutable('now', $tz);
+        $today = $nowLocal->format('Y-m-d');
+        $nowTime = $nowLocal->format('H:i:s');
         Http::render('admin/edit', [
             'title' => 'New Post',
             'mode' => 'new',
@@ -118,7 +126,7 @@ final class AdminController
             'formError' => null,
             'formValues' => [
                 'date' => $today,
-                'time' => '',
+                'time' => $nowTime,
                 'slug' => '',
                 'title' => '',
                 'author' => (string) Config::get('DEFAULT_AUTHOR', ''),

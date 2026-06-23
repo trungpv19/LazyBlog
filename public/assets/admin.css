@@ -462,6 +462,17 @@ button.admin-btn-sm { font-size: 10px; }
 .admin-row-actions .admin-btn { flex: 0 0 auto; }
 .admin-row-actions form { margin: 0; padding: 0; display: inline-flex; }
 
+/* Input + "[ UPLOAD ]" trigger sitting on one row. Keeps the file
+ * picker as a small adjunct to the URL field so externally-hosted
+ * social images still work. */
+.admin-input-with-upload {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+.admin-input-with-upload .admin-input { flex: 1 1 auto; min-width: 0; }
+.admin-input-with-upload .admin-btn { flex: 0 0 auto; align-self: center; }
+
 /* Status dot — replaces bigger LIVE/DRAFT/SCHEDULED text badges.
    Live: green dot with glow. Draft: muted gray. Scheduled: amber. */
 .admin-status {

@@ -308,4 +308,68 @@
     form.addEventListener('submit', function () {
         dirty = false;
     });
+
+    /* ---------- Inline file uploaders (Social image, etc.) ----------
+     * Generic helper for any "[ UPLOAD ]" button whose
+     * data-target=<input id> + data-file-input=<file input id> point
+     * at a sibling pair. Reuses the /admin/upload endpoint that
+     * EasyMDE drives from the body editor, so the response shape +
+     * CSRF handling stay identical. Status pings into an optional
+     * `<id>-status` element next to the field.
+     */
+    Array.prototype.slice.call(document.querySelectorAll('[data-target][data-file-input]')).forEach(function (btn) {
+        var target = document.getElementById(btn.dataset.target);
+        var fileInput = document.getElementById(btn.dataset.fileInput);
+        if (!target || !fileInput) return;
+        var statusEl = document.getElementById(btn.dataset.target + '-upload-status');
+
+        function setStatus(text, isError) {
+            if (!statusEl) return;
+            statusEl.textContent = text;
+            statusEl.hidden = !text;
+            statusEl.style.color = isError ? 'var(--accent)' : '';
+        }
+
+        btn.addEventListener('click', function () { fileInput.click(); });
+
+        fileInput.addEventListener('change', function () {
+            var file = fileInput.files && fileInput.files[0];
+            if (!file) return;
+            setStatus('Uploading ' + file.name + '…', false);
+            var meta = document.querySelector('meta[name="csrf-token"]');
+            var token = meta ? meta.getAttribute('content') : '';
+            var fd = new FormData();
+            fd.append('file', file);
+            fetch('/admin/upload', {
+                method: 'POST',
+                headers: { 'X-CSRF-Token': token },
+                body: fd,
+                credentials: 'same-origin',
+            }).then(function (r) {
+                var ctype = r.headers.get('content-type') || '';
+                if (ctype.indexOf('application/json') === -1) {
+                    return r.text().then(function (body) {
+                        setStatus('Upload failed (' + r.status + ')', true);
+                        throw new Error(body.slice(0, 200));
+                    });
+                }
+                return r.json().then(function (data) {
+                    if (!r.ok || !data.url) {
+                        setStatus('Upload failed: ' + (data.error || 'unknown'), true);
+                        return;
+                    }
+                    target.value = data.url;
+                    // Re-fire change so the dirty-guard above + any
+                    // listeners pick up the new value.
+                    target.dispatchEvent(new Event('change', { bubbles: true }));
+                    setStatus('Uploaded → ' + data.url, false);
+                });
+            }).catch(function (err) {
+                setStatus('Upload error: ' + err.message, true);
+            }).finally(function () {
+                // Reset so re-selecting the same file still fires.
+                fileInput.value = '';
+            });
+        });
+    });
 })();

@@ -97,13 +97,25 @@ $isEdit = $mode === 'edit';
                    placeholder="One-line description shown in post lists and meta tags.">
         </div>
 
-        <!-- Social-card image (per-post og:image override) -->
+        <!-- Social-card image (per-post og:image override). The input
+             accepts a path or absolute URL; the upload button POSTs the
+             chosen file to /admin/upload and writes the returned path
+             back into the input. Drop-in to keep the field useful for
+             externally-hosted images too. -->
         <div class="admin-field">
             <label class="admin-label" for="image">Social image <span class="admin-label-hint">(optional · og:image · falls back to first body image)</span></label>
-            <input type="text" name="image" id="image"
-                   value="<?= Http::e($formValues['image']) ?>"
-                   class="admin-input"
-                   placeholder="/uploads/2026/06/cover.webp  or  https://…">
+            <div class="admin-input-with-upload">
+                <input type="text" name="image" id="image"
+                       value="<?= Http::e($formValues['image']) ?>"
+                       class="admin-input"
+                       placeholder="/uploads/2026/06/cover.webp  or  https://…">
+                <input type="file" id="image-upload" accept="image/*" hidden>
+                <button type="button" id="image-upload-btn"
+                        class="admin-btn admin-btn-sm"
+                        data-target="image"
+                        data-file-input="image-upload">UPLOAD</button>
+            </div>
+            <div id="image-upload-status" class="admin-label-hint" hidden></div>
         </div>
 
         <!-- Series — slug + optional part number side by side -->
