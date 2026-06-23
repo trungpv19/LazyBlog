@@ -23,15 +23,17 @@
     { "code": "ONE-YEAR-ONLINE",  "label": "ONE YEAR ONLINE",   "description": "Blog age ≥ 365 days",                    "kind": "blog-age-days",        "params": { "threshold": 365 } },
     { "code": "TWO-YEAR-ONLINE",  "label": "TWO YEARS ONLINE",  "description": "Blog age ≥ 730 days",                    "kind": "blog-age-days",        "params": { "threshold": 730 } },
 
-    { "code": "SPARK-STREAK",     "label": "SPARK STREAK (4w)", "description": "Longest weekly streak ≥ 4 weeks",        "kind": "longest-streak-weeks", "params": { "threshold": 4 } },
-    { "code": "IRON-STREAK",      "label": "IRON STREAK (12w)", "description": "Longest weekly streak ≥ 12 weeks",       "kind": "longest-streak-weeks", "params": { "threshold": 12 } },
-    { "code": "MARATHON",         "label": "MARATHON (26w)",    "description": "Longest weekly streak ≥ 26 weeks",       "kind": "longest-streak-weeks", "params": { "threshold": 26 } },
-    { "code": "CENTURY-STREAK",   "label": "CENTURY STREAK",    "description": "Longest weekly streak ≥ 100 weeks",      "kind": "longest-streak-weeks", "params": { "threshold": 100 } }
+    { "code": "SPARK-STREAK",     "label": "SPARK STREAK",      "description": "Longest streak ≥ 4 periods (unit from STREAK_UNIT env)",    "kind": "longest-streak", "params": { "threshold": 4 } },
+    { "code": "IRON-STREAK",      "label": "IRON STREAK",       "description": "Longest streak ≥ 12 periods (unit from STREAK_UNIT env)",   "kind": "longest-streak", "params": { "threshold": 12 } },
+    { "code": "MARATHON",         "label": "MARATHON",          "description": "Longest streak ≥ 26 periods (unit from STREAK_UNIT env)",   "kind": "longest-streak", "params": { "threshold": 26 } },
+    { "code": "CENTURY-STREAK",   "label": "CENTURY STREAK",    "description": "Longest streak ≥ 100 periods (unit from STREAK_UNIT env)",  "kind": "longest-streak", "params": { "threshold": 100 } }
   ],
 
   "hidden": [
     { "code": "NIGHT-OWL",        "label": "NIGHT OWL",         "description": "Transmission between 00:00 and 04:00",   "kind": "time-window",          "params": { "hourFrom": 0,  "hourTo": 4 } },
     { "code": "DAWN-PATROL",      "label": "DAWN PATROL",       "description": "Transmission between 05:00 and 07:00",   "kind": "time-window",          "params": { "hourFrom": 5,  "hourTo": 7 } },
+    { "code": "EARLY-MORNING-TX", "label": "EARLY MORNING TX",  "description": "Transmission between 06:00 and 09:00",   "kind": "time-window",          "params": { "hourFrom": 6,  "hourTo": 9 } },
+    { "code": "LUNCH-BREAK-TX",   "label": "LUNCH BREAK TX",    "description": "Transmission during nghỉ trưa 12:00–14:00","kind": "time-window",          "params": { "hourFrom": 12, "hourTo": 14 } },
     { "code": "FRIDAY-NIGHT-TX",  "label": "FRIDAY NIGHT TX",   "description": "Friday transmission after 20:00",        "kind": "time-window",          "params": { "hourFrom": 20, "hourTo": 24, "dayOfWeek": 5 } },
     { "code": "SATURDAY-LATE-TX", "label": "SATURDAY LATE TX",  "description": "Saturday transmission after 22:00",      "kind": "time-window",          "params": { "hourFrom": 22, "hourTo": 24, "dayOfWeek": 6 } },
     { "code": "SUNDAY-MORNING-TX","label": "SUNDAY MORNING TX", "description": "Sunday transmission between 06:00–10:00","kind": "time-window",          "params": { "hourFrom": 6,  "hourTo": 10, "dayOfWeek": 7 } },

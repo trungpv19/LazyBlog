@@ -33,7 +33,11 @@ final class BadgeKinds
             'series-min-parts'     => self::seriesMinParts(),
             'tag-count'            => self::tagCount(),
             'blog-age-days'        => self::blogAgeDays(),
-            'longest-streak-weeks' => self::longestStreakWeeks(),
+            // Threshold semantic depends on STREAK_UNIT env (day/week/month).
+            // Old alias `longest-streak-weeks` kept so older custom configs
+            // don't break after the rename.
+            'longest-streak'       => self::longestStreak(),
+            'longest-streak-weeks' => self::longestStreak(),
             'time-window'          => self::timeWindow(),
             'gap-days'             => self::gapDays(),
             'same-day-count'       => self::sameDayCount(),
@@ -169,11 +173,16 @@ final class BadgeKinds
         };
     }
 
-    private static function longestStreakWeeks(): \Closure
+    private static function longestStreak(): \Closure
     {
         return static function (array $params, array $ctx): array {
             $threshold = (int) ($params['threshold'] ?? 12);
-            $longest = (int) ($ctx['longestStreakWeeks'] ?? 0);
+            // Calculator publishes the longest run under whichever unit
+            // STREAK_UNIT selects — days, weeks, or months. Badge params
+            // are intentionally unit-agnostic so the same JSON entry
+            // works across units; operators are expected to adjust the
+            // threshold + label/description to match their chosen unit.
+            $longest = (int) ($ctx['longestStreak'] ?? $ctx['longestStreakWeeks'] ?? 0);
             $unlocked = $longest >= $threshold;
             return [
                 'current' => min($longest, $threshold),

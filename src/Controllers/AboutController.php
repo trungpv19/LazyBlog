@@ -89,7 +89,8 @@ final class AboutController
         }
 
         $tz = new \DateTimeZone((string) Config::get('TIMEZONE', 'UTC'));
-        $calc = new GamificationCalculator($tz, new \DateTimeImmutable('now', $tz));
+        $streakUnit = (string) Config::get('STREAK_UNIT', GamificationCalculator::UNIT_WEEK);
+        $calc = new GamificationCalculator($tz, new \DateTimeImmutable('now', $tz), $streakUnit);
         $streak = $calc->streak($published);
         $badges = $calc->badges(
             $published,

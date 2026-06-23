@@ -9,18 +9,30 @@ namespace App;
  * from the published-post index. Pure: takes timestamps + scalar lists
  * in, returns arrays out — no filesystem, no DB, no caching.
  *
- * Streak rule is weekly (ISO week, ≥1 published post per week). A
- * Monday-to-Sunday week with no post breaks the streak; the current
- * week is given a grace period until Sunday so an empty mid-week
- * surface flags as "at risk" rather than zeroing out.
+ * Streak unit is configurable via the `STREAK_UNIT` env (`day`, `week`,
+ * `month`; default `week`). One published post per period keeps the
+ * streak alive. The current period gets a grace window — empty current
+ * period flags as "at risk" until the period actually ends — so a
+ * mid-day or mid-week surface doesn't zero the streak out prematurely.
  */
 final class GamificationCalculator
 {
+    public const UNIT_DAY = 'day';
+    public const UNIT_WEEK = 'week';
+    public const UNIT_MONTH = 'month';
+
+    private const VALID_UNITS = [self::UNIT_DAY, self::UNIT_WEEK, self::UNIT_MONTH];
+
+    private readonly string $unit;
+
     public function __construct(
         private readonly \DateTimeZone $tz,
         private readonly \DateTimeImmutable $now,
+        ?string $unit = null,
         private readonly ?Badges\BadgeRegistry $badgeRegistry = null,
     ) {
+        $resolved = $unit ?? self::UNIT_WEEK;
+        $this->unit = in_array($resolved, self::VALID_UNITS, true) ? $resolved : self::UNIT_WEEK;
     }
 
     /**
@@ -37,9 +49,14 @@ final class GamificationCalculator
         return new Badges\BadgeRegistry($rootDir . '/content/badges.json');
     }
 
+    public function unit(): string
+    {
+        return $this->unit;
+    }
+
     /**
      * @param list<array{date:string,...}> $publishedPosts
-     * @return array{current:int,longest:int,atRisk:bool,nextDeadline:string,hasAny:bool}
+     * @return array{current:int,longest:int,atRisk:bool,nextDeadline:string,hasAny:bool,unit:string}
      */
     public function streak(array $publishedPosts): array
     {
@@ -50,12 +67,14 @@ final class GamificationCalculator
                 'atRisk' => false,
                 'nextDeadline' => '',
                 'hasAny' => false,
+                'unit' => $this->unit,
             ];
         }
 
-        // Deduplicate posts by ISO week key — multiple posts in one week
-        // count as a single streak tick.
-        $weekSet = [];
+        // Deduplicate posts by period key — multiple posts in one period
+        // count as a single streak tick. The key format depends on unit
+        // (day/week/month).
+        $periodSet = [];
         foreach ($publishedPosts as $p) {
             $dateOnly = substr((string) $p['date'], 0, 10);
             if ($dateOnly === '') {
@@ -66,36 +85,37 @@ final class GamificationCalculator
             } catch (\Throwable) {
                 continue;
             }
-            $weekSet[$dt->format('o-\WW')] = true;
+            $periodSet[$this->periodKey($dt)] = true;
         }
-        $weeks = array_keys($weekSet);
-        sort($weeks);
+        $periods = array_keys($periodSet);
+        sort($periods);
 
-        $longest = $this->longestRun($weeks);
-        [$current, $atRisk] = $this->currentRun($weekSet);
+        $longest = $this->longestRun($periods);
+        [$current, $atRisk] = $this->currentRun($periodSet);
 
         return [
             'current' => $current,
             'longest' => $longest,
             'atRisk' => $atRisk,
-            'nextDeadline' => $this->endOfCurrentWeek(),
+            'nextDeadline' => $this->endOfCurrentPeriod(),
             'hasAny' => true,
+            'unit' => $this->unit,
         ];
     }
 
     /**
-     * @param list<string> $sortedWeeks
+     * @param list<string> $sortedPeriods
      */
-    private function longestRun(array $sortedWeeks): int
+    private function longestRun(array $sortedPeriods): int
     {
-        if ($sortedWeeks === []) {
+        if ($sortedPeriods === []) {
             return 0;
         }
         $max = 1;
         $run = 1;
-        $count = count($sortedWeeks);
+        $count = count($sortedPeriods);
         for ($i = 1; $i < $count; $i++) {
-            if ($this->nextWeekKey($sortedWeeks[$i - 1]) === $sortedWeeks[$i]) {
+            if ($this->nextPeriodKey($sortedPeriods[$i - 1]) === $sortedPeriods[$i]) {
                 $run++;
                 if ($run > $max) {
                     $max = $run;
@@ -108,24 +128,24 @@ final class GamificationCalculator
     }
 
     /**
-     * @param array<string,true> $weekSet
+     * @param array<string,true> $periodSet
      * @return array{0:int,1:bool}  [current, atRisk]
      */
-    private function currentRun(array $weekSet): array
+    private function currentRun(array $periodSet): array
     {
-        $thisWeek = $this->now->format('o-\WW');
-        $prevWeek = $this->prevWeekKey($thisWeek);
+        $thisPeriod = $this->periodKey($this->now);
+        $prevPeriod = $this->prevPeriodKey($thisPeriod);
 
-        $hasThisWeek = isset($weekSet[$thisWeek]);
-        $hasPrevWeek = isset($weekSet[$prevWeek]);
+        $hasThis = isset($periodSet[$thisPeriod]);
+        $hasPrev = isset($periodSet[$prevPeriod]);
 
-        if ($hasThisWeek) {
-            $anchor = $thisWeek;
+        if ($hasThis) {
+            $anchor = $thisPeriod;
             $atRisk = false;
-        } elseif ($hasPrevWeek && (int) $this->now->format('N') < 7) {
-            // Current week empty but Sunday hasn't passed yet —
-            // streak still alive, just at risk.
-            $anchor = $prevWeek;
+        } elseif ($hasPrev && !$this->currentPeriodFullyElapsed()) {
+            // Current period empty but it isn't over yet — streak still
+            // alive, just at risk until the operator publishes.
+            $anchor = $prevPeriod;
             $atRisk = true;
         } else {
             return [0, false];
@@ -133,37 +153,87 @@ final class GamificationCalculator
 
         $count = 0;
         $cursor = $anchor;
-        while (isset($weekSet[$cursor])) {
+        while (isset($periodSet[$cursor])) {
             $count++;
-            $cursor = $this->prevWeekKey($cursor);
+            $cursor = $this->prevPeriodKey($cursor);
         }
         return [$count, $atRisk];
     }
 
-    private function nextWeekKey(string $key): string
+    /**
+     * Map a datetime into its period key under the active unit.
+     */
+    private function periodKey(\DateTimeImmutable $dt): string
     {
-        [$year, $week] = sscanf($key, '%d-W%d');
-        return (new \DateTimeImmutable('now', $this->tz))
-            ->setISODate((int) $year, ((int) $week) + 1)
-            ->format('o-\WW');
+        return match ($this->unit) {
+            self::UNIT_DAY => $dt->format('Y-m-d'),
+            self::UNIT_MONTH => $dt->format('Y-m'),
+            default => $dt->format('o-\WW'),
+        };
     }
 
-    private function prevWeekKey(string $key): string
+    private function nextPeriodKey(string $key): string
     {
-        [$year, $week] = sscanf($key, '%d-W%d');
-        return (new \DateTimeImmutable('now', $this->tz))
-            ->setISODate((int) $year, ((int) $week) - 1)
-            ->format('o-\WW');
+        return $this->shiftPeriodKey($key, +1);
+    }
+
+    private function prevPeriodKey(string $key): string
+    {
+        return $this->shiftPeriodKey($key, -1);
+    }
+
+    private function shiftPeriodKey(string $key, int $delta): string
+    {
+        $now = new \DateTimeImmutable('now', $this->tz);
+        return match ($this->unit) {
+            self::UNIT_DAY => (new \DateTimeImmutable($key, $this->tz))
+                ->modify(($delta >= 0 ? '+' : '') . $delta . ' day')
+                ->format('Y-m-d'),
+            self::UNIT_MONTH => (new \DateTimeImmutable($key . '-01', $this->tz))
+                ->modify(($delta >= 0 ? '+' : '') . $delta . ' month')
+                ->format('Y-m'),
+            default => (function () use ($key, $delta, $now): string {
+                [$year, $week] = sscanf($key, '%d-W%d');
+                return $now
+                    ->setISODate((int) $year, ((int) $week) + $delta)
+                    ->format('o-\WW');
+            })(),
+        };
     }
 
     /**
-     * Sunday (ISO day 7) of the current week — the deadline the operator
-     * must publish by to keep the streak alive.
+     * The "must publish by" deadline shown to the operator — last day of
+     * the current period under the active unit.
      */
-    private function endOfCurrentWeek(): string
+    private function endOfCurrentPeriod(): string
     {
-        $daysToSunday = 7 - (int) $this->now->format('N');
-        return $this->now->modify("+{$daysToSunday} days")->format('Y-m-d');
+        return match ($this->unit) {
+            self::UNIT_DAY => $this->now->format('Y-m-d'),
+            self::UNIT_MONTH => $this->now->format('Y-m-t'),
+            default => $this->now
+                ->modify('+' . (7 - (int) $this->now->format('N')) . ' days')
+                ->format('Y-m-d'),
+        };
+    }
+
+    /**
+     * True only when the current period is past — i.e. the operator can
+     * no longer rescue the streak by publishing now. Day units treat the
+     * period as "always still live" because a calendar day only ends at
+     * the moment we'd be re-evaluated for the next day anyway.
+     */
+    private function currentPeriodFullyElapsed(): bool
+    {
+        return match ($this->unit) {
+            // Day: there's always still time within the calendar day
+            // until midnight, at which point the period key itself moves.
+            self::UNIT_DAY => false,
+            // Week: ISO day 7 = Sunday — no future day in this week.
+            self::UNIT_WEEK => (int) $this->now->format('N') >= 7,
+            // Month: today is the last day-of-month.
+            self::UNIT_MONTH => (int) $this->now->format('j') >= (int) $this->now->format('t'),
+            default => false,
+        };
     }
 
     /**
@@ -216,7 +286,12 @@ final class GamificationCalculator
             'posts' => $postsWithBody,
             'seriesList' => $seriesList,
             'tagCounts' => $tagCounts,
+            // Unit-agnostic key (preferred). `longestStreakWeeks` kept as
+            // an alias so existing `longest-streak-weeks` kind reads still
+            // resolve under the new name.
+            'longestStreak' => $streak['longest'],
             'longestStreakWeeks' => $streak['longest'],
+            'streakUnit' => $this->unit,
             'firstDate' => $first,
             'todayDate' => $this->now->format('Y-m-d'),
             'tz' => $this->tz,

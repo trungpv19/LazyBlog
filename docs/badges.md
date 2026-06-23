@@ -74,7 +74,7 @@ no wall-clock and can't trigger NIGHT-OWL etc.
 | `series-min-parts` | First series has ≥N published parts | `threshold` (int) |
 | `tag-count` | Any single tag has ≥N posts | `threshold` (int) |
 | `blog-age-days` | Blog age (today − first post) ≥ N days | `threshold` (int) |
-| `longest-streak-weeks` | Longest weekly streak ≥ N weeks | `threshold` (int) |
+| `longest-streak` | Longest streak ≥ N periods (period = day/week/month, per `STREAK_UNIT` env) | `threshold` (int) |
 | `time-window` | Post published within hour window | `hourFrom`, `hourTo` (0–24), optional `dayOfWeek` (1=Mon..7=Sun) |
 | `gap-days` | Post after ≥N days since previous post | `threshold` (int) |
 | `same-day-count` | ≥N posts on the same calendar day | `threshold` (int) |
@@ -88,17 +88,31 @@ sensible defaults where possible (e.g. `post-count` defaults to
 
 ## Streak rules
 
-The streak panel above the badges grid follows a separate rule that
-isn't (yet) configurable via JSON:
+Streak math feeds the `longest-streak` badge family (SPARK-STREAK,
+IRON-STREAK, MARATHON, CENTURY-STREAK). The cadence is configurable via
+the `STREAK_UNIT` env:
 
-- Unit is the ISO week (Monday–Sunday)
-- A week with ≥1 published, non-draft post on `date ≤ today` counts
-- The current week gets a grace period until Sunday — empty mid-week
-  shows an "at risk" callout instead of zeroing the streak
-- `LONGEST` is the maximum consecutive run across history
+- `day` — strict: ≥1 published post every calendar day
+- `week` — ISO Mon–Sun week (default)
+- `month` — calendar month (`Y-m`)
 
-Streaks use the site `TIMEZONE` env (default UTC) for "today" and
-ISO-week boundaries.
+One published, non-draft post per period keeps the streak alive. The
+current period gets a grace window — empty current period reads as "at
+risk" until the period actually ends — so a mid-day or mid-week surface
+doesn't zero the streak out prematurely. (For `day`, this means a
+streak with no post yet today is always "at risk" until you publish
+or the day rolls over.) `LONGEST` is the maximum consecutive run
+across history.
+
+Streaks use the site `TIMEZONE` env (default UTC) for "today" and all
+period boundaries.
+
+**Switching units:** the `longest-streak` badge `threshold` param is
+unit-agnostic — it just means "N consecutive periods". If you switch
+`STREAK_UNIT` from `week` to `day`, the same threshold of 12 now means
+12 consecutive days instead of 12 weeks. Update the badge labels and
+descriptions in `content/badges.json` to match the new unit so the
+visible text doesn't lie.
 
 ## Adding a brand-new pattern
 

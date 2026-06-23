@@ -23,54 +23,124 @@ function posts(array $dates): array
 }
 
 $cases = [
+    // ───── weekly unit (default) ─────
     [
-        'name' => 'empty dataset',
+        'name' => '[week] empty dataset',
+        'unit' => 'week',
         'now' => '2026-06-23 12:00:00',
         'posts' => [],
         'expect' => ['current' => 0, 'longest' => 0, 'atRisk' => false, 'hasAny' => false],
     ],
     [
-        'name' => 'single post this week',
+        'name' => '[week] single post this week',
+        'unit' => 'week',
         'now' => '2026-06-23 12:00:00', // Tuesday, week 26
         'posts' => posts(['2026-06-22']),
         'expect' => ['current' => 1, 'longest' => 1, 'atRisk' => false, 'hasAny' => true],
     ],
     [
-        'name' => '3 consecutive weeks ending this week',
+        'name' => '[week] 3 consecutive weeks ending this week',
+        'unit' => 'week',
         'now' => '2026-06-23 12:00:00',
         'posts' => posts(['2026-06-08', '2026-06-15', '2026-06-22']),
         'expect' => ['current' => 3, 'longest' => 3, 'atRisk' => false],
     ],
     [
-        'name' => 'streak ended last week, current week empty mid-week (at risk)',
+        'name' => '[week] streak ended last week, current week empty mid-week (at risk)',
+        'unit' => 'week',
         'now' => '2026-06-24 12:00:00', // Wednesday
         'posts' => posts(['2026-06-01', '2026-06-08', '2026-06-15']),
         'expect' => ['current' => 3, 'longest' => 3, 'atRisk' => true],
     ],
     [
-        'name' => 'streak ended last week, current week empty, Sunday (broken)',
+        'name' => '[week] streak ended last week, current week empty, Sunday (broken)',
+        'unit' => 'week',
         'now' => '2026-06-28 23:00:00', // Sunday of current week
         'posts' => posts(['2026-06-01', '2026-06-08', '2026-06-15']),
         'expect' => ['current' => 0, 'longest' => 3, 'atRisk' => false],
     ],
     [
-        'name' => 'two streaks 4 then 2 (with gap)',
+        'name' => '[week] two streaks 4 then 2 (with gap)',
+        'unit' => 'week',
         'now' => '2026-06-23 12:00:00',
         'posts' => posts([
-            // 4-week streak: weeks 14, 15, 16, 17 (Apr)
             '2026-03-30', '2026-04-06', '2026-04-13', '2026-04-20',
-            // gap
-            // 2-week streak: weeks 25, 26 (Jun)
             '2026-06-15', '2026-06-22',
         ]),
         'expect' => ['current' => 2, 'longest' => 4],
     ],
     [
-        'name' => 'year boundary (W52 of 2025 + W1 of 2026 consecutive)',
+        'name' => '[week] year boundary (W52 of 2025 + W1 of 2026 consecutive)',
+        'unit' => 'week',
         'now' => '2026-01-10 12:00:00',
         'posts' => posts(['2025-12-22', '2025-12-29', '2026-01-05']),
-        // W52 of 2025, W1 of 2026, W2 of 2026 all consecutive — but 2025 has 53 weeks per ISO calendar
-        // Actually 2025: Dec 22 = W52, Dec 29 = W1 of 2026; 2026 starts at Mon Dec 29.
+        'expect' => ['longest' => 3],
+    ],
+
+    // ───── daily unit ─────
+    [
+        'name' => '[day] empty dataset',
+        'unit' => 'day',
+        'now' => '2026-06-23 12:00:00',
+        'posts' => [],
+        'expect' => ['current' => 0, 'longest' => 0, 'hasAny' => false],
+    ],
+    [
+        'name' => '[day] 4 consecutive days ending today',
+        'unit' => 'day',
+        'now' => '2026-06-23 12:00:00',
+        'posts' => posts(['2026-06-20', '2026-06-21', '2026-06-22', '2026-06-23']),
+        'expect' => ['current' => 4, 'longest' => 4, 'atRisk' => false],
+    ],
+    [
+        'name' => '[day] streak ended yesterday, today empty (at risk grace)',
+        'unit' => 'day',
+        'now' => '2026-06-23 18:00:00',
+        'posts' => posts(['2026-06-20', '2026-06-21', '2026-06-22']),
+        'expect' => ['current' => 3, 'longest' => 3, 'atRisk' => true],
+    ],
+    [
+        'name' => '[day] missed 2 days ago, broken',
+        'unit' => 'day',
+        'now' => '2026-06-23 12:00:00',
+        'posts' => posts(['2026-06-20', '2026-06-21']),
+        'expect' => ['current' => 0, 'longest' => 2],
+    ],
+
+    // ───── monthly unit ─────
+    [
+        'name' => '[month] empty dataset',
+        'unit' => 'month',
+        'now' => '2026-06-15 12:00:00',
+        'posts' => [],
+        'expect' => ['current' => 0, 'longest' => 0, 'hasAny' => false],
+    ],
+    [
+        'name' => '[month] 4 consecutive months ending this month',
+        'unit' => 'month',
+        'now' => '2026-06-15 12:00:00',
+        'posts' => posts(['2026-03-10', '2026-04-15', '2026-05-20', '2026-06-05']),
+        'expect' => ['current' => 4, 'longest' => 4, 'atRisk' => false],
+    ],
+    [
+        'name' => '[month] streak ended last month, current empty mid-month (at risk)',
+        'unit' => 'month',
+        'now' => '2026-06-15 12:00:00', // 15th of June, plenty of time left
+        'posts' => posts(['2026-04-10', '2026-05-15']),
+        'expect' => ['current' => 2, 'longest' => 2, 'atRisk' => true],
+    ],
+    [
+        'name' => '[month] last day of month with no post → broken',
+        'unit' => 'month',
+        'now' => '2026-06-30 23:00:00', // 30 June = end of month
+        'posts' => posts(['2026-04-10', '2026-05-15']),
+        'expect' => ['current' => 0, 'longest' => 2, 'atRisk' => false],
+    ],
+    [
+        'name' => '[month] year boundary (Nov/Dec/Jan consecutive)',
+        'unit' => 'month',
+        'now' => '2026-02-15 12:00:00',
+        'posts' => posts(['2025-11-10', '2025-12-10', '2026-01-10']),
         'expect' => ['longest' => 3],
     ],
 ];
@@ -80,7 +150,7 @@ $fail = 0;
 
 foreach ($cases as $case) {
     $now = new DateTimeImmutable($case['now'], $tz);
-    $calc = new GamificationCalculator($tz, $now);
+    $calc = new GamificationCalculator($tz, $now, $case['unit'] ?? null);
     $got = $calc->streak($case['posts']);
 
     $ok = true;
