@@ -12,7 +12,7 @@ use App\Http;
     <h2 class="series-page-title">📡 <?= Http::e($seriesTitle) ?></h2>
     <p class="series-meta"><?= count($posts) ?> PART<?= count($posts) === 1 ? '' : 'S' ?> · slug: <code><?= Http::e($seriesSlug) ?></code></p>
 
-    <ol class="series-list">
+    <ul class="series-list">
         <?php foreach ($posts as $i => $entry): ?>
             <li class="series-item">
                 <span class="series-part-no"><?= str_pad((string) ($entry['part'] ?? ($i + 1)), 2, '0', STR_PAD_LEFT) ?></span>
@@ -30,7 +30,7 @@ use App\Http;
                 </div>
             </li>
         <?php endforeach; ?>
-    </ol>
+    </ul>
 
     <p style="margin-top: 32px;">
         <a class="view-source-link" href="/">← BACK TO INDEX</a>

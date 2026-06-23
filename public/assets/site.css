@@ -1335,27 +1335,27 @@ a.heatmap-cell:hover {
     padding: 1px 6px;
 }
 .series-list {
-    list-style: none;
+    list-style: none !important;
     margin: 0;
     padding: 0;
-    counter-reset: none;
 }
 .series-item {
     display: flex;
-    gap: 18px;
-    padding: 16px 0;
+    align-items: baseline;
+    gap: 12px;
+    padding: 12px 0;
     border-bottom: 1px dashed var(--border);
 }
+.series-item::marker { content: ''; }
 .series-item:last-child { border-bottom: none; }
 .series-part-no {
-    font-family: 'VT323', monospace;
-    font-size: 36px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
     color: var(--accent);
-    line-height: 1;
-    min-width: 56px;
-    text-align: right;
+    letter-spacing: 2px;
+    min-width: 32px;
     flex-shrink: 0;
-    text-shadow: 0 0 6px var(--accent-dim);
+    text-shadow: 0 0 4px var(--accent-dim);
 }
 .series-item-body { flex: 1; min-width: 0; }
 .series-item-title {
@@ -1363,7 +1363,6 @@ a.heatmap-cell:hover {
     font-size: 22px;
     color: var(--primary);
     text-decoration: none;
-    display: block;
     line-height: 1.2;
 }
 .series-item-title:hover {
