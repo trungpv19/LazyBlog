@@ -113,33 +113,63 @@ final class MarkdownRenderer
      * image into the adjacent paragraph (e.g. `text\n![alt](url)`) and the
      * figure-wrapping postprocess sees `<p>text<img></p>` — which it skips,
      * leaving the image inline at natural size with no tint overlay.
+     *
+     * Grouping: consecutive image-only lines (separated by single newlines,
+     * NOT blank lines) are merged into a single paragraph so the figure
+     * postprocess wraps them all in one <figure class="post-figure-gallery
+     * count-N"> for a side-by-side grid. A blank line between images keeps
+     * them as separate figures.
+     *
      * Skips lines inside fenced code blocks (```/~~~).
      */
     private function preprocessStandaloneImages(string $md): string
     {
         $lines = preg_split('/\R/u', $md) ?: [];
         $inFence = false;
-        $out = [];
         $imgRe = '/^\s*!\[[^\]]*\]\([^)]+\)\s*$/u';
 
-        foreach ($lines as $i => $line) {
+        // Pass 1: classify each line, group consecutive image lines together.
+        // $groups is a list of either ['text', $line] or ['images', $line1, $line2, ...].
+        $groups = [];
+        $current = null;
+
+        foreach ($lines as $line) {
             if (preg_match('/^\s*(?:```|~~~)/u', $line)) {
                 $inFence = !$inFence;
-                $out[] = $line;
+                if ($current !== null) { $groups[] = $current; $current = null; }
+                $groups[] = ['text', $line];
                 continue;
             }
             if ($inFence || !preg_match($imgRe, $line)) {
-                $out[] = $line;
+                if ($current !== null) { $groups[] = $current; $current = null; }
+                $groups[] = ['text', $line];
                 continue;
             }
+            if ($current === null || $current[0] !== 'images') {
+                if ($current !== null) $groups[] = $current;
+                $current = ['images', $line];
+            } else {
+                $current[] = $line;
+            }
+        }
+        if ($current !== null) $groups[] = $current;
+
+        // Pass 2: flatten. Image groups collapse to a single line (joined with
+        // a single space so CommonMark treats them as multiple inline images
+        // within one paragraph), wrapped by blank lines just like a single
+        // image line was before.
+        $out = [];
+        foreach ($groups as $g) {
+            if ($g[0] === 'text') {
+                $out[] = $g[1];
+                continue;
+            }
+            $images = array_slice($g, 1);
             if (!empty($out) && trim((string) end($out)) !== '') {
                 $out[] = '';
             }
-            $out[] = $line;
-            $next = $lines[$i + 1] ?? null;
-            if ($next !== null && trim($next) !== '') {
-                $out[] = '';
-            }
+            $out[] = implode(' ', $images);
+            $out[] = '';
         }
 
         return implode("\n", $out);
@@ -284,25 +314,56 @@ final class MarkdownRenderer
     }
 
     /**
-     * Wrap standalone `<p><img></p>` lines (markdown's default for an image on
-     * its own paragraph) in `<figure class="post-figure">` with a `<figcaption>`
-     * pulled from the alt text. So `![Caption](url)` on its own line becomes
-     * a captioned figure with the CRT theme-color tint overlay applied in CSS.
+     * Wrap `<p>` containing one or more `<img>` tags in
+     * `<figure class="post-figure">` (single image) or
+     * `<figure class="post-figure post-figure-gallery count-N">` (N>=2 images
+     * grouped from adjacent markdown lines by preprocessStandaloneImages).
+     * Each image gets its own `<div class="post-figure-image">` + figcaption
+     * pulled from the alt text. The figure element itself becomes a CSS Grid
+     * container for the multi-image case.
      */
     private function postprocessFigures(string $html): string
     {
         return (string) preg_replace_callback(
-            '/<p>(<img\s+[^>]*src="([^"]+)"[^>]*alt="([^"]*)"[^>]*\/?>)<\/p>/u',
+            '/<p>((?:\s*<img\s+[^>]*\/?>\s*)+)<\/p>/u',
             static function (array $m): string {
-                $alt = $m[3];
-                $cap = $alt !== ''
-                    ? '<figcaption>' . $alt . '</figcaption>'
-                    : '';
-                // Wrap the <img> in its own div so the theme-color tint
-                // overlay (CSS ::after) only covers the image, not the caption.
-                return '<figure class="post-figure">'
-                    . '<div class="post-figure-image">' . $m[1] . '</div>'
-                    . $cap
+                preg_match_all(
+                    '/<img\s+[^>]*src="([^"]+)"[^>]*alt="([^"]*)"(?:\s+title="([^"]*)")?[^>]*\/?>/u',
+                    $m[1],
+                    $imgs,
+                    PREG_SET_ORDER,
+                );
+                $count = count($imgs);
+
+                $cells = [];
+                foreach ($imgs as $img) {
+                    $url = htmlspecialchars($img[1], ENT_QUOTES);
+                    $alt = htmlspecialchars($img[2], ENT_QUOTES);
+                    // Title attribute (from `![alt](url "caption")`) wins as the
+                    // visible caption. Falls back to alt text if no title is set,
+                    // so existing posts without captions keep working unchanged.
+                    $titleAttr = isset($img[3]) ? htmlspecialchars($img[3], ENT_QUOTES) : '';
+                    $captionText = $titleAttr !== '' ? $img[3] : $img[2];
+                    $titleRender = $titleAttr !== '' ? ' title="' . $titleAttr . '"' : '';
+                    $cap = $captionText !== ''
+                        ? '<figcaption>' . htmlspecialchars($captionText, ENT_QUOTES) . '</figcaption>'
+                        : '';
+                    // Wrap each (image + its caption) in a single cell div so the
+                    // grid lays them out as a column inside the cell — keeps
+                    // captions UNDER their image, never pushed to the side as a
+                    // second column slot.
+                    $cells[] = '<div class="post-figure-cell">'
+                        . '<div class="post-figure-image">'
+                        . '<img src="' . $url . '" alt="' . $alt . '"' . $titleRender . ' loading="lazy" />'
+                        . '</div>' . $cap
+                        . '</div>';
+                }
+
+                $class = $count > 1
+                    ? 'post-figure post-figure-gallery count-' . $count
+                    : 'post-figure';
+                return '<figure class="' . $class . '">'
+                    . implode("\n", $cells)
                     . '</figure>';
             },
             $html,

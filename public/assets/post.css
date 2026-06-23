@@ -97,7 +97,11 @@
    with the caption pulled from alt. The figure breaks out of the post
    reading column to full viewport width; the caption stays narrow + centered.
    A theme-color overlay (mix-blend-mode: multiply) tints the image so photos
-   feel native to the CRT terminal aesthetic. */
+   feel native to the CRT terminal aesthetic.
+
+   Multiple consecutive image-only lines get grouped into a single
+   <figure class="post-figure post-figure-gallery count-N"> and laid out
+   as a CSS Grid — 2 columns, 3 columns, or auto-fit for 4+. */
 .post-figure {
     /* Break out of the article column to viewport width while text stays
        in its container. transform centers on viewport regardless of parent. */
@@ -106,6 +110,7 @@
     transform: translateX(-50%);
     margin-top: 36px;
     margin-bottom: 36px;
+    position: relative;
 }
 .post-figure-image {
     position: relative;
@@ -153,6 +158,44 @@
         transform: none;
     }
 }
+
+/* ---------- Multi-image gallery (post-figure-gallery) ----------
+   Triggered when N>=2 consecutive image-only lines are grouped into a
+   single figure by MarkdownRenderer. Each (image + caption) pair lives
+   in a .post-figure-cell so the grid lays them out as a column inside
+   each cell — captions stay UNDER their image, never pushed to the side
+   as a second column slot. */
+.post-figure-gallery {
+    display: grid;
+    gap: 8px;
+}
+.post-figure-cell {
+    display: flex;
+    flex-direction: column;
+}
+.post-figure-cell .post-figure-image {
+    border-top: none;
+    border-bottom: none;
+    flex: 0 0 auto;
+}
+.post-figure-cell figcaption {
+    max-width: 100%;
+    padding: 0;
+    margin-top: 6px;
+    font-size: 11px;
+    line-height: 1.4;
+    flex: 0 0 auto;
+}
+/* Mỗi count-N giữ đúng N cột bất kể viewport size. Dùng `minmax(0, 1fr)`
+   thay vì `1fr` để ngăn nội dung ảnh (intrinsic min-width) ép cột rộng
+   hơn 1/N figure width — nếu không sẽ tràn ngang khi N lớn. */
+.post-figure-gallery.count-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.post-figure-gallery.count-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.post-figure-gallery.count-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.post-figure-gallery.count-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.post-figure-gallery.count-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+/* count-7+ không có rule riêng → rơi về CSS Grid default (1 cột).
+   Nếu cần hỗ trợ count-7+, thêm rule tương tự ở đây. */
 
 /* ---------- Floating TOC (desktop only) ----------
    The post.php template renders the TOC twice:

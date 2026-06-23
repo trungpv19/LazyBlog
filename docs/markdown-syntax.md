@@ -73,9 +73,8 @@ renders as a normal code span.
 
 A line containing **only** `![alt](url)` gets wrapped in
 `<figure class="post-figure">`. The figure breaks out of the article
-column to viewport width on desktop, applies a `mix-blend-mode: multiply`
-overlay in the theme color (so photos feel native to the phosphor
-aesthetic), and shows the alt text as a centered `<figcaption>` below.
+column to viewport width on desktop; the caption stays narrow + centered.
+A theme-color tint (`mix-blend-mode: multiply`) gives the photo a CRT-phosphor feel.
 
 ```markdown
 ![Hai chiếc dish array nhìn từ rooftop, hoàng hôn cam](https://example.com/photo.jpg)
@@ -93,6 +92,75 @@ And this paragraph comes right after.
 To embed an image inline (not full-width, no caption), drop it inside a
 sentence — `see the diagram ![arrow](…) over here` — and it renders as a
 plain inline `<img>`.
+
+### Captions — separate from alt text
+
+By default, the `alt` text becomes the visible caption. To use a
+different caption while keeping `alt` for screen readers, use the
+markdown **title** attribute (CommonMark standard):
+
+```markdown
+![alt text describes the image](https://example.com/photo.jpg "This is the visible caption")
+```
+
+Rendered output:
+
+```html
+<figure class="post-figure">
+    <div class="post-figure-cell">
+        <div class="post-figure-image">
+            <img src="..." alt="alt text describes the image" title="This is the visible caption" />
+        </div>
+        <figcaption>This is the visible caption</figcaption>
+    </div>
+</figure>
+```
+
+For multi-image blocks, each (image + caption) pair is wrapped in its own
+`.post-figure-cell` so the caption always sits **below** its image —
+never beside it as a second column slot.
+
+| Markdown | Visible caption | `<img alt>` |
+|----------|-----------------|-------------|
+| `![alt](url)` | `alt` | `alt` |
+| `![alt](url "cap")` | `cap` | `alt` |
+| `![](url "cap")` | `cap` | empty |
+| `![](url)` | (none) | empty |
+
+The admin editor has a dedicated **image-with-caption** toolbar button
+(picture icon) that prompts for URL, alt, and caption separately.
+
+### Multiple images — side-by-side grid
+
+Consecutive image-only lines (no blank line between them) are merged into
+a single figure rendered as a CSS Grid. **Mỗi count-N giữ đúng N cột**
+bất kể viewport size (count-2 = 2 cột, count-3 = 3 cột, ..., count-6 = 6
+cột). A blank line between images keeps them as separate figures.
+
+```markdown
+<!-- 2 images on adjacent lines → one 2-column block -->
+![Left](https://example.com/a.jpg)
+![Right](https://example.com/b.jpg)
+
+<!-- 3 images on adjacent lines → one 3-column block -->
+![One](https://example.com/1.jpg)
+![Two](https://example.com/2.jpg)
+![Three](https://example.com/3.jpg)
+
+<!-- 2 images separated by a blank line → two separate full-width figures -->
+![Solo A](https://example.com/a.jpg)
+
+![Solo B](https://example.com/b.jpg)
+```
+
+You can also write several `![]()` on the **same line** — they render as
+a single multi-column figure the same way.
+
+On screens narrower than 600px (điện thoại, iPad portrait), multi-image
+blocks vẫn giữ đúng N cột tương ứng (count-2 vẫn 2 cột, count-4 vẫn 4
+cột, v.v.) — mỗi ảnh co lại còn 1/N figure width nhưng KHÔNG bị xếp dọc
+hoặc rút cột. Mục đích: người dùng mobile xem được song song, không phải
+scroll dọc qua từng ảnh.
 
 **Where the URL comes from**: paste any HTTPS URL, or use the admin UI's
 upload feature (drag-drop / clipboard paste / `📤 upload-image` toolbar
