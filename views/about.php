@@ -113,7 +113,10 @@ $streakUnitLabel = match ($stats['streak']['unit']) {
         <section class="about-panel hud-frame about-streak<?= $stats['streak']['atRisk'] ? ' is-at-risk' : '' ?>">
             <div class="about-streak-body">
                 <div class="about-streak-text">
-                    <div class="about-panel-label">&gt; CURRENT STREAK</div>
+                    <div class="about-panel-label">
+                        &gt; CURRENT STREAK
+                        <span class="about-streak-unit-tag">(<?= Http::e($stats['streak']['unit']) ?>)</span>
+                    </div>
                     <div class="about-streak-num">
                         <?= (int) $stats['streak']['current'] ?>
                         <span class="about-streak-unit"><?= Http::e($streakUnitLabel) ?></span>

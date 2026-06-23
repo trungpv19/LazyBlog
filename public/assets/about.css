@@ -344,6 +344,17 @@ a.about-contact-value:hover {
     text-shadow: 0 0 12px var(--primary-glow);
     margin-top: 6px;
 }
+.about-streak-unit-tag {
+    /* Renders the raw STREAK_UNIT env value next to the panel heading
+     * so the operator can see at a glance which cadence is active. */
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-transform: lowercase;
+    letter-spacing: 0.08em;
+    margin-left: 6px;
+    text-shadow: none;
+}
 .about-streak-unit {
     font-size: 1.6rem;
     letter-spacing: 0.08em;
