@@ -226,14 +226,29 @@ $favicon = 'data:image/svg+xml,'
     <link href="https://fonts.googleapis.com/css2?family=Play:wght@400;700&family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
 
     <?php
-    // Stylesheets split by concern so each file has its own ?v= cache-bust
-    // (changing one doesn't invalidate the others). Load order matters:
-    // base defines tokens, the rest consume them.
+    // Stylesheets split by concern, each with its own ?v= cache-bust.
+    // base/effects/components/post are universal (touched by header,
+    // footer, post-page-title used on /about, post-body code-block HUD
+    // for any markdown body). pages.css + about.css are route-scoped —
+    // see "Frontend assets" rule in .claude/rules/development-rules.md.
+    // Load order matters: base defines tokens, the rest consume them.
     foreach (['assets/base.css', 'assets/effects.css', 'assets/components.css',
-              'assets/post.css', 'assets/pages.css'] as $css):
+              'assets/post.css'] as $css):
     ?>
         <link rel="stylesheet" href="<?= Http::e(Http::asset($css)) ?>">
     <?php endforeach; ?>
+    <?php
+    // pages.css holds standalone-page styles only (.archive-*, .search-*,
+    // .ascii-404, .series-page on the /series INDEX). Skip it everywhere
+    // else so home / post / tag / about don't pay for unused rules.
+    $needsPages = $path === '/archive'
+        || $path === '/search'
+        || $path === '/series'
+        || http_response_code() === 404;
+    if ($needsPages):
+    ?>
+        <link rel="stylesheet" href="<?= Http::e(Http::asset('assets/pages.css')) ?>">
+    <?php endif; ?>
     <?php if ($path === '/about'): ?>
         <link rel="stylesheet" href="<?= Http::e(Http::asset('assets/about.css')) ?>">
     <?php endif; ?>
