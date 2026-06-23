@@ -62,6 +62,9 @@ $twitterCard = $ogImage !== '' ? 'summary_large_image' : 'summary';
 // Footer metadata. Index cache makes this cheap.
 $footerRepo = new PostRepository();
 $footerTags = $footerRepo->allTags();
+// Hide the [ SERIES ] header link when no published post belongs to any
+// series — keeps the nav focused for blogs that don't use the feature.
+$hasSeries = $footerRepo->allSeries() !== [];
 
 // JSON-LD structured data — BlogPosting for posts, Blog for home.
 $jsonLd = null;
@@ -250,7 +253,9 @@ $favicon = 'data:image/svg+xml,'
     <div class="header-actions">
         <a class="header-btn" href="/" aria-label="Back to home"<?= $isHome ? ' aria-current="page"' : '' ?>>[ HOME ]</a>
         <a class="header-btn" href="/archive" aria-label="Archive"<?= $path === '/archive' ? ' aria-current="page"' : '' ?>>[ ARCHIVE ]</a>
-        <a class="header-btn" href="/series" aria-label="Series"<?= str_starts_with($path, '/series') ? ' aria-current="page"' : '' ?>>[ SERIES ]</a>
+        <?php if ($hasSeries): ?>
+            <a class="header-btn" href="/series" aria-label="Series"<?= str_starts_with($path, '/series') ? ' aria-current="page"' : '' ?>>[ SERIES ]</a>
+        <?php endif; ?>
         <a class="header-btn" href="/search" aria-label="Search"<?= $path === '/search' ? ' aria-current="page"' : '' ?>>[ SEARCH ]</a>
         <?php if (App\Auth::check()): ?>
             <a class="header-btn" href="/admin" aria-label="Admin"<?= str_starts_with($path, '/admin') ? ' aria-current="page"' : '' ?>>[ ADMIN ]</a>
