@@ -74,7 +74,7 @@ no wall-clock and can't trigger NIGHT-OWL etc.
 | `series-min-parts` | First series has ≥N published parts | `threshold` (int) |
 | `tag-count` | Any single tag has ≥N posts | `threshold` (int) |
 | `blog-age-days` | Blog age (today − first post) ≥ N days | `threshold` (int) |
-| `longest-streak` | Longest streak ≥ N periods (period = day/week/month, per `STREAK_UNIT` env) | `threshold` (int) |
+| `longest-streak` | Longest streak ≥ N consecutive periods | `threshold` (int), `unit` (`"day"`/`"week"`/`"month"`/`"year"`, default `"week"`) |
 | `time-window` | Post published within hour window | `hourFrom`, `hourTo` (0–24), optional `dayOfWeek` (1=Mon..7=Sun) |
 | `gap-days` | Post after ≥N days since previous post | `threshold` (int) |
 | `same-day-count` | ≥N posts on the same calendar day | `threshold` (int) |
@@ -86,33 +86,38 @@ log — they don't break `/about`. Mistyped `params` keys fall back to
 sensible defaults where possible (e.g. `post-count` defaults to
 `threshold: 1`).
 
-## Streak rules
+## Streak badges
 
-Streak math feeds the `longest-streak` badge family (SPARK-STREAK,
-IRON-STREAK, MARATHON, CENTURY-STREAK). The cadence is configurable via
-the `STREAK_UNIT` env:
+The `longest-streak` kind reads its own `unit` param per badge — there
+is no global cadence setting. Available units:
 
-- `day` — strict: ≥1 published post every calendar day
-- `week` — ISO Mon–Sun week (default)
+- `day` — ≥1 published post per calendar day
+- `week` — ISO Mon–Sun week (default if `unit` is omitted)
 - `month` — calendar month (`Y-m`)
+- `year` — calendar year (`Y`)
 
-One published, non-draft post per period keeps the streak alive. The
-current period gets a grace window — empty current period reads as "at
-risk" until the period actually ends — so a mid-day or mid-week surface
-doesn't zero the streak out prematurely. (For `day`, this means a
-streak with no post yet today is always "at risk" until you publish
-or the day rolls over.) `LONGEST` is the maximum consecutive run
-across history.
+One published, non-draft post per period keeps the run alive; gaps
+break it. The badge stores the longest consecutive run ever achieved.
 
-Streaks use the site `TIMEZONE` env (default UTC) for "today" and all
-period boundaries.
+```json
+{
+  "code": "DAILY-X30",
+  "label": "DAILY STREAK (30 days)",
+  "description": "Longest streak ≥ 30 consecutive days",
+  "kind": "longest-streak",
+  "params": { "threshold": 30, "unit": "day" }
+}
+```
 
-**Switching units:** the `longest-streak` badge `threshold` param is
-unit-agnostic — it just means "N consecutive periods". If you switch
-`STREAK_UNIT` from `week` to `day`, the same threshold of 12 now means
-12 consecutive days instead of 12 weeks. Update the badge labels and
-descriptions in `content/badges.json` to match the new unit so the
-visible text doesn't lie.
+Multiple streak badges with different units coexist freely — declare
+as many as you want. The calculator memoises the longest run per unit
+so 5 weekly streak badges only walk the post set once.
+
+Period boundaries use the site `TIMEZONE` env (default UTC).
+
+**Note on the `STREAK_UNIT` env:** it's reserved for any future
+standalone "current streak" indicator (not yet implemented). Badges
+are NOT affected by that env — each one carries its own `unit` param.
 
 ## Adding a brand-new pattern
 

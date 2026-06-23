@@ -23,10 +23,16 @@
     { "code": "ONE-YEAR-ONLINE",  "label": "ONE YEAR ONLINE",   "description": "Blog age ≥ 365 days",                    "kind": "blog-age-days",        "params": { "threshold": 365 } },
     { "code": "TWO-YEAR-ONLINE",  "label": "TWO YEARS ONLINE",  "description": "Blog age ≥ 730 days",                    "kind": "blog-age-days",        "params": { "threshold": 730 } },
 
-    { "code": "SPARK-STREAK",     "label": "SPARK STREAK",      "description": "Longest streak ≥ 4 periods (unit from STREAK_UNIT env)",    "kind": "longest-streak", "params": { "threshold": 4 } },
-    { "code": "IRON-STREAK",      "label": "IRON STREAK",       "description": "Longest streak ≥ 12 periods (unit from STREAK_UNIT env)",   "kind": "longest-streak", "params": { "threshold": 12 } },
-    { "code": "MARATHON",         "label": "MARATHON",          "description": "Longest streak ≥ 26 periods (unit from STREAK_UNIT env)",   "kind": "longest-streak", "params": { "threshold": 26 } },
-    { "code": "CENTURY-STREAK",   "label": "CENTURY STREAK",    "description": "Longest streak ≥ 100 periods (unit from STREAK_UNIT env)",  "kind": "longest-streak", "params": { "threshold": 100 } }
+    { "code": "DAILY-STREAK-X7",   "label": "DAILY STREAK (7 days)",     "description": "Longest streak ≥ 7 consecutive days",     "kind": "longest-streak", "params": { "threshold": 7,   "unit": "day" } },
+    { "code": "DAILY-STREAK-X30",  "label": "DAILY STREAK (30 days)",    "description": "Longest streak ≥ 30 consecutive days",    "kind": "longest-streak", "params": { "threshold": 30,  "unit": "day" } },
+    { "code": "SPARK-STREAK",      "label": "SPARK STREAK (4 weeks)",    "description": "Longest streak ≥ 4 consecutive weeks",    "kind": "longest-streak", "params": { "threshold": 4,   "unit": "week" } },
+    { "code": "IRON-STREAK",       "label": "IRON STREAK (12 weeks)",    "description": "Longest streak ≥ 12 consecutive weeks",   "kind": "longest-streak", "params": { "threshold": 12,  "unit": "week" } },
+    { "code": "MARATHON",          "label": "MARATHON (26 weeks)",       "description": "Longest streak ≥ 26 consecutive weeks",   "kind": "longest-streak", "params": { "threshold": 26,  "unit": "week" } },
+    { "code": "CENTURY-STREAK",    "label": "CENTURY STREAK (100 weeks)","description": "Longest streak ≥ 100 consecutive weeks",  "kind": "longest-streak", "params": { "threshold": 100, "unit": "week" } },
+    { "code": "MONTHLY-STREAK-X6", "label": "MONTHLY STREAK (6 months)", "description": "Longest streak ≥ 6 consecutive months",   "kind": "longest-streak", "params": { "threshold": 6,   "unit": "month" } },
+    { "code": "MONTHLY-STREAK-X12","label": "MONTHLY STREAK (12 months)","description": "Longest streak ≥ 12 consecutive months",  "kind": "longest-streak", "params": { "threshold": 12,  "unit": "month" } },
+    { "code": "YEARLY-STREAK-X2",  "label": "YEARLY STREAK (2 years)",   "description": "Longest streak ≥ 2 consecutive years",    "kind": "longest-streak", "params": { "threshold": 2,   "unit": "year" } },
+    { "code": "YEARLY-STREAK-X5",  "label": "YEARLY STREAK (5 years)",   "description": "Longest streak ≥ 5 consecutive years",    "kind": "longest-streak", "params": { "threshold": 5,   "unit": "year" } }
   ],
 
   "hidden": [

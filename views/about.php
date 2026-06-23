@@ -5,7 +5,6 @@
  *   posts:int,tags:int,series:int,
  *   firstDate:?string,lastDate:?string,
  *   daysOnline:?int,serverUptime:?string,
- *   streak:array{current:int,longest:int,atRisk:bool,nextDeadline:string,hasAny:bool},
  *   badges:list<array{code:string,label:string,description:string,tier:string,current:int,target:int,unlocked:bool,unlockedAt:?string,isRecentUnlock:bool}>
  * } $stats */
 

@@ -177,12 +177,12 @@ final class BadgeKinds
     {
         return static function (array $params, array $ctx): array {
             $threshold = (int) ($params['threshold'] ?? 12);
-            // Calculator publishes the longest run under whichever unit
-            // STREAK_UNIT selects — days, weeks, or months. Badge params
-            // are intentionally unit-agnostic so the same JSON entry
-            // works across units; operators are expected to adjust the
-            // threshold + label/description to match their chosen unit.
-            $longest = (int) ($ctx['longestStreak'] ?? $ctx['longestStreakWeeks'] ?? 0);
+            $unit = (string) ($params['unit'] ?? 'week');
+            // Calculator pre-computes longest run per unit referenced
+            // anywhere in the catalogue. Lookup is O(1); missing unit
+            // (typo in JSON) falls back to 0 so the badge stays locked
+            // instead of crashing.
+            $longest = (int) ($ctx['longestStreakByUnit'][$unit] ?? 0);
             $unlocked = $longest >= $threshold;
             return [
                 'current' => min($longest, $threshold),

@@ -5,34 +5,34 @@ declare(strict_types=1);
 namespace App;
 
 /**
- * Derives the operator-flex gamification stats (writing streak, badges)
- * from the published-post index. Pure: takes timestamps + scalar lists
- * in, returns arrays out — no filesystem, no DB, no caching.
+ * Derives the operator-flex gamification stats (badges) from the
+ * published-post index. Pure: takes timestamps + scalar lists in,
+ * returns arrays out — no filesystem, no DB.
  *
- * Streak unit is configurable via the `STREAK_UNIT` env (`day`, `week`,
- * `month`; default `week`). One published post per period keeps the
- * streak alive. The current period gets a grace window — empty current
- * period flags as "at risk" until the period actually ends — so a
- * mid-day or mid-week surface doesn't zero the streak out prematurely.
+ * Streak units are NOT global — each `longest-streak` badge in
+ * content/badges.json declares its own unit (day/week/month/year).
+ * `longestStreakForUnit()` computes the longest consecutive run under
+ * a given unit; results are memoised per unit since one render typically
+ * needs the same unit for multiple thresholds (SPARK / IRON / MARATHON
+ * all on `week`, for example).
  */
 final class GamificationCalculator
 {
     public const UNIT_DAY = 'day';
     public const UNIT_WEEK = 'week';
     public const UNIT_MONTH = 'month';
+    public const UNIT_YEAR = 'year';
 
-    private const VALID_UNITS = [self::UNIT_DAY, self::UNIT_WEEK, self::UNIT_MONTH];
+    private const VALID_UNITS = [self::UNIT_DAY, self::UNIT_WEEK, self::UNIT_MONTH, self::UNIT_YEAR];
 
-    private readonly string $unit;
+    /** @var array<string,int> cache: unit → longest run */
+    private array $longestCache = [];
 
     public function __construct(
         private readonly \DateTimeZone $tz,
         private readonly \DateTimeImmutable $now,
-        ?string $unit = null,
         private readonly ?Badges\BadgeRegistry $badgeRegistry = null,
     ) {
-        $resolved = $unit ?? self::UNIT_WEEK;
-        $this->unit = in_array($resolved, self::VALID_UNITS, true) ? $resolved : self::UNIT_WEEK;
     }
 
     /**
@@ -49,31 +49,32 @@ final class GamificationCalculator
         return new Badges\BadgeRegistry($rootDir . '/content/badges.json');
     }
 
-    public function unit(): string
+    public static function normalizeUnit(string $unit): string
     {
-        return $this->unit;
+        return in_array($unit, self::VALID_UNITS, true) ? $unit : self::UNIT_WEEK;
     }
 
     /**
+     * Longest consecutive run of periods (under the given unit) that
+     * contain at least one published post. `posts` should already be
+     * filtered to non-draft entries on or before today; this method
+     * doesn't re-filter.
+     *
+     * Memoised on `$unit` — subsequent calls with the same unit inside
+     * one calculator instance return the cached value.
+     *
      * @param list<array{date:string,...}> $publishedPosts
-     * @return array{current:int,longest:int,atRisk:bool,nextDeadline:string,hasAny:bool,unit:string}
      */
-    public function streak(array $publishedPosts): array
+    public function longestStreakForUnit(string $unit, array $publishedPosts): int
     {
+        $unit = self::normalizeUnit($unit);
+        if (array_key_exists($unit, $this->longestCache)) {
+            return $this->longestCache[$unit];
+        }
         if ($publishedPosts === []) {
-            return [
-                'current' => 0,
-                'longest' => 0,
-                'atRisk' => false,
-                'nextDeadline' => '',
-                'hasAny' => false,
-                'unit' => $this->unit,
-            ];
+            return $this->longestCache[$unit] = 0;
         }
 
-        // Deduplicate posts by period key — multiple posts in one period
-        // count as a single streak tick. The key format depends on unit
-        // (day/week/month).
         $periodSet = [];
         foreach ($publishedPosts as $p) {
             $dateOnly = substr((string) $p['date'], 0, 10);
@@ -85,28 +86,19 @@ final class GamificationCalculator
             } catch (\Throwable) {
                 continue;
             }
-            $periodSet[$this->periodKey($dt)] = true;
+            $periodSet[self::periodKey($dt, $unit)] = true;
         }
         $periods = array_keys($periodSet);
         sort($periods);
 
-        $longest = $this->longestRun($periods);
-        [$current, $atRisk] = $this->currentRun($periodSet);
-
-        return [
-            'current' => $current,
-            'longest' => $longest,
-            'atRisk' => $atRisk,
-            'nextDeadline' => $this->endOfCurrentPeriod(),
-            'hasAny' => true,
-            'unit' => $this->unit,
-        ];
+        return $this->longestCache[$unit] = $this->longestRun($periods, $unit);
     }
 
     /**
-     * @param list<string> $sortedPeriods
+     * @param list<int|string> $sortedPeriods  (numeric-string keys like "2026"
+     *   come back from array_keys() coerced to int — accept both shapes)
      */
-    private function longestRun(array $sortedPeriods): int
+    private function longestRun(array $sortedPeriods, string $unit): int
     {
         if ($sortedPeriods === []) {
             return 0;
@@ -115,7 +107,9 @@ final class GamificationCalculator
         $run = 1;
         $count = count($sortedPeriods);
         for ($i = 1; $i < $count; $i++) {
-            if ($this->nextPeriodKey($sortedPeriods[$i - 1]) === $sortedPeriods[$i]) {
+            $prev = (string) $sortedPeriods[$i - 1];
+            $curr = (string) $sortedPeriods[$i];
+            if (self::nextPeriodKey($prev, $unit, $this->tz) === $curr) {
                 $run++;
                 if ($run > $max) {
                     $max = $run;
@@ -128,111 +122,37 @@ final class GamificationCalculator
     }
 
     /**
-     * @param array<string,true> $periodSet
-     * @return array{0:int,1:bool}  [current, atRisk]
+     * Period key for a given datetime under the given unit.
      */
-    private function currentRun(array $periodSet): array
+    public static function periodKey(\DateTimeImmutable $dt, string $unit): string
     {
-        $thisPeriod = $this->periodKey($this->now);
-        $prevPeriod = $this->prevPeriodKey($thisPeriod);
-
-        $hasThis = isset($periodSet[$thisPeriod]);
-        $hasPrev = isset($periodSet[$prevPeriod]);
-
-        if ($hasThis) {
-            $anchor = $thisPeriod;
-            $atRisk = false;
-        } elseif ($hasPrev && !$this->currentPeriodFullyElapsed()) {
-            // Current period empty but it isn't over yet — streak still
-            // alive, just at risk until the operator publishes.
-            $anchor = $prevPeriod;
-            $atRisk = true;
-        } else {
-            return [0, false];
-        }
-
-        $count = 0;
-        $cursor = $anchor;
-        while (isset($periodSet[$cursor])) {
-            $count++;
-            $cursor = $this->prevPeriodKey($cursor);
-        }
-        return [$count, $atRisk];
-    }
-
-    /**
-     * Map a datetime into its period key under the active unit.
-     */
-    private function periodKey(\DateTimeImmutable $dt): string
-    {
-        return match ($this->unit) {
+        return match (self::normalizeUnit($unit)) {
             self::UNIT_DAY => $dt->format('Y-m-d'),
             self::UNIT_MONTH => $dt->format('Y-m'),
+            self::UNIT_YEAR => $dt->format('Y'),
             default => $dt->format('o-\WW'),
         };
     }
 
-    private function nextPeriodKey(string $key): string
+    /**
+     * Next period key in sequence. Internal use — only called from
+     * `longestRun()` walking sorted keys.
+     */
+    private static function nextPeriodKey(string $key, string $unit, \DateTimeZone $tz): string
     {
-        return $this->shiftPeriodKey($key, +1);
-    }
-
-    private function prevPeriodKey(string $key): string
-    {
-        return $this->shiftPeriodKey($key, -1);
-    }
-
-    private function shiftPeriodKey(string $key, int $delta): string
-    {
-        $now = new \DateTimeImmutable('now', $this->tz);
-        return match ($this->unit) {
-            self::UNIT_DAY => (new \DateTimeImmutable($key, $this->tz))
-                ->modify(($delta >= 0 ? '+' : '') . $delta . ' day')
-                ->format('Y-m-d'),
-            self::UNIT_MONTH => (new \DateTimeImmutable($key . '-01', $this->tz))
-                ->modify(($delta >= 0 ? '+' : '') . $delta . ' month')
-                ->format('Y-m'),
-            default => (function () use ($key, $delta, $now): string {
+        $unit = self::normalizeUnit($unit);
+        return match ($unit) {
+            self::UNIT_DAY => (new \DateTimeImmutable($key, $tz))
+                ->modify('+1 day')->format('Y-m-d'),
+            self::UNIT_MONTH => (new \DateTimeImmutable($key . '-01', $tz))
+                ->modify('+1 month')->format('Y-m'),
+            self::UNIT_YEAR => (string) (((int) $key) + 1),
+            default => (function () use ($key, $tz): string {
                 [$year, $week] = sscanf($key, '%d-W%d');
-                return $now
-                    ->setISODate((int) $year, ((int) $week) + $delta)
+                return (new \DateTimeImmutable('now', $tz))
+                    ->setISODate((int) $year, ((int) $week) + 1)
                     ->format('o-\WW');
             })(),
-        };
-    }
-
-    /**
-     * The "must publish by" deadline shown to the operator — last day of
-     * the current period under the active unit.
-     */
-    private function endOfCurrentPeriod(): string
-    {
-        return match ($this->unit) {
-            self::UNIT_DAY => $this->now->format('Y-m-d'),
-            self::UNIT_MONTH => $this->now->format('Y-m-t'),
-            default => $this->now
-                ->modify('+' . (7 - (int) $this->now->format('N')) . ' days')
-                ->format('Y-m-d'),
-        };
-    }
-
-    /**
-     * True only when the current period is past — i.e. the operator can
-     * no longer rescue the streak by publishing now. Day units treat the
-     * period as "always still live" because a calendar day only ends at
-     * the moment we'd be re-evaluated for the next day anyway.
-     */
-    private function currentPeriodFullyElapsed(): bool
-    {
-        return match ($this->unit) {
-            // Day: there's always still time within the calendar day
-            // until midnight, at which point the period key itself moves.
-            self::UNIT_DAY => false,
-            // Week: ISO day 7 = Sunday — no future day in this week.
-            self::UNIT_WEEK => (int) $this->now->format('N') >= 7,
-            // Month: today is the last day-of-month.
-            self::UNIT_MONTH => (int) $this->now->format('j') >= (int) $this->now->format('t'),
-            default => false,
         };
     }
 
@@ -280,24 +200,33 @@ final class GamificationCalculator
             $first = $dates[0];
         }
 
-        $streak = $this->streak($publishedPosts);
+        $registry = $this->registry();
+        // Pre-compute longest streak for every unit referenced by a
+        // `longest-streak` entry in the catalogue. This way each kind
+        // invocation is a O(1) cache hit instead of a full O(n) rescan.
+        $catalogue = $registry->load();
+        $streakUnits = [];
+        foreach (array_merge($catalogue['volume'], $catalogue['hidden']) as $entry) {
+            if (($entry['kind'] ?? '') === 'longest-streak') {
+                $u = self::normalizeUnit((string) ($entry['params']['unit'] ?? self::UNIT_WEEK));
+                $streakUnits[$u] = true;
+            }
+        }
+        $longestStreakByUnit = [];
+        foreach (array_keys($streakUnits) as $u) {
+            $longestStreakByUnit[$u] = $this->longestStreakForUnit($u, $publishedPosts);
+        }
 
         $ctx = [
             'posts' => $postsWithBody,
             'seriesList' => $seriesList,
             'tagCounts' => $tagCounts,
-            // Unit-agnostic key (preferred). `longestStreakWeeks` kept as
-            // an alias so existing `longest-streak-weeks` kind reads still
-            // resolve under the new name.
-            'longestStreak' => $streak['longest'],
-            'longestStreakWeeks' => $streak['longest'],
-            'streakUnit' => $this->unit,
+            'longestStreakByUnit' => $longestStreakByUnit,
             'firstDate' => $first,
             'todayDate' => $this->now->format('Y-m-d'),
             'tz' => $this->tz,
         ];
 
-        $registry = $this->registry();
         // Volume tier always rendered (locked entries surface N/M progress).
         // Hidden tier filters to unlocked entries inside the registry so
         // locked codes never make it into the HTML response.

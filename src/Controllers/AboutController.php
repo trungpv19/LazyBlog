@@ -56,14 +56,10 @@ final class AboutController
      * against the in-memory index cache the rest of the app uses; the
      * uptime read is a single tiny file. All null-safe.
      *
-     * `streak` is computed lazily here too, keyed off the same published
-     * index so we avoid a second filesystem walk.
-     *
      * @return array{
      *   posts:int,tags:int,series:int,
      *   firstDate:?string,lastDate:?string,
      *   daysOnline:?int,serverUptime:?string,
-     *   streak:array{current:int,longest:int,atRisk:bool,nextDeadline:string,hasAny:bool},
      *   badges:list<array{code:string,label:string,description:string,tier:string,current:int,target:int,unlocked:bool,unlockedAt:?string,isRecentUnlock:bool}>
      * }
      */
@@ -89,9 +85,11 @@ final class AboutController
         }
 
         $tz = new \DateTimeZone((string) Config::get('TIMEZONE', 'UTC'));
-        $streakUnit = (string) Config::get('STREAK_UNIT', GamificationCalculator::UNIT_WEEK);
-        $calc = new GamificationCalculator($tz, new \DateTimeImmutable('now', $tz), $streakUnit);
-        $streak = $calc->streak($published);
+        // Streak unit is per-badge (declared in content/badges.json),
+        // not global — calculator no longer needs an env-driven unit.
+        // STREAK_UNIT env is reserved for any future standalone
+        // streak indicator and does not affect badges.
+        $calc = new GamificationCalculator($tz, new \DateTimeImmutable('now', $tz));
         $badges = $calc->badges(
             $published,
             $this->posts->allSeries(),
@@ -106,7 +104,6 @@ final class AboutController
             'lastDate' => $last,
             'daysOnline' => $daysOnline,
             'serverUptime' => self::readServerUptime(),
-            'streak' => $streak,
             'badges' => $badges,
         ];
     }
