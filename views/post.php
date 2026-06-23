@@ -3,6 +3,7 @@
 /** @var \App\Post $post */
 /** @var string $body_html */
 /** @var list<array{level:int,id:string,text:string}> $toc */
+/** @var array{slug:string,title:string,position:int,total:int,prev:?array<string,mixed>,next:?array<string,mixed>}|null $seriesNav */
 
 use App\Auth;
 use App\Http;
@@ -45,6 +46,13 @@ $renderTocList = function () use ($toc): void {
         </div>
     <?php endif; ?>
 
+    <?php if ($seriesNav !== null): ?>
+        <a class="series-banner" href="/series/<?= Http::e($seriesNav['slug']) ?>" aria-label="View full series">
+            <span class="series-banner-label">📡 PART <?= $seriesNav['position'] ?> OF <?= $seriesNav['total'] ?></span>
+            <span class="series-banner-title"><?= Http::e($seriesNav['title']) ?></span>
+        </a>
+    <?php endif; ?>
+
     <?php if ($showToc): ?>
         <nav class="toc toc-inline" aria-label="Table of contents">
             <div class="toc-label">§ TOC — NAVIGATION</div>
@@ -55,6 +63,27 @@ $renderTocList = function () use ($toc): void {
     <div class="post-body">
         <?= $body_html /* trusted: rendered by MarkdownRenderer, source HTML escaped */ ?>
     </div>
+
+    <?php if ($seriesNav !== null && ($seriesNav['prev'] !== null || $seriesNav['next'] !== null)): ?>
+        <nav class="series-nav" aria-label="Series navigation">
+            <?php if ($seriesNav['prev'] !== null): ?>
+                <a class="series-nav-link series-nav-prev" href="/posts/<?= Http::e($seriesNav['prev']['slug']) ?>">
+                    <span class="series-nav-direction">← PREV</span>
+                    <span class="series-nav-title"><?= Http::e($seriesNav['prev']['title']) ?></span>
+                </a>
+            <?php else: ?>
+                <span class="series-nav-link series-nav-empty" aria-hidden="true"></span>
+            <?php endif; ?>
+            <?php if ($seriesNav['next'] !== null): ?>
+                <a class="series-nav-link series-nav-next" href="/posts/<?= Http::e($seriesNav['next']['slug']) ?>">
+                    <span class="series-nav-direction">NEXT →</span>
+                    <span class="series-nav-title"><?= Http::e($seriesNav['next']['title']) ?></span>
+                </a>
+            <?php else: ?>
+                <span class="series-nav-link series-nav-empty" aria-hidden="true"></span>
+            <?php endif; ?>
+        </nav>
+    <?php endif; ?>
 
     <div class="post-footer">
         <a class="view-source-link" href="<?= Http::e($post->rawUrl()) ?>">[ VIEW SOURCE .md ]</a>

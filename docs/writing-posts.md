@@ -44,6 +44,8 @@ icon: "📻"
 | `summary` | no | Shown in listings, RSS description, llms.txt entry, og:description |
 | `icon` | no | Emoji shown next to the title in listings |
 | `image` | no | Per-post social-card image. Used as `og:image` + `twitter:image` when shared on Telegram/Facebook/Slack/Twitter. Path (`/uploads/…webp`) gets prefixed with `SITE_URL`; absolute URLs pass through. Falls back to `SITE_OG_IMAGE` env when omitted. |
+| `series` | no | Slug grouping this post into a multi-part series. Add the same value to every post in the series. Shows a banner at the top of the post ("Part N of M") + prev/next nav at the bottom. The series index lives at `/series/{slug}`. |
+| `part` | no | Explicit numeric ordering within a series (e.g. `1`, `2`). When omitted, posts in the series are ordered by `date` ascending. |
 
 ## Body — markdown syntax
 

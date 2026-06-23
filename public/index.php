@@ -54,6 +54,7 @@ $admin = new App\Controllers\AdminController($repo);
 $archive = new App\Controllers\ArchiveController($repo);
 $search = new App\Controllers\SearchController(new App\Searcher($repo));
 $upload = new App\Controllers\UploadController(__DIR__ . '/../content');
+$series = new App\Controllers\SeriesController($repo);
 
 $router = new App\Router();
 
@@ -74,6 +75,7 @@ $router->get('/admin', fn () => $admin->index());
 $router->get('/posts/{slug}.md', fn (array $p) => $post->raw($p));
 $router->get('/posts/{slug}', fn (array $p) => $post->show($p));
 $router->get('/tags/{tag}', fn (array $p) => $tag->show($p));
+$router->get('/series/{slug}', fn (array $p) => $series->show($p));
 $router->get('/llms.txt', fn () => $llmsCtl->index());
 $router->get('/llms-full.txt', fn () => $llmsCtl->full());
 $router->get('/feed.xml', fn () => $feedCtl->show());

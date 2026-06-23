@@ -77,6 +77,34 @@ final class PostRepository
     }
 
     /**
+     * Return all published posts in the given series, ordered by
+     * explicit `part:` ascending, then date ascending. The chronological
+     * fallback means a writer who doesn't bother with `part:` still gets
+     * the right reading order (oldest → newest).
+     *
+     * @return list<array<string,mixed>>
+     */
+    public function bySeries(string $series): array
+    {
+        $matching = array_values(array_filter(
+            $this->published(),
+            static fn (array $e): bool => isset($e['series']) && $e['series'] === $series,
+        ));
+        usort($matching, static function (array $a, array $b): int {
+            $pa = $a['part'] ?? null;
+            $pb = $b['part'] ?? null;
+            if ($pa !== null && $pb !== null && $pa !== $pb) {
+                return $pa <=> $pb;
+            }
+            // Posts with explicit part come before un-numbered ones.
+            if ($pa !== null && $pb === null) return -1;
+            if ($pa === null && $pb !== null) return 1;
+            return strcmp($a['date'], $b['date']);   // chronological
+        });
+        return $matching;
+    }
+
+    /**
      * @return list<array{slug:string,title:string,date:string,tags:list<string>,draft:bool,icon:?string,summary:?string,file:string,mtime:int}>
      */
     public function byTag(string $tag): array
@@ -305,6 +333,8 @@ final class PostRepository
                 'summary' => isset($meta['summary']) ? (string) $meta['summary'] : null,
                 'author' => self::resolveAuthor($meta['author'] ?? null),
                 'image' => isset($meta['image']) && is_string($meta['image']) ? (string) $meta['image'] : null,
+                'series' => isset($meta['series']) && is_string($meta['series']) && $meta['series'] !== '' ? strtolower(trim($meta['series'])) : null,
+                'part' => isset($meta['part']) && is_numeric($meta['part']) ? (int) $meta['part'] : null,
                 // Store basename only — keeps the index portable between
                 // Docker (/var/www/html/...) and host (./content/...) paths.
                 // Resolved back to absolute in all().
@@ -378,6 +408,8 @@ final class PostRepository
             summary: isset($meta['summary']) ? (string) $meta['summary'] : null,
             author: self::resolveAuthor($meta['author'] ?? null),
             image: isset($meta['image']) && is_string($meta['image']) ? (string) $meta['image'] : null,
+            series: isset($meta['series']) && is_string($meta['series']) && $meta['series'] !== '' ? strtolower(trim($meta['series'])) : null,
+            part: isset($meta['part']) && is_numeric($meta['part']) ? (int) $meta['part'] : null,
         );
     }
 

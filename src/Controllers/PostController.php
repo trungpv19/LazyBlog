@@ -32,11 +32,38 @@ final class PostController
 
         $rendered = $this->renderer->render($post->bodyMarkdown);
 
+        // Series context — if this post belongs to a series, fetch the
+        // ordered list and find this post's position so the view can show
+        // a "Part N of M" banner + prev/next nav at the bottom.
+        $seriesNav = null;
+        if ($post->series !== null) {
+            $seriesPosts = $this->repo->bySeries($post->series);
+            $total = count($seriesPosts);
+            $idx = null;
+            foreach ($seriesPosts as $i => $e) {
+                if ($e['slug'] === $post->slug) {
+                    $idx = $i;
+                    break;
+                }
+            }
+            if ($idx !== null && $total > 0) {
+                $seriesNav = [
+                    'slug' => $post->series,
+                    'title' => ucwords(str_replace(['-', '_'], ' ', $post->series)),
+                    'position' => $idx + 1,
+                    'total' => $total,
+                    'prev' => $idx > 0 ? $seriesPosts[$idx - 1] : null,
+                    'next' => $idx < $total - 1 ? $seriesPosts[$idx + 1] : null,
+                ];
+            }
+        }
+
         Http::render('post', [
             'title' => $post->title,
             'post' => $post,
             'body_html' => $rendered['html'],
             'toc' => $rendered['toc'],
+            'seriesNav' => $seriesNav,
         ]);
     }
 
