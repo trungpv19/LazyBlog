@@ -317,55 +317,6 @@ a.about-contact-value:hover {
     border-right: 2px dashed var(--accent);
 }
 
-/* ───── TX STREAK panel ─────
- * Three big numerals + an optional at-risk callout. Mirrors the
- * `.about-stats` grid look so it slots in below the transmission stats
- * without inventing new chrome.
- */
-.about-streak-grid {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-}
-.about-streak-row {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-.about-streak-num {
-    font-family: 'VT323', monospace;
-    font-size: 2.4rem;
-    line-height: 1.05;
-    color: var(--primary);
-    text-shadow: 0 0 8px var(--primary-glow);
-}
-.about-streak-deadline .about-streak-num {
-    /* Date label is wider than a small integer — drop a notch so it
-     * doesn't overflow the column on narrow viewports. */
-    font-size: 1.4rem;
-    letter-spacing: 0.04em;
-}
-.about-streak-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--text-dim);
-    letter-spacing: 0.18em;
-}
-.about-streak-warning {
-    margin-top: 14px;
-    padding: 8px 10px;
-    border: 1px dashed var(--accent-dim);
-    color: var(--accent);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.82rem;
-    text-align: center;
-    letter-spacing: 0.06em;
-}
-
 /* ───── BADGES panel ─────
  * Auto-fit tile grid. Unlocked badges glow phosphor; locked tiles dim
  * with a dashed border and surface their N/M progress. Tier-agnostic at
@@ -377,7 +328,9 @@ a.about-contact-value:hover {
     margin: 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    /* Wider min so the longest codes (HALF-YEAR-ONLINE, SATURDAY-LATE-TX)
+     * fit on one line without breaking at hyphens. */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 10px;
 }
 .about-badge {
@@ -399,12 +352,18 @@ a.about-contact-value:hover {
 }
 .about-badge-head {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 8px;
+    min-width: 0;
 }
 .about-badge-icon {
     color: var(--text-dim);
     font-size: 0.95rem;
+    /* `[ ]` contains a literal space between the brackets — keep them
+     * together so a narrow tile doesn't wrap the close-bracket onto a
+     * second line. */
+    white-space: nowrap;
+    flex: 0 0 auto;
 }
 .about-badge.is-unlocked .about-badge-icon {
     color: var(--primary);
@@ -415,6 +374,12 @@ a.about-contact-value:hover {
     font-weight: 700;
     letter-spacing: 0.08em;
     color: var(--text-dim);
+    /* Codes are kebab-uppercase with hyphens; default browser behaviour
+     * breaks at every hyphen and stacks vertically inside a cramped
+     * tile. Override to only break when the word genuinely overflows. */
+    overflow-wrap: break-word;
+    word-break: normal;
+    line-height: 1.2;
 }
 .about-badge.is-unlocked .about-badge-code {
     color: var(--primary);
@@ -511,7 +476,6 @@ a.about-contact-value:hover {
     .about-identity { gap: 16px; }
     .about-avatar-photo { width: 140px; height: 140px; }
     .about-contact-label { min-width: 100px; }
-    .about-streak-grid { grid-template-columns: 1fr; }
     .about-badges-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 400px) {

@@ -97,31 +97,6 @@ $daysLabel = match (true) {
             <?php endif; ?>
         </section>
 
-        <?php if ($stats['streak']['hasAny']): ?>
-            <section class="about-panel hud-frame about-streak">
-                <div class="about-panel-label">&gt; TX STREAK</div>
-                <ul class="about-streak-grid">
-                    <li class="about-streak-row">
-                        <span class="about-streak-num"><?= (int) $stats['streak']['current'] ?></span>
-                        <span class="about-streak-label">CURRENT WK</span>
-                    </li>
-                    <li class="about-streak-row">
-                        <span class="about-streak-num"><?= (int) $stats['streak']['longest'] ?></span>
-                        <span class="about-streak-label">LONGEST WK</span>
-                    </li>
-                    <li class="about-streak-row about-streak-deadline">
-                        <span class="about-streak-num"><?= Http::e($stats['streak']['nextDeadline']) ?></span>
-                        <span class="about-streak-label">NEXT TX BY</span>
-                    </li>
-                </ul>
-                <?php if ($stats['streak']['atRisk']): ?>
-                    <div class="about-streak-warning">
-                        ⚠ STREAK AT RISK — TX NEEDED THIS WEEK
-                    </div>
-                <?php endif; ?>
-            </section>
-        <?php endif; ?>
-
         <?php if ($stats['badges'] !== []): ?>
             <section class="about-panel hud-frame about-badges">
                 <div class="about-panel-label">&gt; BADGES</div>
@@ -156,6 +131,18 @@ $daysLabel = match (true) {
                         </li>
                     <?php endforeach; ?>
                 </ul>
+            </section>
+        <?php endif; ?>
+
+        <!-- BIO body — full markdown. Sits above CONTACT/STACK so the
+             narrative reads before the supporting metadata; the
+             two-column grid below acts as a sign-off footer. -->
+        <?php if ($hasBody): ?>
+            <section class="about-panel hud-frame">
+                <div class="about-panel-label">&gt; BIO</div>
+                <div class="post-body about-body">
+                    <?= $bodyHtml ?>
+                </div>
             </section>
         <?php endif; ?>
 
@@ -196,16 +183,6 @@ $daysLabel = match (true) {
                     </section>
                 <?php endif; ?>
             </div>
-        <?php endif; ?>
-
-        <!-- BIO body — full markdown -->
-        <?php if ($hasBody): ?>
-            <section class="about-panel hud-frame">
-                <div class="about-panel-label">&gt; BIO</div>
-                <div class="post-body about-body">
-                    <?= $bodyHtml ?>
-                </div>
-            </section>
         <?php endif; ?>
 
         <!-- Decorative terminal log — auto-generated transcript. Pure flavour. -->
