@@ -4,14 +4,36 @@
 [![License](https://img.shields.io/badge/license-MIT-ffb700)](LICENSE)
 [![PHP](https://img.shields.io/badge/php-8.2%2B-39ff14)](composer.json)
 
-A simple personal blog. Posts are markdown files on disk, rendered by a few
-thousand lines of plain PHP, served by Caddy + php-fpm. CRT phosphor terminal
-aesthetic. AI-friendly by design — every post is also available as raw
-`.md`, plus `llms.txt` / `llms-full.txt` indexes and a valid RSS 2.0 feed.
+> A markdown-first personal blog with CRT phosphor aesthetics,
+> operator-flex gamification, and zero moving parts.
 
-No database. No framework. No build step. Backup with `rsync`. Stylesheets
-are split by concern and cache-busted via `filemtime`, so deploys invalidate
-browser caches per-file without manual asset rotation.
+**Static. Markdown. Plain PHP.** Posts live as `YYYY-MM-DD-slug.md`
+files on disk — no database, no framework, no build step. A few
+thousand lines of plain PHP render them through a Caddy + php-fpm
+stack you can deploy to a 5 USD VPS (or a Raspberry Pi) in under a
+minute.
+
+**AI-friendly by design.** Every post is also served as raw `.md` at
+`/posts/{slug}.md`. The site publishes [`llms.txt`](https://llmstxt.org)
+(sectioned index) and `llms-full.txt` (concatenated corpus), so
+language models and tooling can ingest the entire blog without
+scraping HTML. Valid RSS 2.0 too — and an `article:published_time`
+that carries full ISO datetime precision when you bother to set it.
+
+**Operator-flex `/about` page.** A Duolingo-style streak flame tracks
+your writing cadence — day, week, month, or year, you pick. A
+JSON-driven badge catalogue at `content/badges.json` covers post-count
+milestones, markdown-element patterns (image-rich, code-heavy,
+link-curator), tag specialisation, time-of-day Easter eggs (night owl,
+lunch break, Friday night transmission), calendar anniversaries, and
+multi-year streaks — 12 reusable kinds, 30+ shipped entries, edit in
+place. Hidden badges only appear in the HTML once unlocked, so the
+surprise survives a "view source" peek.
+
+**Hardened, ergonomic.** CSP, CSRF, atomic file writes, session
+hardening. Stylesheets split by concern and cache-busted via
+`filemtime` so deploys invalidate browser caches per-file without
+manual asset rotation. Backup with `rsync`. Restore in seconds.
 
 ```
 ┌─────────────────────────────────────────────────────┐
