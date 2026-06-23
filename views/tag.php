@@ -17,6 +17,13 @@ use App\Http;
                 <li class="post-item">
                     <div class="post-meta">
                         <span class="post-date"><?= Http::e($entry['date']) ?></span>
+                        <?php if (!empty($entry['series'])): ?>
+                            <a class="post-series-tag" href="/series/<?= Http::e((string) $entry['series']) ?>">
+                                📡 <?= Http::e((string) $entry['series']) ?><?php
+                                    if (isset($entry['part']) && $entry['part'] !== null) echo ' · PART ' . (int) $entry['part'];
+                                ?>
+                            </a>
+                        <?php endif; ?>
                     </div>
                     <a class="post-title-link" href="/posts/<?= Http::e($entry['slug']) ?>">
                         <span class="post-title">

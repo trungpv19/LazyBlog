@@ -97,6 +97,13 @@ $intensity = static function (int $count, bool $inRange): string {
                                 <?php if (!empty($entry['icon'])): ?><span class="archive-icon"><?= Http::e($entry['icon']) ?></span> <?php endif; ?>
                                 <?= Http::e($entry['title']) ?>
                             </a>
+                            <?php if (!empty($entry['series'])): ?>
+                                <a class="post-series-tag" href="/series/<?= Http::e((string) $entry['series']) ?>" onclick="event.stopPropagation()">
+                                    📡 <?= Http::e((string) $entry['series']) ?><?php
+                                        if (isset($entry['part']) && $entry['part'] !== null) echo ' · P' . (int) $entry['part'];
+                                    ?>
+                                </a>
+                            <?php endif; ?>
                         </li>
                     <?php endforeach; ?>
                 </ul>

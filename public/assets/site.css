@@ -1237,6 +1237,30 @@ a.heatmap-cell:hover {
     border-radius: 1px;
 }
 
+/* ---------- Series chip (inline tag on listings) ----------
+   Used on home, tag, and archive pages to mark a post that belongs to
+   a series. Dashed amber border distinguishes it from tag-chips so the
+   "this is part of a series" cue is immediately readable. */
+.post-series-tag {
+    display: inline-block;
+    padding: 1px 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--accent);
+    border: 1px dashed var(--accent-dim);
+    border-radius: 2px;
+    text-decoration: none;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.post-series-tag:hover {
+    background: var(--primary-glow);
+    border-color: var(--accent);
+    color: var(--primary);
+}
+
 /* ---------- Series banner + nav (on post page) + series index ----------
    The banner sits between post meta and body: clickable bar that
    announces the post's position in the series and links to the series
