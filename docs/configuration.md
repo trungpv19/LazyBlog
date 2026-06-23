@@ -46,6 +46,7 @@ You can still edit posts by writing markdown files into `content/posts/`.
 | `/llms.txt` | Site index per [llmstxt.org](https://llmstxt.org) |
 | `/llms-full.txt` | Every published post concatenated for LLM consumption |
 | `/robots.txt` | `Disallow: /admin/` + `Disallow: /llms-full.txt` |
+| `/healthz` | Liveness probe — `text/plain` `ok`, no-store. Short-circuited before autoload/session/repo so monitor traffic costs ~nothing |
 
 Each rendered post page also includes `<link rel="alternate" type="text/markdown">`
 in `<head>` so AI agents auto-discover the raw source, and

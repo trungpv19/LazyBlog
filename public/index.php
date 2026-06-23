@@ -2,6 +2,16 @@
 
 declare(strict_types=1);
 
+// Fast-path liveness probe — answer before composer autoload, dotenv,
+// session start, or repo scan. Monitors hitting this every Ns would
+// otherwise spawn a session file per probe and churn the filesystem.
+if ((parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/') === '/healthz') {
+    header('Content-Type: text/plain; charset=utf-8');
+    header('Cache-Control: no-store');
+    echo "ok\n";
+    exit;
+}
+
 require __DIR__ . '/../vendor/autoload.php';
 
 Dotenv\Dotenv::createImmutable(__DIR__ . '/..')->safeLoad();
