@@ -101,8 +101,8 @@ $isEdit = $mode === 'edit';
         </div>
 
         <!-- Series — slug + optional part number side by side -->
-        <div class="admin-row">
-            <div class="admin-field" style="flex: 2 1 0">
+        <div class="admin-form-row">
+            <div class="admin-field admin-field-grow">
                 <label class="admin-label" for="series">Series <span class="admin-label-hint">(optional · slug shared across all parts)</span></label>
                 <input type="text" name="series" id="series"
                        value="<?= Http::e($formValues['series']) ?>"
