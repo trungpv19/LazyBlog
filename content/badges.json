@@ -21,6 +21,10 @@
     { "code": "SERIES-INIT",      "label": "SERIES INITIATED",  "description": "First series with ≥3 published parts",   "kind": "series-min-parts",     "params": { "threshold": 3 } },
     { "code": "SERIES-OPERATOR",  "label": "SERIES OPERATOR",   "description": "First series with ≥5 published parts",   "kind": "series-min-parts",     "params": { "threshold": 5 } },
 
+    { "code": "SERIES-X3",        "label": "SERIES ×3",         "description": "Run 3 distinct series",                  "kind": "series-count",         "params": { "threshold": 3 } },
+    { "code": "SERIES-X5",        "label": "SERIES ×5",         "description": "Run 5 distinct series",                  "kind": "series-count",         "params": { "threshold": 5 } },
+    { "code": "SERIES-X10",       "label": "SERIES ×10",        "description": "Run 10 distinct series",                 "kind": "series-count",         "params": { "threshold": 10 } },
+
     { "code": "TAG-SPECIALIST",   "label": "TAG SPECIALIST",    "description": "≥10 posts in a single tag",              "kind": "tag-count",            "params": { "threshold": 10 } },
     { "code": "TAG-MENTOR",       "label": "TAG MENTOR",        "description": "≥25 posts in a single tag",              "kind": "tag-count",            "params": { "threshold": 25 } },
 

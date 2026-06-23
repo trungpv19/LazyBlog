@@ -73,6 +73,7 @@ no wall-clock and can't trigger NIGHT-OWL etc.
 | `longest-post-words` | Any single post has ≥N words | `threshold` (int) | `threshold: 5000` |
 | `body-pattern-count` | Any single post has ≥N markdown elements of a pattern | `threshold` (int), `pattern` (`"image"` / `"code-block"` / `"external-link"` / `"blockquote"`) | `threshold: 5`, `pattern` required |
 | `series-min-parts` | First series has ≥N published parts | `threshold` (int) | `threshold: 3` |
+| `series-count` | N or more distinct series started | `threshold` (int) | `threshold: 3` |
 | `tag-count` | Any single tag has ≥N posts | `threshold` (int) | `threshold: 10` |
 | `blog-age-days` | Blog age (today − first post) ≥ N days | `threshold` (int) | `threshold: 365` |
 | `longest-streak` | Longest streak ≥ N consecutive periods | `threshold` (int), `unit` (`"day"` / `"week"` / `"month"` / `"year"`) | `threshold: 12`, `unit: "week"` |

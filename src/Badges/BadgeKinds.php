@@ -32,6 +32,7 @@ final class BadgeKinds
             'longest-post-words'   => self::longestPostWords(),
             'body-pattern-count'   => self::bodyPatternCount(),
             'series-min-parts'     => self::seriesMinParts(),
+            'series-count'         => self::seriesCount(),
             'tag-count'            => self::tagCount(),
             'blog-age-days'        => self::blogAgeDays(),
             // Threshold semantic depends on STREAK_UNIT env (day/week/month).
@@ -181,6 +182,45 @@ final class BadgeKinds
                 'target' => $threshold,
                 'unlocked' => $unlocked,
                 'unlockedAt' => $unlocked ? $bestUnlockDate : null,
+            ];
+        };
+    }
+
+    /**
+     * Distinct-series count across the catalogue. Counterpart to
+     * `series-min-parts` (which inspects how many parts the deepest
+     * single series has) — this kind asks "how many series have you
+     * even started?", regardless of how long any one runs.
+     *
+     * Unlock date = newest `lastDate` among the series at the moment
+     * the threshold tipped, so the badge surfaces the day the Nth
+     * series became visible.
+     */
+    private static function seriesCount(): \Closure
+    {
+        return static function (array $params, array $ctx): array {
+            $threshold = (int) ($params['threshold'] ?? 3);
+            $count = count($ctx['seriesList']);
+            $unlocked = $count >= $threshold;
+            $unlockedAt = null;
+            if ($unlocked) {
+                // The series listing is already sorted by lastDate desc
+                // (see PostRepository::allSeries) but the Nth-most-recent
+                // entry is the one that crossed the threshold — that's
+                // the one at index ($threshold - 1) counting from the
+                // start of the chronologically-newest run. The list is
+                // newest-first, so index threshold-1 is the badge's
+                // unlock date.
+                $lastDates = array_column($ctx['seriesList'], 'lastDate');
+                $unlockedAt = isset($lastDates[$threshold - 1])
+                    ? substr((string) $lastDates[$threshold - 1], 0, 10)
+                    : null;
+            }
+            return [
+                'current' => min($count, $threshold),
+                'target' => $threshold,
+                'unlocked' => $unlocked,
+                'unlockedAt' => $unlockedAt,
             ];
         };
     }
