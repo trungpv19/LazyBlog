@@ -48,6 +48,14 @@ use App\Http;
                                 <?php if (!empty($entry['icon'])): ?><?= Http::e((string) $entry['icon']) ?> <?php endif; ?>
                                 <?= Http::e((string) $entry['title']) ?>
                             </a>
+                            <?php if (!empty($entry['series'])): ?>
+                                <a class="admin-series-chip" href="/series/<?= Http::e((string) $entry['series']) ?>" target="_blank">
+                                    📡 <?= Http::e((string) $entry['series']) ?>
+                                    <?php if (isset($entry['part']) && $entry['part'] !== null): ?>
+                                        · PART <?= (int) $entry['part'] ?>
+                                    <?php endif; ?>
+                                </a>
+                            <?php endif; ?>
                         </td>
                         <td class="admin-mono"><?= Http::e(implode(', ', (array) $entry['tags'])) ?></td>
                         <td class="admin-mono">

@@ -517,6 +517,28 @@ button.admin-btn-sm { font-size: 10px; }
     }
 }
 
+/* ---------- Series chip in admin posts list (under the title) ---------- */
+.admin-series-chip {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 1px 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--accent);
+    background: transparent;
+    border: 1px dashed var(--accent-dim);
+    border-radius: 2px;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: background 0.15s, border-color 0.15s;
+}
+.admin-series-chip:hover {
+    background: var(--primary-glow);
+    border-color: var(--accent);
+    color: var(--primary);
+}
+
 /* ---------- Upload status pill (top-right floating notification) ---------- */
 #upload-status {
     position: fixed;
