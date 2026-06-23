@@ -1,6 +1,10 @@
 <?php
 /** @var string $title */
 /** @var list<array<string,mixed>> $posts */
+/** @var int $page */
+/** @var int $totalPages */
+/** @var int $total */
+/** @var string $pageBaseUrl */
 /** @var string|null $flash */
 
 use App\Csrf;
@@ -10,7 +14,7 @@ use App\Http;
 <section>
     <div class="admin-header-row">
         <div>
-            <h2>ALL POSTS (<?= count($posts) ?>)</h2>
+            <h2>ALL POSTS (<?= (int) $total ?>)</h2>
         </div>
         <div class="admin-actions">
             <a class="admin-btn admin-btn-primary" href="/admin/new">[ NEW POST ]</a>
@@ -86,5 +90,6 @@ use App\Http;
                 <?php endforeach; ?>
             </tbody>
         </table>
+        <?php include __DIR__ . '/../_pagination.php'; ?>
     <?php endif; ?>
 </section>

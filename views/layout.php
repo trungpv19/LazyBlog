@@ -279,7 +279,14 @@ $favicon = 'data:image/svg+xml,'
     <?php $callsign = (string) Config::get('CALLSIGN', ''); if ($callsign !== ''): ?>
         <div class="callsign"><?= Http::e($callsign) ?></div>
     <?php endif; ?>
-    <h1><a href="/" class="brand-link"><?= Http::e($siteTitle) ?></a></h1>
+    <?php /* Home is the only page where the site title IS the primary
+         heading; everywhere else (posts, /about, archive, etc.) the
+         content owns the H1 and the brand is decorative chrome. */ ?>
+    <?php if ($isHome): ?>
+        <h1><a href="/" class="brand-link"><?= Http::e($siteTitle) ?></a></h1>
+    <?php else: ?>
+        <p class="site-brand"><a href="/" class="brand-link"><?= Http::e($siteTitle) ?></a></p>
+    <?php endif; ?>
     <?php if ($siteDesc !== ''): ?>
         <div class="subtitle">// <?= Http::e($siteDesc) ?></div>
     <?php else: ?>

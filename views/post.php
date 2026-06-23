@@ -31,12 +31,12 @@ $renderTocList = function () use ($toc): void {
             }
         ?>
     </div>
-    <h2 class="post-page-title">
+    <h1 class="post-page-title">
         <?php if ($post->icon !== null && $post->icon !== ''): ?>
             <span class="post-icon"><?= Http::e($post->icon) ?></span>
         <?php endif; ?>
         <?= Http::e($post->title) ?>
-    </h2>
+    </h1>
 
     <?php if ($post->tags !== []): ?>
         <div class="post-meta-tags">
