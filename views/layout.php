@@ -239,11 +239,12 @@ $favicon = 'data:image/svg+xml,'
     <?php endforeach; ?>
     <?php
     // pages.css holds standalone-page styles only (.archive-*, .search-*,
-    // .ascii-404, .series-page on the /series INDEX). Skip it everywhere
-    // else so home / post / tag / about don't pay for unused rules.
+    // .ascii-404, .series-page used on both the /series index AND each
+    // /series/{slug} detail page). Skip it everywhere else so home /
+    // post / tag / about don't pay for unused rules.
     $needsPages = $path === '/archive'
         || $path === '/search'
-        || $path === '/series'
+        || str_starts_with($path, '/series')
         || http_response_code() === 404;
     if ($needsPages):
     ?>
