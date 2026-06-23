@@ -33,6 +33,7 @@ use App\Http;
                 <tr>
                     <th>DATE</th>
                     <th>TITLE</th>
+                    <th class="admin-col-series">SERIES</th>
                     <th>TAGS</th>
                     <th>STATUS</th>
                     <th>ACTIONS</th>
@@ -48,13 +49,17 @@ use App\Http;
                                 <?php if (!empty($entry['icon'])): ?><?= Http::e((string) $entry['icon']) ?> <?php endif; ?>
                                 <?= Http::e((string) $entry['title']) ?>
                             </a>
+                        </td>
+                        <td class="admin-col-series admin-mono">
                             <?php if (!empty($entry['series'])): ?>
                                 <a class="admin-series-chip" href="/series/<?= Http::e((string) $entry['series']) ?>" target="_blank">
                                     📡 <?= Http::e((string) $entry['series']) ?>
                                     <?php if (isset($entry['part']) && $entry['part'] !== null): ?>
-                                        · PART <?= (int) $entry['part'] ?>
+                                        · P<?= (int) $entry['part'] ?>
                                     <?php endif; ?>
                                 </a>
+                            <?php else: ?>
+                                <span style="color: var(--text-dim);">—</span>
                             <?php endif; ?>
                         </td>
                         <td class="admin-mono"><?= Http::e(implode(', ', (array) $entry['tags'])) ?></td>
