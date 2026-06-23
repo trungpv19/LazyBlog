@@ -38,6 +38,8 @@ browser caches per-file without manual asset rotation.
 | _Single post — TOC, reading progress, full-bleed figure_ | _`/archive` — heatmap + posts grouped by year_ |
 | ![Search results with snippet + highlight](docs/screenshot/search.webp) | ![Admin post list](docs/screenshot/admin-home.webp) |
 | _`/search` — diacritic-insensitive, highlighted snippets_ | _`/admin` — post management with EasyMDE editor_ |
+| ![About page operator profile with HUD frames](docs/screenshot/about.webp) | |
+| _`/about` — operator profile, HUD frames, stats grid, transmission log_ | |
 
 ## Stack
 
