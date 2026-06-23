@@ -75,7 +75,45 @@ final class GamificationCalculator
             return $this->longestCache[$unit] = 0;
         }
 
-        $periodSet = [];
+        $periodSet = $this->periodSet($publishedPosts, $unit);
+        $periods = array_keys($periodSet);
+        sort($periods);
+
+        return $this->longestCache[$unit] = $this->longestRun($periods, $unit);
+    }
+
+    /**
+     * Standalone "writing streak" snapshot for the /about card — both
+     * the current consecutive run anchored at today and the all-time
+     * longest, under the given unit. The current run gives the period
+     * containing `now` a grace window: an empty current period reads
+     * as "at risk" continuing from the previous period instead of
+     * zeroing the streak before the period actually ends.
+     *
+     * @param list<array{date:string,...}> $publishedPosts
+     * @return array{current:int,longest:int,atRisk:bool,unit:string}
+     */
+    public function streakSummaryForUnit(string $unit, array $publishedPosts): array
+    {
+        $unit = self::normalizeUnit($unit);
+        $longest = $this->longestStreakForUnit($unit, $publishedPosts);
+        if ($publishedPosts === []) {
+            return ['current' => 0, 'longest' => 0, 'atRisk' => false, 'unit' => $unit];
+        }
+        $periodSet = $this->periodSet($publishedPosts, $unit);
+        [$current, $atRisk] = $this->currentRun($periodSet, $unit);
+        return ['current' => $current, 'longest' => $longest, 'atRisk' => $atRisk, 'unit' => $unit];
+    }
+
+    /**
+     * Build the deduplicated set of period keys touched by the posts.
+     *
+     * @param list<array{date:string,...}> $publishedPosts
+     * @return array<string,true>
+     */
+    private function periodSet(array $publishedPosts, string $unit): array
+    {
+        $set = [];
         foreach ($publishedPosts as $p) {
             $dateOnly = substr((string) $p['date'], 0, 10);
             if ($dateOnly === '') {
@@ -86,12 +124,62 @@ final class GamificationCalculator
             } catch (\Throwable) {
                 continue;
             }
-            $periodSet[self::periodKey($dt, $unit)] = true;
+            $set[self::periodKey($dt, $unit)] = true;
         }
-        $periods = array_keys($periodSet);
-        sort($periods);
+        return $set;
+    }
 
-        return $this->longestCache[$unit] = $this->longestRun($periods, $unit);
+    /**
+     * Walk back from the current period counting consecutive non-empty
+     * periods. Grace rule: if the current period is empty but hasn't
+     * fully elapsed yet, continue counting from the previous period
+     * (flagged as "at risk").
+     *
+     * @param array<string,true> $periodSet
+     * @return array{0:int,1:bool}  [current, atRisk]
+     */
+    private function currentRun(array $periodSet, string $unit): array
+    {
+        $thisPeriod = self::periodKey($this->now, $unit);
+        $prevPeriod = self::prevPeriodKey($thisPeriod, $unit, $this->tz);
+
+        $hasThis = isset($periodSet[$thisPeriod]);
+        $hasPrev = isset($periodSet[$prevPeriod]);
+
+        if ($hasThis) {
+            $anchor = $thisPeriod;
+            $atRisk = false;
+        } elseif ($hasPrev && !$this->currentPeriodFullyElapsed($unit)) {
+            $anchor = $prevPeriod;
+            $atRisk = true;
+        } else {
+            return [0, false];
+        }
+
+        $count = 0;
+        $cursor = $anchor;
+        while (isset($periodSet[$cursor])) {
+            $count++;
+            $cursor = self::prevPeriodKey($cursor, $unit, $this->tz);
+        }
+        return [$count, $atRisk];
+    }
+
+    /**
+     * True when the current period can no longer be saved by publishing —
+     * i.e. day boundary has passed for that unit. Daily unit treats the
+     * current day as "always still live"; the calendar boundary moves
+     * naturally on the next request after midnight.
+     */
+    private function currentPeriodFullyElapsed(string $unit): bool
+    {
+        return match ($unit) {
+            self::UNIT_DAY => false,
+            self::UNIT_WEEK => (int) $this->now->format('N') >= 7,
+            self::UNIT_MONTH => (int) $this->now->format('j') >= (int) $this->now->format('t'),
+            self::UNIT_YEAR => $this->now->format('m-d') === '12-31',
+            default => false,
+        };
     }
 
     /**
@@ -134,23 +222,37 @@ final class GamificationCalculator
         };
     }
 
-    /**
-     * Next period key in sequence. Internal use — only called from
-     * `longestRun()` walking sorted keys.
-     */
+    /** Next period key in sequence. */
     private static function nextPeriodKey(string $key, string $unit, \DateTimeZone $tz): string
     {
+        return self::shiftPeriodKey($key, $unit, +1, $tz);
+    }
+
+    /** Previous period key in sequence. */
+    private static function prevPeriodKey(string $key, string $unit, \DateTimeZone $tz): string
+    {
+        return self::shiftPeriodKey($key, $unit, -1, $tz);
+    }
+
+    /**
+     * Shift a period key by an integer delta under the given unit.
+     * Handles year/month/week roll-over via DateTime so callers don't
+     * worry about month-end or ISO-week edge cases.
+     */
+    private static function shiftPeriodKey(string $key, string $unit, int $delta, \DateTimeZone $tz): string
+    {
         $unit = self::normalizeUnit($unit);
+        $deltaStr = ($delta >= 0 ? '+' : '') . $delta;
         return match ($unit) {
             self::UNIT_DAY => (new \DateTimeImmutable($key, $tz))
-                ->modify('+1 day')->format('Y-m-d'),
+                ->modify($deltaStr . ' day')->format('Y-m-d'),
             self::UNIT_MONTH => (new \DateTimeImmutable($key . '-01', $tz))
-                ->modify('+1 month')->format('Y-m'),
-            self::UNIT_YEAR => (string) (((int) $key) + 1),
-            default => (function () use ($key, $tz): string {
+                ->modify($deltaStr . ' month')->format('Y-m'),
+            self::UNIT_YEAR => (string) (((int) $key) + $delta),
+            default => (function () use ($key, $delta, $tz): string {
                 [$year, $week] = sscanf($key, '%d-W%d');
                 return (new \DateTimeImmutable('now', $tz))
-                    ->setISODate((int) $year, ((int) $week) + 1)
+                    ->setISODate((int) $year, ((int) $week) + $delta)
                     ->format('o-\WW');
             })(),
         };

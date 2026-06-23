@@ -317,6 +317,81 @@ a.about-contact-value:hover {
     border-right: 2px dashed var(--accent);
 }
 
+/* ───── Current Streak card ─────
+ * Duolingo-inspired hero panel: big numeral on the left, a tinted
+ * phosphor flame on the right. Unit label (DAYS/WEEKS/…) sits next
+ * to the count so the same component reads correctly across all
+ * four cadences the STREAK_UNIT env supports.
+ */
+.about-streak {
+    overflow: hidden;
+}
+.about-streak-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+.about-streak-text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.about-streak-num {
+    font-family: 'VT323', monospace;
+    font-size: 3.2rem;
+    line-height: 1.05;
+    color: var(--primary);
+    text-shadow: 0 0 12px var(--primary-glow);
+    margin-top: 6px;
+}
+.about-streak-unit {
+    font-size: 1.6rem;
+    letter-spacing: 0.08em;
+    color: var(--primary);
+    margin-left: 6px;
+}
+.about-streak-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+    margin-top: 8px;
+}
+.about-streak-warning {
+    color: var(--accent);
+    text-shadow: 0 0 4px var(--accent);
+}
+.about-streak-flame {
+    flex: 0 0 auto;
+    color: var(--primary);
+    filter: drop-shadow(0 0 8px var(--primary-glow));
+}
+/* Dim the flame when nothing is on fire — 0-day streak still shows
+ * the icon but reads visually quiet. */
+.about-streak[data-empty] .about-streak-flame,
+.about-streak-num:empty + * .about-streak-flame {
+    color: var(--text-dim);
+    filter: none;
+    opacity: 0.4;
+}
+.about-streak.is-at-risk .about-streak-flame {
+    color: var(--accent);
+    filter: drop-shadow(0 0 8px var(--accent));
+    animation: about-streak-flame-flicker 1.4s ease-in-out infinite;
+}
+@keyframes about-streak-flame-flicker {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.7; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .about-streak.is-at-risk .about-streak-flame { animation: none; }
+}
+@media (max-width: 480px) {
+    .about-streak-flame { width: 56px; height: 70px; }
+    .about-streak-num { font-size: 2.4rem; }
+    .about-streak-unit { font-size: 1.2rem; }
+}
+
 /* ───── BADGES panel ─────
  * Auto-fit tile grid. Unlocked badges glow phosphor; locked tiles dim
  * with a dashed border and surface their N/M progress. Tier-agnostic at

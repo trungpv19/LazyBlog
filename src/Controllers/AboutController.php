@@ -60,7 +60,8 @@ final class AboutController
      *   posts:int,tags:int,series:int,
      *   firstDate:?string,lastDate:?string,
      *   daysOnline:?int,serverUptime:?string,
-     *   badges:list<array{code:string,label:string,description:string,tier:string,current:int,target:int,unlocked:bool,unlockedAt:?string,isRecentUnlock:bool}>
+     *   badges:list<array{code:string,label:string,description:string,tier:string,current:int,target:int,unlocked:bool,unlockedAt:?string,isRecentUnlock:bool}>,
+     *   streak:array{current:int,longest:int,atRisk:bool,unit:string}
      * }
      */
     private function buildStats(): array
@@ -85,16 +86,17 @@ final class AboutController
         }
 
         $tz = new \DateTimeZone((string) Config::get('TIMEZONE', 'UTC'));
-        // Streak unit is per-badge (declared in content/badges.json),
-        // not global — calculator no longer needs an env-driven unit.
-        // STREAK_UNIT env is reserved for any future standalone
-        // streak indicator and does not affect badges.
         $calc = new GamificationCalculator($tz, new \DateTimeImmutable('now', $tz));
         $badges = $calc->badges(
             $published,
             $this->posts->allSeries(),
             $this->posts->tagCounts(),
         );
+        // Standalone "Current Streak" card — driven by STREAK_UNIT env,
+        // independent of any individual badge's per-entry unit. The
+        // card visualises ongoing writing cadence at a glance.
+        $streakUnit = (string) Config::get('STREAK_UNIT', GamificationCalculator::UNIT_WEEK);
+        $streak = $calc->streakSummaryForUnit($streakUnit, $published);
 
         return [
             'posts' => count($published),
@@ -105,6 +107,7 @@ final class AboutController
             'daysOnline' => $daysOnline,
             'serverUptime' => self::readServerUptime(),
             'badges' => $badges,
+            'streak' => $streak,
         ];
     }
 

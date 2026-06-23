@@ -5,7 +5,8 @@
  *   posts:int,tags:int,series:int,
  *   firstDate:?string,lastDate:?string,
  *   daysOnline:?int,serverUptime:?string,
- *   badges:list<array{code:string,label:string,description:string,tier:string,current:int,target:int,unlocked:bool,unlockedAt:?string,isRecentUnlock:bool}>
+ *   badges:list<array{code:string,label:string,description:string,tier:string,current:int,target:int,unlocked:bool,unlockedAt:?string,isRecentUnlock:bool}>,
+ *   streak:array{current:int,longest:int,atRisk:bool,unit:string}
  * } $stats */
 
 use App\Auth;
@@ -22,6 +23,16 @@ $daysLabel = match (true) {
     $stats['daysOnline'] === 0    => 'TODAY',
     $stats['daysOnline'] === 1    => '1 DAY',
     default                       => $stats['daysOnline'] . ' DAYS',
+};
+
+// Streak unit label (uppercase, matches the CRT mono aesthetic). The
+// underlying unit is the STREAK_UNIT env value passed through the
+// calculator; default is `week` so legacy installs still read sanely.
+$streakUnitLabel = match ($stats['streak']['unit']) {
+    'day'   => 'DAYS',
+    'month' => 'MONTHS',
+    'year'  => 'YEARS',
+    default => 'WEEKS',
 };
 ?>
 
@@ -94,6 +105,32 @@ $daysLabel = match (true) {
                     LAST TX <?= Http::e($stats['lastDate']) ?>
                 </div>
             <?php endif; ?>
+        </section>
+
+        <!-- Current streak card — Duolingo-style flame + big numeral.
+             Driven by STREAK_UNIT env (day/week/month/year) and is
+             independent of any badge's per-entry unit. -->
+        <section class="about-panel hud-frame about-streak<?= $stats['streak']['atRisk'] ? ' is-at-risk' : '' ?>">
+            <div class="about-streak-body">
+                <div class="about-streak-text">
+                    <div class="about-panel-label">&gt; CURRENT STREAK</div>
+                    <div class="about-streak-num">
+                        <?= (int) $stats['streak']['current'] ?>
+                        <span class="about-streak-unit"><?= Http::e($streakUnitLabel) ?></span>
+                    </div>
+                    <div class="about-streak-sub">
+                        LONGEST STREAK: <?= (int) $stats['streak']['longest'] ?> <?= Http::e($streakUnitLabel) ?>
+                        <?php if ($stats['streak']['atRisk']): ?>
+                            · <span class="about-streak-warning">AT RISK</span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <svg class="about-streak-flame" viewBox="0 0 24 32" width="80" height="100" aria-hidden="true">
+                    <!-- Stylised flame drop, single path so CSS can tint
+                         via currentColor in the active theme. -->
+                    <path d="M12 1 C 13.5 8, 21 9, 18 21 C 21.5 17, 22 26, 12 31 C 2 26, 2.5 17, 6 21 C 3 9, 10.5 8, 12 1 Z" fill="currentColor" />
+                </svg>
+            </div>
         </section>
 
         <?php if ($stats['badges'] !== []): ?>
