@@ -51,11 +51,10 @@ $isEdit = $mode === 'edit';
 
         <!-- Row 2: Date + Slug + Tags + Draft — secondary structural fields -->
         <div class="admin-form-row">
-            <div class="admin-field" style="flex: 0 0 140px">
+            <div class="admin-field" style="flex: 0 0 150px">
                 <label class="admin-label" for="date">Date</label>
-                <input type="text" name="date" id="date" required
+                <input type="date" name="date" id="date" required
                        value="<?= Http::e($formValues['date']) ?>"
-                       pattern="\d{4}-\d{2}-\d{2}"
                        class="admin-input admin-mono">
             </div>
             <div class="admin-field" style="flex: 0 0 110px">

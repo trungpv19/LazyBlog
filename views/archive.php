@@ -100,7 +100,7 @@ $intensity = static function (int $count, bool $inRange): string {
                             </a>
                             <?php if (!empty($entry['series'])): ?>
                                 <a class="post-series-tag" href="/series/<?= Http::e((string) $entry['series']) ?>" onclick="event.stopPropagation()">
-                                    📡 <?= Http::e((string) $entry['series']) ?><?php
+                                    <?= Http::e((string) $entry['series']) ?><?php
                                         if (isset($entry['part']) && $entry['part'] !== null) echo ' · P' . (int) $entry['part'];
                                     ?>
                                 </a>

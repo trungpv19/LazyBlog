@@ -168,6 +168,15 @@ final class AdminController
             $editTime = $m[1];
         }
 
+        // Social image: if no explicit `image:` frontmatter is set, fall
+        // back to the first body image so the field reflects what
+        // og:image will actually render. Saving the form persists this
+        // value explicitly — making the implicit fallback durable.
+        $editImage = $post->image ?? '';
+        if ($editImage === '') {
+            $editImage = $post->firstBodyImage() ?? '';
+        }
+
         Http::render('admin/edit', [
             'title' => 'Edit: ' . $post->title,
             'mode' => 'edit',
@@ -184,7 +193,7 @@ final class AdminController
                 'draft' => $post->draft,
                 'icon' => $post->icon ?? '',
                 'summary' => $post->summary ?? '',
-                'image' => $post->image ?? '',
+                'image' => $editImage,
                 'series' => $post->series ?? '',
                 'part' => $post->part !== null ? (string) $post->part : '',
                 'body' => $post->bodyMarkdown,

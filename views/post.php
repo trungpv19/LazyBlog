@@ -48,7 +48,7 @@ $renderTocList = function () use ($toc): void {
 
     <?php if ($seriesNav !== null): ?>
         <a class="series-banner" href="/series/<?= Http::e($seriesNav['slug']) ?>" aria-label="View full series">
-            <span class="series-banner-label">📡 PART <?= $seriesNav['position'] ?> OF <?= $seriesNav['total'] ?></span>
+            <span class="series-banner-label">§ PART <?= $seriesNav['position'] ?> OF <?= $seriesNav['total'] ?></span>
             <span class="series-banner-title"><?= Http::e($seriesNav['title']) ?></span>
         </a>
     <?php endif; ?>
