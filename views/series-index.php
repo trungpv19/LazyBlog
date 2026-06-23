@@ -25,7 +25,6 @@ use App\Http;
                             <?php if ($s['firstDate'] !== $s['lastDate']): ?>
                                 → <?= Http::e($s['lastDate']) ?>
                             <?php endif; ?>
-                            · slug: <code><?= Http::e($s['slug']) ?></code>
                         </div>
                     </div>
                 </li>
