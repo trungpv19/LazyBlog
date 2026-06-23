@@ -84,7 +84,7 @@ final class AdminController
         // Server-side pagination — reuses the POSTS_PER_PAGE env that
         // home + tag listings already honour so a single dial controls
         // the whole site's list density.
-        $perPage = max(1, (int) Config::get('POSTS_PER_PAGE', 10));
+        $perPage = max(1, (int) Config::get('POSTS_PER_PAGE', '10'));
         $all = $this->repo->all();
         $total = count($all);
         $totalPages = max(1, (int) ceil($total / $perPage));
