@@ -102,6 +102,14 @@ if ($isPost) {
     ];
 }
 
+// Site default theme — rendered server-side on <html data-theme>, so
+// no-JS users honour the configured choice. Inline bootstrap below only
+// overrides when localStorage holds a valid user pick.
+$defaultTheme = strtolower((string) Config::get('SITE_DEFAULT_THEME', 'amber'));
+if ($defaultTheme !== 'green' && $defaultTheme !== 'amber') {
+    $defaultTheme = 'amber';
+}
+
 // Minimal CRT-themed inline SVG favicon — avoids /favicon.ico 404 noise.
 $favicon = 'data:image/svg+xml,'
     . rawurlencode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
@@ -110,7 +118,7 @@ $favicon = 'data:image/svg+xml,'
         . '</svg>');
 ?>
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" data-theme="<?= $defaultTheme ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -181,14 +189,16 @@ $favicon = 'data:image/svg+xml,'
     <?php endif; ?>
 
     <script>
+    // Theme bootstrap — server already rendered the configured default on
+    // <html data-theme>. Only override here when the visitor has picked a
+    // different valid value previously. Runs sync in <head> so no FOUC.
     (function () {
         try {
             var t = localStorage.getItem('theme');
-            if (t !== 'green' && t !== 'amber') t = 'amber';
-            document.documentElement.setAttribute('data-theme', t);
-        } catch (e) {
-            document.documentElement.setAttribute('data-theme', 'amber');
-        }
+            if (t === 'green' || t === 'amber') {
+                document.documentElement.setAttribute('data-theme', t);
+            }
+        } catch (e) {}
     })();
     </script>
 
@@ -196,9 +206,17 @@ $favicon = 'data:image/svg+xml,'
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Play:wght@400;700&family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="/assets/site.css">
+    <?php
+    // Stylesheets split by concern so each file has its own ?v= cache-bust
+    // (changing one doesn't invalidate the others). Load order matters:
+    // base defines tokens, the rest consume them.
+    foreach (['assets/base.css', 'assets/effects.css', 'assets/components.css',
+              'assets/post.css', 'assets/pages.css'] as $css):
+    ?>
+        <link rel="stylesheet" href="<?= Http::e(Http::asset($css)) ?>">
+    <?php endforeach; ?>
     <?php if (str_starts_with($path, '/admin')): ?>
-        <link rel="stylesheet" href="/assets/admin.css">
+        <link rel="stylesheet" href="<?= Http::e(Http::asset('assets/admin.css')) ?>">
         <?php if (App\Auth::check()): ?>
             <meta name="csrf-token" content="<?= Http::e(App\Csrf::token()) ?>">
         <?php endif; ?>
@@ -267,168 +285,33 @@ $favicon = 'data:image/svg+xml,'
         if ($footerSignoff !== '') {
             $footerSignoff = str_replace('{year}', date('Y'), $footerSignoff);
         }
+        // Project source link — defaults to upstream LazyBlog repo for
+        // branding/sharing. Override SITE_GITHUB_URL to point at a fork, or
+        // set it to empty to hide the line.
+        $githubUrl = (string) Config::get('SITE_GITHUB_URL', 'https://github.com/hieuha/LazyBlog');
     ?>
     <?php if ($footerSignoff !== ''): ?>
         <div class="footer-copyright"><?= Http::e($footerSignoff) ?></div>
+    <?php endif; ?>
+    <?php if ($githubUrl !== ''): ?>
+        <div class="footer-source">
+            <a class="footer-source-link"
+               href="<?= Http::e($githubUrl) ?>"
+               target="_blank"
+               rel="noopener noreferrer"
+               aria-label="LazyBlog source code on GitHub">
+                [ POWERED BY LAZYBLOG ON GITHUB ↗ ]
+            </a>
+        </div>
     <?php endif; ?>
 </footer>
 
 <button id="back-to-top" class="back-to-top" aria-label="Back to top" title="Back to top">↑</button>
 
-<script>
-document.getElementById('theme-toggle').addEventListener('click', function () {
-    var cur = document.documentElement.getAttribute('data-theme');
-    var next = cur === 'green' ? 'amber' : 'green';
-    document.documentElement.setAttribute('data-theme', next);
-    try { localStorage.setItem('theme', next); } catch (e) {}
-});
-
-(function () {
-    var btt = document.getElementById('back-to-top');
-    var tocWrap = document.querySelector('.post-toc-wrap');
-    var threshold = 400;
-    var ticking = false;
-
-    function update() {
-        var scrolled = window.scrollY > threshold;
-        if (btt) btt.classList.toggle('visible', scrolled);
-        if (tocWrap) tocWrap.classList.toggle('floating-visible', scrolled);
-        ticking = false;
-    }
-    window.addEventListener('scroll', function () {
-        if (!ticking) { window.requestAnimationFrame(update); ticking = true; }
-    }, { passive: true });
-    if (btt) {
-        btt.addEventListener('click', function () {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    }
-    update();
-})();
-
-/* Reading progress bar — CRT signal-strength style. Only present on
-   post pages (added by layout.php). Sets a CSS custom property to the
-   scroll-through-article percentage; CSS handles the fill + ticks. */
-(function () {
-    var bar = document.querySelector('.read-progress-fill');
-    if (!bar) return;
-    var ticking = false;
-    function update() {
-        var el = document.documentElement;
-        var max = el.scrollHeight - el.clientHeight;
-        var p = max > 0 ? Math.min(100, Math.max(0, (el.scrollTop / max) * 100)) : 0;
-        bar.style.width = p + '%';
-        ticking = false;
-    }
-    window.addEventListener('scroll', function () {
-        if (!ticking) {
-            window.requestAnimationFrame(update);
-            ticking = true;
-        }
-    }, { passive: true });
-    window.addEventListener('resize', update);
-    update();
-})();
-
-/* Scrollspy: highlight the TOC link matching the h2 currently near the top of
-   the viewport. Uses IntersectionObserver — no scroll listener, no rAF needed. */
-(function () {
-    if (!('IntersectionObserver' in window)) return;
-    var headings = document.querySelectorAll('.post-body h2[id]');
-    if (!headings.length) return;
-
-    var tocLinks = document.querySelectorAll('.toc-list a');
-    if (!tocLinks.length) return;
-
-    var intersecting = new Set();
-
-    function setActive(activeId) {
-        var activeHref = activeId ? '#' + activeId : null;
-        tocLinks.forEach(function (a) {
-            a.classList.toggle('is-active', a.getAttribute('href') === activeHref);
-        });
-    }
-
-    var observer = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-            if (e.isIntersecting) intersecting.add(e.target);
-            else intersecting.delete(e.target);
-        });
-        var topmost = null;
-        var topmostY = Infinity;
-        intersecting.forEach(function (el) {
-            var y = el.getBoundingClientRect().top;
-            if (y < topmostY) { topmostY = y; topmost = el; }
-        });
-        setActive(topmost ? topmost.id : null);
-    }, {
-        // Trigger band: top 10–35% of viewport. Heading is "active" while it
-        // sits inside that band as the reader scrolls past.
-        rootMargin: '-10% 0px -65% 0px',
-        threshold: 0,
-    });
-
-    headings.forEach(function (h) { observer.observe(h); });
-})();
-
-/* Code block enhancements: language label + copy button */
-(function () {
-    var blocks = document.querySelectorAll('.post-body pre');
-    if (!blocks.length) return;
-
-    blocks.forEach(function (pre) {
-        var code = pre.querySelector('code');
-        var lang = '';
-        if (code && code.className) {
-            var match = code.className.match(/language-([\w-]+)/);
-            if (match) lang = match[1];
-        }
-
-        if (lang) {
-            var label = document.createElement('span');
-            label.className = 'code-lang-tag';
-            label.textContent = lang;
-            pre.appendChild(label);
-        }
-
-        var btn = document.createElement('button');
-        btn.className = 'copy-btn';
-        btn.type = 'button';
-        btn.setAttribute('aria-label', 'Copy code');
-        btn.textContent = 'COPY';
-        btn.addEventListener('click', function () {
-            var text = (code || pre).textContent || '';
-            var done = function () {
-                btn.textContent = 'COPIED';
-                btn.classList.add('copied');
-                setTimeout(function () {
-                    btn.textContent = 'COPY';
-                    btn.classList.remove('copied');
-                }, 1500);
-            };
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(done).catch(function () {
-                    fallbackCopy(text, done);
-                });
-            } else {
-                fallbackCopy(text, done);
-            }
-        });
-        pre.appendChild(btn);
-    });
-
-    function fallbackCopy(text, cb) {
-        var ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.focus(); ta.select();
-        try { document.execCommand('copy'); cb(); } catch (e) {}
-        document.body.removeChild(ta);
-    }
-})();
-</script>
+<script defer src="<?= Http::e(Http::asset('assets/site.js')) ?>"></script>
+<?php if ($isPost): ?>
+    <script defer src="<?= Http::e(Http::asset('assets/post.js')) ?>"></script>
+<?php endif; ?>
 
 </body>
 </html>

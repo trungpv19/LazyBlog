@@ -56,4 +56,20 @@ final class Http
     {
         return htmlspecialchars($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
+
+    /**
+     * Return an asset URL with a cache-busting ?v=<mtime> query string.
+     *
+     * Takes a path relative to /public (e.g. "assets/base.css") and resolves
+     * mtime against the on-disk file so deploys invalidate browser caches
+     * automatically. Falls back to a static "0" when the file is missing so
+     * a typo doesn't crash the page render.
+     */
+    public static function asset(string $path): string
+    {
+        $relative = '/' . ltrim($path, '/');
+        $fsPath = __DIR__ . '/../public' . $relative;
+        $version = is_file($fsPath) ? (string) filemtime($fsPath) : '0';
+        return $relative . '?v=' . $version;
+    }
 }

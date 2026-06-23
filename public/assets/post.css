@@ -1,0 +1,398 @@
+/* =========================================================================
+   LazyBlog — post + series
+   Home/tag post list, post page, post-figure, post-body code blocks,
+   floating TOC, post-footer, tag-page-title, series banner/nav/chip.
+   ========================================================================= */
+
+/* ---------- Home / Tag page: post list ---------- */
+.post-list { list-style: none; padding: 0; }
+.post-item {
+    border-bottom: 1px solid var(--border);
+    padding: 22px 0;
+}
+.post-item:last-child { border-bottom: none; }
+
+.post-meta {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+.post-date { color: var(--primary-dim); text-transform: uppercase; }
+
+.post-title-link { text-decoration: none; display: block; }
+.post-title {
+    font-family: 'VT323', monospace;
+    font-size: clamp(26px, 5vw, 32px);
+    color: var(--primary);
+    text-shadow: 0 0 8px var(--primary-glow-strong);
+    letter-spacing: 1px;
+    display: inline-block;
+    line-height: 1.15;
+}
+.post-title-link:hover .post-title { text-shadow: 0 0 14px var(--primary), 0 0 24px var(--primary-glow-strong); }
+.post-icon { opacity: 0.85; }
+
+.post-summary {
+    color: var(--text);
+    margin-top: 8px;
+    font-size: 1em;
+    line-height: 1.65;
+}
+
+/* Date moved below summary, right-aligned */
+.post-date-row {
+    text-align: right;
+    margin-top: 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+}
+.post-date-row .post-date {
+    color: var(--primary-dim);
+    text-transform: uppercase;
+}
+
+/* ---------- Post page ---------- */
+.post-page-title {
+    margin-bottom: 12px;
+}
+.post-meta-tags {
+    margin-bottom: 28px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.post-body { font-size: 1em; line-height: 1.85; }
+.post-body h2, .post-body h3 { margin-top: 28px; margin-bottom: 14px; }
+.post-body p { margin: 14px 0; }
+.post-body ul, .post-body ol { margin: 14px 0 14px 24px; }
+.post-body li { margin: 8px 0; }
+
+@media (min-width: 768px) {
+    .post-body .post-section { padding-left: 22px; margin: 40px 0; }
+}
+
+.post-footer {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ---------- Tag page (extends post list) ---------- */
+.tag-page-title { color: var(--primary); }
+
+/* ---------- Post figures (auto-wrapped images) ----------
+   Standalone `![alt](url)` in markdown becomes <figure class="post-figure">
+   with the caption pulled from alt. The figure breaks out of the post
+   reading column to full viewport width; the caption stays narrow + centered.
+   A theme-color overlay (mix-blend-mode: multiply) tints the image so photos
+   feel native to the CRT terminal aesthetic. */
+.post-figure {
+    /* Break out of the article column to viewport width while text stays
+       in its container. transform centers on viewport regardless of parent. */
+    width: 100vw;
+    margin-left: 50%;
+    transform: translateX(-50%);
+    margin-top: 36px;
+    margin-bottom: 36px;
+}
+.post-figure-image {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-top: 1px solid var(--primary-dim);
+    border-bottom: 1px solid var(--primary-dim);
+}
+.post-figure-image img {
+    display: block;
+    width: 100%;
+    height: auto;
+    /* Desaturate slightly so the multiply overlay can carry the theme color
+       without fighting the photo's original saturation. */
+    filter: grayscale(0.4) contrast(1.05);
+}
+/* The theme-color tint overlay — multiply blend so dark areas of the photo
+   stay dark and the highlights take on the phosphor color. */
+.post-figure-image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--primary);
+    mix-blend-mode: multiply;
+    opacity: 0.22;
+    pointer-events: none;
+}
+.post-figure figcaption {
+    max-width: 720px;
+    margin: 14px auto 0;
+    padding: 0 24px;
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    line-height: 1.5;
+}
+/* On narrow screens stop trying to break out — full-viewport tint on
+   a phone often clips weirdly with body overflow-x:hidden. */
+@media (max-width: 600px) {
+    .post-figure {
+        width: 100%;
+        margin-left: 0;
+        transform: none;
+    }
+}
+
+/* ---------- Floating TOC (desktop only) ----------
+   The post.php template renders the TOC twice:
+     1. `.toc-inline` — always in normal flow, sits just below the post meta on
+        every viewport size. This is the "stays below summary when not scrolled"
+        copy.
+     2. `.post-toc-wrap` — a duplicate that's hidden on mobile and only fades in
+        on desktop after the reader scrolls past a threshold (toggled by JS).
+   The article column width is never affected by the floating TOC.
+*/
+.post-toc-wrap { display: none; }
+
+@media (min-width: 1024px) {
+    .post-toc-wrap {
+        display: block;
+        position: fixed;
+        /* Pushed down to clear the top-left CRT corner vignette which
+           was visibly darkening the TOC header. */
+        top: 72px;
+        left: 36px;
+        width: 220px;
+        max-height: calc(100vh - 110px);
+        overflow-y: auto;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateX(-12px);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        z-index: 50;
+        margin: 0;
+        background: rgba(15, 26, 15, 0.92); /* var(--panel) at 92% so scanline shows through */
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        padding: 14px 14px 14px 16px;
+        border: 1px solid var(--border);
+        border-left: 2px solid var(--accent-dim);
+        border-radius: 3px;
+    }
+    [data-theme="amber"] .post-toc-wrap {
+        background: rgba(26, 18, 8, 0.92);
+    }
+
+    .post-toc-wrap.floating-visible {
+        opacity: 0.96;
+        pointer-events: auto;
+        transform: translateX(0);
+    }
+
+    .post-toc-wrap .toc {
+        margin: 0;
+        background: transparent;
+        border: none;
+        padding: 0;
+    }
+    .post-toc-wrap .toc-label { margin-bottom: 10px; }
+    .post-toc-wrap .toc-list li { margin: 5px 0; font-size: 12px; line-height: 1.45; }
+
+    /* Custom scrollbar for floating TOC */
+    .post-toc-wrap::-webkit-scrollbar { width: 4px; }
+    .post-toc-wrap::-webkit-scrollbar-thumb { background: var(--primary-dim); border-radius: 2px; }
+    .post-toc-wrap::-webkit-scrollbar-track { background: transparent; }
+}
+
+/* ---------- Post-body code blocks: dashed HUD frame on grid background ----------
+   Cross-hatch grid drawn over the panel bg via repeating-linear-gradients
+   in the accent color, plus a dashed accent border around the whole
+   block — reads as a targeting/output frame. */
+.post-body pre {
+    position: relative;
+    padding: 36px 18px 16px;
+    background:
+        repeating-linear-gradient(0deg,
+            rgba(255, 183, 0, 0.05) 0, rgba(255, 183, 0, 0.05) 1px,
+            transparent 1px, transparent 6px),
+        repeating-linear-gradient(90deg,
+            rgba(255, 183, 0, 0.05) 0, rgba(255, 183, 0, 0.05) 1px,
+            transparent 1px, transparent 6px),
+        var(--panel);
+    border: 1px dashed var(--accent-dim);
+    border-radius: 2px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+.post-body pre code {
+    color: var(--accent);
+    background: transparent;
+    padding: 0;
+    text-shadow: 0 0 4px var(--accent-dim);
+}
+
+.code-lang-tag {
+    position: absolute;
+    top: 8px;
+    left: 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    pointer-events: none;
+}
+
+.copy-btn {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    background: var(--panel);
+    border: 1px solid var(--accent-dim);
+    color: var(--accent);
+    padding: 4px 10px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    opacity: 0.55;
+    transition: opacity 0.18s, background 0.18s, border-color 0.18s;
+    border-radius: 2px;
+}
+.post-body pre:hover .copy-btn { opacity: 1; }
+.copy-btn:hover { background: var(--primary-glow); border-color: var(--accent); }
+.copy-btn.copied { color: var(--primary); border-color: var(--primary); }
+
+/* ---------- Series link (in post-meta on home feed) ----------
+   Series link styled to match the surrounding date meta on the home
+   feed — e.g. "2026-06-19 // XV5HP // rtl-sdr-cho-nguoi-moi - P1".
+   Inherits the meta's dim color but glows on hover. */
+.post-date-series {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px dashed transparent;
+}
+.post-date-series:hover {
+    color: var(--primary);
+    border-bottom-color: var(--primary-dim);
+    text-shadow: 0 0 6px var(--primary-glow-strong);
+}
+
+/* ---------- Series chip (inline tag on listings) ----------
+   Used on home, tag, and archive pages to mark a post that belongs to
+   a series. Dashed amber border distinguishes it from tag-chips so the
+   "this is part of a series" cue is immediately readable. */
+.post-series-tag {
+    display: inline-block;
+    padding: 1px 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--accent);
+    border: 1px dashed var(--accent-dim);
+    border-radius: 2px;
+    text-decoration: none;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.post-series-tag:hover {
+    background: var(--primary-glow);
+    border-color: var(--accent);
+    color: var(--primary);
+}
+
+/* ---------- Series banner + nav (on post page) ----------
+   The banner sits between post meta and body: clickable bar that
+   announces the post's position in the series and links to the series
+   index. The nav sits below the body before the post-footer with
+   prev/next titled blocks. */
+.series-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0 28px;
+    padding: 12px 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    text-decoration: none;
+    font-family: 'Share Tech Mono', monospace;
+    transition: border-color 0.15s, background 0.15s;
+}
+.series-banner:hover {
+    border-color: var(--primary-dim);
+    background: var(--primary-glow);
+}
+.series-banner-label {
+    color: var(--accent);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.series-banner-title {
+    color: var(--primary);
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+.series-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 40px 0 24px;
+}
+.series-nav-link {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 16px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    min-height: 60px;
+}
+.series-nav-link:hover {
+    border-color: var(--primary-dim);
+    box-shadow: 0 0 12px var(--primary-glow);
+}
+.series-nav-empty {
+    visibility: hidden;
+}
+.series-nav-direction {
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+.series-nav-next {
+    text-align: right;
+}
+.series-nav-title {
+    color: var(--text);
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    line-height: 1.2;
+}
+.series-nav-link:hover .series-nav-title {
+    color: var(--primary);
+    text-shadow: 0 0 6px var(--primary-glow-strong);
+}
+
+@media (max-width: 600px) {
+    .series-nav { grid-template-columns: 1fr; }
+}

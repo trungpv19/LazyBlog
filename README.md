@@ -4,12 +4,14 @@
 [![License](https://img.shields.io/badge/license-MIT-ffb700)](LICENSE)
 [![PHP](https://img.shields.io/badge/php-8.2%2B-39ff14)](composer.json)
 
-A simple personal blog. Posts are markdown files on disk, rendered by ~3000
-lines of plain PHP, served by Caddy + php-fpm. CRT phosphor terminal
+A simple personal blog. Posts are markdown files on disk, rendered by a few
+thousand lines of plain PHP, served by Caddy + php-fpm. CRT phosphor terminal
 aesthetic. AI-friendly by design — every post is also available as raw
 `.md`, plus `llms.txt` / `llms-full.txt` indexes and a valid RSS 2.0 feed.
 
-No database. No framework. No build step. Backup with `rsync`.
+No database. No framework. No build step. Backup with `rsync`. Stylesheets
+are split by concern and cache-busted via `filemtime`, so deploys invalidate
+browser caches per-file without manual asset rotation.
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -99,7 +101,8 @@ playbook.
 ```
 LazyBlog/
 ├── public/              # web root (front controller + assets)
-├── src/                 # PHP — Router, Controllers, PostRepository, MarkdownRenderer...
+│   └── assets/          # base/effects/components/post/pages.css + admin.css + admin-editor.js
+├── src/                 # PHP — Router, Controllers, PostRepository, MarkdownRenderer, Http (asset cache-bust)...
 ├── views/               # layout, post, home, tag, admin/*
 ├── content/posts/       # YYYY-MM-DD-slug.md files (gitignored)
 ├── scripts/

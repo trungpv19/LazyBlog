@@ -17,6 +17,8 @@
 | `SESSION_SECURE` | yes for HTTPS | `true` in production (HTTPS-only cookie); `false` for local HTTP dev |
 | `SITE_OG_IMAGE` | no | Default social-card image (path or absolute URL). Used when a post doesn't define `image:` in frontmatter. Recommended 1200×630 px |
 | `SITE_TWITTER_HANDLE` | no | Site's Twitter handle with `@`. Emitted as `twitter:site` so the rich card credits your account |
+| `SITE_GITHUB_URL` | no | Project source link in footer "§ SOURCE" block. Defaults to the upstream LazyBlog repo. Empty hides the line |
+| `SITE_DEFAULT_THEME` | no | Initial CRT theme — `amber` (default) or `green`. Rendered server-side on `<html data-theme>` so no-JS visitors see it. Visitor's header toggle still overrides via `localStorage` |
 
 Generate the password hash with the interactive helper:
 
@@ -66,8 +68,9 @@ readers find the feed without a URL hint.
 
 ## Reading-experience flags
 
-These are styling defaults baked into `public/assets/site.css`, not env vars
-— editing them means tweaking the CSS:
+These are styling defaults baked into the CSS files under `public/assets/`
+(`base.css`, `effects.css`, `components.css`, `post.css`, `pages.css`), not
+env vars — editing them means tweaking the CSS:
 
 - **Theme**: amber (default) ↔ green (toggle in header). Persists in `localStorage`
 - **CRT scanlines + vignette + bezel**: layered fixed overlays at z-index 998–1000

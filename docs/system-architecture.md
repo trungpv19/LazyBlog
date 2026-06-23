@@ -165,7 +165,13 @@ Public visitors transparently warm the caches. No cron, no service.
 │   ├── .htaccess                         (Apache fallback)
 │   ├── robots.txt
 │   └── assets/
-│       ├── site.css
+│       ├── base.css                      (tokens, reset, typography, header/main/footer)
+│       ├── effects.css                   (CRT scanlines, vignette, bezel, back-to-top, progress)
+│       ├── components.css                (chips, callouts, tables, video, TOC base, pagination)
+│       ├── post.css                      (post list, post page, post-figure, floating TOC, series)
+│       ├── pages.css                     (archive, search, 404, series index)
+│       ├── site.js                       (theme toggle + back-to-top; loaded everywhere)
+│       ├── post.js                       (reading progress, scrollspy, code-block UI; /posts/* only)
 │       ├── admin.css                     (admin-only)
 │       └── admin-editor.js               (admin-only)
 ├── src/                                  ← outside web root
