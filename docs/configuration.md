@@ -19,6 +19,7 @@
 | `SITE_TWITTER_HANDLE` | no | Site's Twitter handle with `@`. Emitted as `twitter:site` so the rich card credits your account |
 | `SITE_GITHUB_URL` | no | Project source link in footer "§ SOURCE" block. Defaults to the upstream LazyBlog repo. Empty hides the line |
 | `SITE_DEFAULT_THEME` | no | Initial CRT theme — `amber` (default) or `green`. Rendered server-side on `<html data-theme>` so no-JS visitors see it. Visitor's header toggle still overrides via `localStorage` |
+| `SITE_NOISE` | no | Film-grain / dust overlay on every page. `true` (default) / `false`. Off leaves scanlines + vignette intact |
 
 Generate the password hash with the interactive helper:
 
@@ -42,6 +43,7 @@ You can still edit posts by writing markdown files into `content/posts/`.
 | `/tags/{tag}` | Posts filtered by tag (`?page=N`) |
 | `/archive` | Posting heatmap + chronological list grouped by year |
 | `/search?q=...` | Diacritic-insensitive search across title, tags, body |
+| `/about` | Operator profile page — 404 when `content/about.md` is missing |
 | `/feed.xml` | RSS 2.0 of the latest 20 posts (ETag + 304) |
 | `/llms.txt` | Site index per [llmstxt.org](https://llmstxt.org) |
 | `/llms-full.txt` | Every published post concatenated for LLM consumption |
@@ -66,6 +68,7 @@ readers find the feed without a URL hint.
 | `POST /admin/delete/{slug}` | CSRF-protected unlink |
 | `POST /admin/preview` | Server-side markdown render for EasyMDE preview pane |
 | `POST /admin/upload` | Image upload — strips metadata, resizes to ≤1600px, returns `{url}` pointing at `/uploads/YYYY/MM/...webp` |
+| `GET /admin/about` · `POST /admin/about/save` | Manage `content/about.md` — same EasyMDE editor + avatar upload reuses `/admin/upload` |
 
 ## Reading-experience flags
 

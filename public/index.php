@@ -65,6 +65,9 @@ $archive = new App\Controllers\ArchiveController($repo);
 $search = new App\Controllers\SearchController(new App\Searcher($repo));
 $upload = new App\Controllers\UploadController(__DIR__ . '/../content');
 $series = new App\Controllers\SeriesController($repo);
+$aboutRepo = new App\AboutRepository(__DIR__ . '/../content');
+$aboutCtl = new App\Controllers\AboutController($aboutRepo, $renderer, $repo);
+$adminAboutCtl = new App\Controllers\AdminAboutController($aboutRepo);
 
 $router = new App\Router();
 
@@ -79,6 +82,8 @@ $router->post('/admin/save', fn () => $admin->save());
 $router->post('/admin/delete/{slug}', fn (array $p) => $admin->delete($p));
 $router->post('/admin/preview', fn () => $admin->preview());
 $router->post('/admin/upload', fn () => $upload->upload());
+$router->get('/admin/about', fn () => $adminAboutCtl->editForm());
+$router->post('/admin/about/save', fn () => $adminAboutCtl->save());
 $router->get('/admin', fn () => $admin->index());
 
 // Public.
@@ -92,6 +97,7 @@ $router->get('/llms-full.txt', fn () => $llmsCtl->full());
 $router->get('/feed.xml', fn () => $feedCtl->show());
 $router->get('/archive', fn () => $archive->show());
 $router->get('/search', fn () => $search->show());
+$router->get('/about', fn () => $aboutCtl->show());
 $router->get('/', fn () => $home->index());
 
 $router->dispatch(

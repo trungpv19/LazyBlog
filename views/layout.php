@@ -65,6 +65,9 @@ $footerTags = $footerRepo->allTags();
 // Hide the [ SERIES ] header link when no published post belongs to any
 // series — keeps the nav focused for blogs that don't use the feature.
 $hasSeries = $footerRepo->allSeries() !== [];
+// Same idea for the [ ABOUT ] link — only show when the page exists, so
+// fresh installs don't expose a broken-link nav.
+$hasAbout = (new \App\AboutRepository(__DIR__ . '/../content'))->exists();
 
 // JSON-LD structured data — BlogPosting for posts, Blog for home.
 $jsonLd = null;
@@ -113,6 +116,19 @@ if ($defaultTheme !== 'green' && $defaultTheme !== 'amber') {
     $defaultTheme = 'amber';
 }
 
+// Film grain / dust overlay toggle. Accepts "true"/"false"/"on"/"off"/1/0.
+// Default ON — the texture is part of the CRT aesthetic — but admins
+// who find it too busy (or care about every last paint cost) can disable
+// via SITE_NOISE="false". CSS reads the data-noise attr below.
+$noiseEnabled = filter_var(
+    (string) Config::get('SITE_NOISE', 'true'),
+    FILTER_VALIDATE_BOOLEAN,
+    FILTER_NULL_ON_FAILURE,
+);
+if ($noiseEnabled === null) {
+    $noiseEnabled = true;
+}
+
 // Minimal CRT-themed inline SVG favicon — avoids /favicon.ico 404 noise.
 $favicon = 'data:image/svg+xml,'
     . rawurlencode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
@@ -121,7 +137,7 @@ $favicon = 'data:image/svg+xml,'
         . '</svg>');
 ?>
 <!DOCTYPE html>
-<html lang="vi" data-theme="<?= $defaultTheme ?>">
+<html lang="vi" data-theme="<?= $defaultTheme ?>" data-noise="<?= $noiseEnabled ? 'on' : 'off' ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -257,6 +273,9 @@ $favicon = 'data:image/svg+xml,'
             <a class="header-btn" href="/series" aria-label="Series"<?= str_starts_with($path, '/series') ? ' aria-current="page"' : '' ?>>[ SERIES ]</a>
         <?php endif; ?>
         <a class="header-btn" href="/search" aria-label="Search"<?= $path === '/search' ? ' aria-current="page"' : '' ?>>[ SEARCH ]</a>
+        <?php if ($hasAbout): ?>
+            <a class="header-btn" href="/about" aria-label="About"<?= $path === '/about' ? ' aria-current="page"' : '' ?>>[ ABOUT ]</a>
+        <?php endif; ?>
         <?php if (App\Auth::check()): ?>
             <a class="header-btn" href="/admin" aria-label="Admin"<?= str_starts_with($path, '/admin') ? ' aria-current="page"' : '' ?>>[ ADMIN ]</a>
         <?php endif; ?>

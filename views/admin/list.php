@@ -14,6 +14,7 @@ use App\Http;
         </div>
         <div class="admin-actions">
             <a class="admin-btn admin-btn-primary" href="/admin/new">[ NEW POST ]</a>
+            <a class="admin-btn" href="/admin/about">[ <?= (new \App\AboutRepository(__DIR__ . '/../../content'))->exists() ? 'EDIT' : 'CREATE' ?> ABOUT ]</a>
             <form method="post" action="/admin/logout" style="display:inline">
                 <input type="hidden" name="_csrf" value="<?= Http::e(Csrf::token()) ?>">
                 <button type="submit" class="admin-btn">[ LOG OUT ]</button>
